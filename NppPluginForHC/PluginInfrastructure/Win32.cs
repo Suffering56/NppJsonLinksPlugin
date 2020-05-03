@@ -323,5 +323,7 @@ namespace NppPluginForHC.PluginInfrastructure
         public static extern int CallWindowProcW(IntPtr lpPrevWndFunc, IntPtr hWnd, int Msg, int wParam, int lParam);
         [DllImport("user32")]
         public static extern IntPtr SendMessage(IntPtr hWnd, NppMsg Msg, int wParam, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lParam);
+        [DllImport("user32")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, NppMsg Msg, int wParam, [MarshalAs(UnmanagedType.LPWStr)] string lParam);
     }
 }

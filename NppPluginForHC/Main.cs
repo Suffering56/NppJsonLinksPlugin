@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -6,19 +8,24 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using NppPluginForHC.PluginInfrastructure;
+using NppPluginForHC.Redirect;
 
 namespace NppPluginForHC
 {
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal static class Main
     {
         internal const string PluginName = "NppPluginForHC";
-        static string iniFilePath = null;
-        static bool someSetting = false;
-        static frmMyDlg frmMyDlg = null;
-        static int idMyDlg = -1;
-        static Bitmap tbBmp = NppPluginForHC.Properties.Resources.star;
-        static Bitmap tbBmp_tbTab = NppPluginForHC.Properties.Resources.star_bmp;
-        static Icon tbIcon = null;
+        private static string _iniFilePath = null;
+        private static bool _someSetting = false;
+        private static frmMyDlg _frmMyDlg = null;
+        private static int _idMyDlg = -1;
+        private static readonly Bitmap TbBmp = Properties.Resources.star;
+        private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
+        private static Icon _tbIcon = null;
+
+        private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
+        private static bool _inited = false;
 
         private static readonly EventHandler OnLeftMouseClick = delegate
         {
@@ -35,20 +42,65 @@ namespace NppPluginForHC
 
         public static void OnNotification(ScNotification notification)
         {
-            switch (notification.Header.Code)
+            var notificationType = notification.Header.Code;
+            switch (notificationType)
             {
+                // NPP successfully started
                 case (uint) NppMsg.NPPN_READY:
-                    Log.Trace("NPPN_READY");
+                    _inited = true;
+                    SearchEngine.OnSwitchContext(GetCurrentFilePath());
                     MouseHook.Start();
+                    Log.Out("NPPN_READY");
                     break;
+
+                // switching tabs/open file/reload file/etc
+                case (uint) NppMsg.NPPN_BUFFERACTIVATED:
+                    if (_inited)
+                    {
+                        SearchEngine.OnSwitchContext(GetCurrentFilePath());
+                    }
+
+                    Log.Out($"NPPN_BUFFERACTIVATED: inited={_inited}");
+                    break;
+
                 case (uint) SciMsg.SCN_FOCUSIN:
-                    Log.Trace("SCN_FOCUSIN");
+                    Log.Out("SCN_FOCUSIN");
                     MouseHook.RegisterListener(OnLeftMouseClick);
                     break;
+
                 case (uint) SciMsg.SCN_FOCUSOUT:
-                    Log.Trace("SCN_FOCUSOUT");
+                    Log.Out("SCN_FOCUSOUT");
                     MouseHook.CleanListeners();
                     break;
+                
+                case (uint) SciMsg.SCN_MODIFIED:
+                    Log.Out($"SCN_MODIFIED: text={notification.TextPointer.ToString()}, int32={notification.TextPointer.ToInt32()}");
+                    break;
+
+                #region " switch other "
+                case (uint) SciMsg.SCN_PAINTED:
+                case (uint) SciMsg.SC_MASK_FOLDERS:
+                case (uint) SciMsg.SCN_UPDATEUI:
+                case 4294967284:
+                case 4294967294:
+                case 4294966745:
+                case 4294966744:
+                case 4294966766:
+                case 4294966774:
+                case 4294966775:
+                case 4294966731:
+                case 4294966732:
+                case 4294966733:
+                case 4294966583:
+                    break;
+
+                default:
+                    Log.Out(notificationType < 2000
+                        ? $"defaultMsg[{notificationType}]={(NppMsg) notificationType}"
+                        : $"defaultMsg[{notificationType}]={(SciMsg) notificationType}");
+                    break;
+
+                #endregion " switch other "
             }
         }
 
@@ -63,32 +115,38 @@ namespace NppPluginForHC
         {
             StringBuilder sbIniFilePath = new StringBuilder(Win32.MAX_PATH);
             Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETPLUGINSCONFIGDIR, Win32.MAX_PATH, sbIniFilePath);
-            iniFilePath = sbIniFilePath.ToString();
-            if (!Directory.Exists(iniFilePath)) Directory.CreateDirectory(iniFilePath);
-            iniFilePath = Path.Combine(iniFilePath, PluginName + ".ini");
-            someSetting = (Win32.GetPrivateProfileInt("SomeSection", "SomeKey", 0, iniFilePath) != 0);
+            _iniFilePath = sbIniFilePath.ToString();
+            if (!Directory.Exists(_iniFilePath)) Directory.CreateDirectory(_iniFilePath);
+            _iniFilePath = Path.Combine(_iniFilePath, PluginName + ".ini");
+            _someSetting = (Win32.GetPrivateProfileInt("SomeSection", "SomeKey", 0, _iniFilePath) != 0);
 
             PluginBase.SetCommand(0, "Version", GetVersion, new ShortcutKey(false, false, false, Keys.None));
             PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
-            idMyDlg = 1;
+            _idMyDlg = 1;
             PluginBase.SetCommand(2, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
         }
 
         private static void GoToDefinition()
         {
             StringBuilder sbWord = new StringBuilder(4096);
-
             if (Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTWORD, 4096, sbWord) != IntPtr.Zero)
             {
                 // NppMsg.NPPM_GETCURRENTDOCINDEX - документа (tab pane)
-                int currentLine = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTLINE, 0, 0).ToInt32();
-                int currentColumn = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTCOLUMN, 0, 0).ToInt32();
+                // int currentColumn = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTCOLUMN, 0, 0).ToInt32();
 
-                String word = sbWord.ToString();
-                if (sbWord.Length > 0)
+
+                int currentLine = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTLINE, 0, 0).ToInt32();
+                string selectedWord = sbWord.ToString();
+
+                if (selectedWord.Length > 0)
                 {
-                    MessageBox.Show("word: " + word);
-                    return;
+                    JumpLocation? jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, currentLine);
+
+                    if (jumpLocation.HasValue)
+                    {
+                        ShowLineInNotepadPP(jumpLocation.Value);
+                        return;
+                    }
                 }
             }
 
@@ -96,13 +154,394 @@ namespace NppPluginForHC
             System.Media.SystemSounds.Hand.Play();
         }
 
+        private static string GetCurrentFilePath()
+        {
+            StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
+            if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
+            {
+                return sbPath.ToString();
+            }
+
+            Log.Error("Current time path not found?");
+            throw new Exception("Current time path not found?");
+        }
+
+
+        static int jumpPos = 0;
+
+        struct Jump
+        {
+            public string FilePath;
+            public int Line;
+        }
+
+        static Stack<Jump> jumpStack = new Stack<Jump>();
+
+        // static void GoToDefinition()
+        // {
+        //     TRACE("-START-");
+        //     try
+        //     {
+        //         StringBuilder sbWord = new StringBuilder(4096);
+        //         if (Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTWORD, 4096, sbWord) != IntPtr.Zero)
+        //         {
+        //             String word = sbWord.ToString();
+        //             List<Tag> lstMatches = new List<Tag>();
+        //             List<QuickTag> lstMatchesQ = new List<QuickTag>();
+        //
+        //             if (frmMain == null)
+        //             {
+        //                 ShowFrmMain();
+        //                 Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMHIDE, 0, frmMain.Handle);
+        //             }
+        //             else if (!frmMain.Visible)
+        //             {
+        //                 if (Settings.Configs.SessionMode == Settings.SessionMode.None)
+        //                     frmMain.DoCurrentSciBufferTags();
+        //                 else if (Settings.Configs.SessionMode == Settings.SessionMode.Npp)
+        //                     frmMain.DoAllOpenedDocuments();
+        //             }
+        //
+        //             int numSources = 0;
+        //             TRACE(string.Format("Searching word '{0}'", sbWord));
+        //             if (sbWord.Length > 0)
+        //             {
+        //                 foreach (TreeNode sourceNode in frmMain.tvTags.Nodes)
+        //                 {
+        //                     bool found = false;
+        //                     if ((Settings.Configs.SessionMode == Settings.SessionMode.Cookie)
+        //                         && (sourceNode.Name == Source.INCLUDES))
+        //                     {
+        //                         foreach (IncludeFile incFile in sourceNode.Nodes)
+        //                         {
+        //                             if (incFile.QuickTags == null) continue;
+        //                             bool _found = false;
+        //                             foreach (QuickTag qtag in incFile.QuickTags)
+        //                                 if (string.Compare(qtag.Text, word, !Settings.Languages[qtag.Language].CaseSensitive) == 0)
+        //                                 {
+        //                                     lstMatchesQ.Add(qtag);
+        //                                     _found = true;
+        //                                 }
+        //
+        //                             if (_found) numSources++;
+        //                         }
+        //                     }
+        //                     else
+        //                     {
+        //                         Source source = (Source) sourceNode.Tag;
+        //                         foreach (string tagType in source.TagTypes.Keys)
+        //                         foreach (Tag tag in source.TagTypes[tagType].Tags)
+        //                             if (string.Compare(tag.TagName, word, !Settings.Languages[tag.Language].CaseSensitive) == 0)
+        //                             {
+        //                                 lstMatches.Add(tag);
+        //                                 found = true;
+        //                             }
+        //                     }
+        //
+        //                     if (found) numSources++;
+        //                 }
+        //
+        //                 foreach (TreeNode sourceNode in Source.invisibleSourceNodes)
+        //                 {
+        //                     bool found = false;
+        //                     Source source = (Source) sourceNode.Tag;
+        //                     foreach (string tagType in source.TagTypes.Keys)
+        //                     foreach (Tag tag in source.TagTypes[tagType].Tags)
+        //                         if (string.Compare(tag.TagName, word, !Settings.Languages[tag.Language].CaseSensitive) == 0)
+        //                         {
+        //                             lstMatches.Add(tag);
+        //                             found = true;
+        //                         }
+        //
+        //                     if (found) numSources++;
+        //                 }
+        //
+        //                 foreach (IncludeFile incFile in Source.invisibleIncludeFileNodes)
+        //                 {
+        //                     if (incFile.QuickTags == null) continue;
+        //                     bool _found = false;
+        //                     foreach (QuickTag qtag in incFile.QuickTags)
+        //                         if (string.Compare(qtag.Text, word, !Settings.Languages[qtag.Language].CaseSensitive) == 0)
+        //                         {
+        //                             lstMatchesQ.Add(qtag);
+        //                             _found = true;
+        //                         }
+        //
+        //                     if (_found) numSources++;
+        //                 }
+        //             }
+        //
+        //             TRACE(string.Format("Word found {0} times", numSources));
+        //
+        //             if ((lstMatches.Count + lstMatchesQ.Count) > 256)
+        //             {
+        //                 if (MessageBox.Show("You will get more than 256 matches.\nGoing on with the search might \n"
+        //                                     + "deadlock the Notepad++ process.\nDo you want to cancel the search?",
+        //                         "SourceCookifier", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+        //                     == DialogResult.Yes) return;
+        //                 TRACE("Ignoring 256 matches limit");
+        //             }
+        //
+        //             if ((lstMatches.Count > 0) || (lstMatchesQ.Count > 0))
+        //             {
+        //                 TRACE(string.Format("lstMatches.Count={0} lstMatchesQ.Count={1}", lstMatches.Count, lstMatchesQ.Count));
+        //                 if ((lstMatches.Count == 1) && (lstMatchesQ.Count == 0))
+        //                 {
+        //                     PushJump(lstMatches[0].SourceFile, lstMatches[0].Line);
+        //                     ShowLineInNotepadPP(lstMatches[0].SourceFile, lstMatches[0].Line, true);
+        //                 }
+        //                 else if ((lstMatchesQ.Count == 1) && (lstMatches.Count == 0))
+        //                 {
+        //                     PushJump(lstMatchesQ[0].SourceFile, lstMatchesQ[0].Line);
+        //                     ShowLineInNotepadPP(lstMatchesQ[0].SourceFile, lstMatchesQ[0].Line, true);
+        //                 }
+        //                 else
+        //                 {
+        //                     string currentSourceFile = "";
+        //                     StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
+        //                     if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
+        //                         currentSourceFile = sbPath.ToString();
+        //
+        //                     if (cmsDefinitions == null)
+        //                     {
+        //                         cmsDefinitions = new ContextMenuStrip();
+        //                         cmsDefinitions.ItemClicked += new ToolStripItemClickedEventHandler(cmsDefinitions_ItemClicked);
+        //                         cmsDefinitions.ImageList = Settings.IconList;
+        //                     }
+        //                     else
+        //                     {
+        //                         cmsDefinitions.Items.Clear();
+        //                     }
+        //
+        //                     Font fontBold = new Font(cmsDefinitions.Font.FontFamily, cmsDefinitions.Font.Size, FontStyle.Bold);
+        //                     Font fontItalic = new Font(cmsDefinitions.Font.FontFamily, cmsDefinitions.Font.Size, FontStyle.Italic);
+        //                     Font fontItalicBold = new Font(cmsDefinitions.Font.FontFamily, cmsDefinitions.Font.Size, FontStyle.Italic | FontStyle.Bold);
+        //
+        //                     int numInserts = 0;
+        //                     foreach (Tag tag in lstMatches)
+        //                     {
+        //                         string path = "";
+        //                         if (tag.SourceFile != currentSourceFile)
+        //                         {
+        //                             if (Settings.Configs.ShowGtdToolTips)
+        //                                 path = " - " + Path.GetFileName(tag.SourceFile);
+        //                             else
+        //                                 path = " - " + tag.SourceFile;
+        //                         }
+        //
+        //                         ToolStripMenuItem tsmi = new ToolStripMenuItem(string.Format("{0} [{1}]{2}",
+        //                             (tag.ToolTipText != "") ? tag.ToolTipText : tag.Text, tag.Line, path));
+        //
+        //                         if (Settings.Configs.ShowGtdToolTips)
+        //                             tsmi.ToolTipText = tag.SourceFile;
+        //                         tsmi.ImageIndex = Settings.Languages[tag.Language].TagTypes[tag.Identifier].ImageListIndex;
+        //                         tsmi.ForeColor = Color.FromArgb(Settings.Languages[tag.Language].TagTypes[tag.Identifier].ForeColor);
+        //                         tsmi.Tag = tag;
+        //                         if (tag.SourceFile == currentSourceFile)
+        //                         {
+        //                             tsmi.Font = fontBold;
+        //                             cmsDefinitions.Items.Insert(numInserts++, tsmi);
+        //                         }
+        //                         else
+        //                         {
+        //                             cmsDefinitions.Items.Add(tsmi);
+        //                         }
+        //                     }
+        //
+        //                     foreach (QuickTag qtag in lstMatchesQ)
+        //                     {
+        //                         string path = "";
+        //                         if (qtag.SourceFile != currentSourceFile)
+        //                         {
+        //                             if (Settings.Configs.ShowGtdToolTips)
+        //                                 path = " - " + Path.GetFileName(qtag.SourceFile);
+        //                             else
+        //                                 path = " - " + qtag.SourceFile;
+        //                         }
+        //
+        //                         ToolStripMenuItem tsmi = new ToolStripMenuItem(string.Format("{0} [{1}]{2}",
+        //                             qtag.FullText, qtag.Line, path));
+        //
+        //                         if (Settings.Configs.ShowGtdToolTips)
+        //                             tsmi.ToolTipText = qtag.SourceFile;
+        //                         tsmi.ImageIndex = Settings.Languages[qtag.Language].TagTypes[qtag.Identifier].ImageListIndex;
+        //                         tsmi.ForeColor = Color.FromArgb(Settings.Languages[qtag.Language].TagTypes[qtag.Identifier].ForeColor);
+        //                         tsmi.Tag = qtag;
+        //                         if (qtag.SourceFile == currentSourceFile)
+        //                         {
+        //                             tsmi.Font = fontItalicBold;
+        //                             cmsDefinitions.Items.Insert(numInserts++, tsmi);
+        //                         }
+        //                         else
+        //                         {
+        //                             tsmi.Font = fontItalic;
+        //                             cmsDefinitions.Items.Add(tsmi);
+        //                         }
+        //                     }
+        //
+        //                     if ((numInserts > 0) && (numInserts < cmsDefinitions.Items.Count))
+        //                     {
+        //                         cmsDefinitions.Items.Insert(numInserts, new ToolStripSeparator());
+        //                     }
+        //
+        //                     IntPtr curSci = PluginBase.GetCurrentScintilla();
+        //                     int currentPos = (int) Win32.SendMessage(curSci, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+        //                     Point pt = new Point();
+        //                     pt.X = (int) Win32.SendMessage(curSci, SciMsg.SCI_POINTXFROMPOSITION, 0, currentPos);
+        //                     pt.Y = (int) Win32.SendMessage(curSci, SciMsg.SCI_POINTYFROMPOSITION, 0, currentPos);
+        //                     Win32.ClientToScreen(curSci, ref pt);
+        //                     TRACE(string.Format("Showing cmsDefinitions menu at X={0} Y={1}", pt.X, pt.Y));
+        //                     cmsDefinitions.Show(pt);
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GRABFOCUS, 0, 0);
+        //                 System.Media.SystemSounds.Hand.Play();
+        //             }
+        //         }
+        //         else
+        //         {
+        //             TRACE("NPPM_GETCURRENTWORD failed");
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         ErrorOut(ex);
+        //     }
+        //
+        //     TRACE("-END-");
+        // }
+
+        static void cmsDefinitions_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            // TRACE("-START-");
+            // try
+            // {
+            //     if (e.ClickedItem.Tag is Tag)
+            //     {
+            //         Tag tag = e.ClickedItem.Tag as Tag;
+            //         PushJump(tag.SourceFile, tag.Line);
+            //         ShowLineInNotepadPP(tag.SourceFile, tag.Line, true);
+            //     }
+            //     else if (e.ClickedItem.Tag is QuickTag)
+            //     {
+            //         QuickTag qtag = e.ClickedItem.Tag as QuickTag;
+            //         PushJump(qtag.SourceFile, qtag.Line);
+            //         ShowLineInNotepadPP(qtag.SourceFile, qtag.Line, true);
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     ErrorOut(ex);
+            // }
+            //
+            // TRACE("-END-");
+        }
+
+        internal static void PushJump(string source, int line)
+        {
+            // TRACE("-START-");
+            // IntPtr curScintilla = PluginBase.GetCurrentScintilla();
+            // StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
+            // if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
+            // {
+            //     Jump jumpNewPos = new Jump();
+            //     jumpNewPos.FilePath = source;
+            //     jumpNewPos.Line = line;
+            //     Jump jumpOldPos = new Jump();
+            //     jumpOldPos.FilePath = sbPath.ToString();
+            //     if ((jumpOldPos.FilePath != "") && File.Exists(jumpOldPos.FilePath))
+            //     {
+            //         jumpOldPos.Line = (int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTLINE, 0, 0) + 1;    
+            //         while (((jumpStack.Count) > jumpPos)
+            //                || (((jumpStack.Count > 0))
+            //                    && (jumpStack.Peek().FilePath == jumpOldPos.FilePath)
+            //                    && (jumpStack.Peek().Line == jumpOldPos.Line)))
+            //             jumpStack.Pop();
+            //         jumpStack.Push(jumpOldPos);
+            //         jumpStack.Push(jumpNewPos);
+            //         jumpPos = jumpStack.Count;
+            //     }
+            // }
+            //
+            // TRACE("-END-");
+        }
+
+        private static void ShowLineInNotepadPP(JumpLocation jumpLocation)
+        {
+            ShowLineInNotepadPP(jumpLocation.FilePath, jumpLocation.Line);
+        }
+
+        private static void ShowLineInNotepadPP(string file, int line)
+        {
+            Log.Out($"Opening file '{file}'");
+            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, file);
+
+            IntPtr curScintilla = PluginBase.GetCurrentScintilla();
+            int currentPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+            int currentLine = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
+            if ((line != 1) && (line - 1 != currentLine))
+            {
+                Win32.SendMessage(curScintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
+                Win32.SendMessage(curScintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
+                Win32.SendMessage(curScintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
+
+                
+                // uint EM_SETSEL = 177; //0x0b1;//177;
+                // int newPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_POSITIONFROMLINE, line - 1, 0);
+                // Win32.SendMessage(curScintilla, EM_SETSEL, newPos, newPos + 1);
+
+                
+                // var linesOnScreen = Win32.SendMessage(curScintilla, SciMsg.SCI_LINESONSCREEN, 0, 0);
+                // Log.Out($"linesOnScreen={linesOnScreen}");
+            }
+
+            Win32.SendMessage(curScintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
+        }
+
+        static void NavigateBackward()
+        {
+            // TRACE("-START-");
+            // try
+            // {
+            //     if ((frmMain == null) || (jumpPos <= 1)) throw new Exception();
+            //     int newPos = jumpStack.Count - (--jumpPos);
+            //     ShowLineInNotepadPP(jumpStack.ToArray()[newPos].FilePath, jumpStack.ToArray()[newPos].Line, true);
+            // }
+            // catch
+            // {
+            //     System.Media.SystemSounds.Hand.Play();
+            // }
+            //
+            // TRACE("-END-");
+        }
+
+        static void NavigateForward()
+        {
+            // TRACE("-START-");
+            // try
+            // {
+            //     if ((jumpStack.Count) <= jumpPos) throw new Exception();
+            //     int newPos = jumpStack.Count - (++jumpPos);
+            //     ShowLineInNotepadPP(jumpStack.ToArray()[newPos].FilePath, jumpStack.ToArray()[newPos].Line, true);
+            // }
+            // catch
+            // {
+            //     System.Media.SystemSounds.Hand.Play();
+            // }
+            //
+            // TRACE("-END-");
+        }
+
+
         #region " Layout Base "
 
         internal static void myDockableDialog()
         {
-            if (frmMyDlg == null)
+            if (_frmMyDlg == null)
             {
-                frmMyDlg = new frmMyDlg();
+                _frmMyDlg = new frmMyDlg();
 
                 using (Bitmap newBmp = new Bitmap(16, 16))
                 {
@@ -113,16 +552,16 @@ namespace NppPluginForHC
                     colorMap[0].NewColor = Color.FromKnownColor(KnownColor.ButtonFace);
                     ImageAttributes attr = new ImageAttributes();
                     attr.SetRemapTable(colorMap);
-                    g.DrawImage(tbBmp_tbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
-                    tbIcon = Icon.FromHandle(newBmp.GetHicon());
+                    g.DrawImage(TbBmpTbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
+                    _tbIcon = Icon.FromHandle(newBmp.GetHicon());
                 }
 
                 NppTbData _nppTbData = new NppTbData();
-                _nppTbData.hClient = frmMyDlg.Handle;
+                _nppTbData.hClient = _frmMyDlg.Handle;
                 _nppTbData.pszName = "My dockable dialog";
-                _nppTbData.dlgID = idMyDlg;
+                _nppTbData.dlgID = _idMyDlg;
                 _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
-                _nppTbData.hIconTab = (uint) tbIcon.Handle;
+                _nppTbData.hIconTab = (uint) _tbIcon.Handle;
                 _nppTbData.pszModuleName = PluginName;
                 IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
                 Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
@@ -131,17 +570,17 @@ namespace NppPluginForHC
             }
             else
             {
-                Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, frmMyDlg.Handle);
+                Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _frmMyDlg.Handle);
             }
         }
 
         internal static void SetToolBarIcon()
         {
             toolbarIcons tbIcons = new toolbarIcons();
-            tbIcons.hToolbarBmp = tbBmp.GetHbitmap();
+            tbIcons.hToolbarBmp = TbBmp.GetHbitmap();
             IntPtr pTbIcons = Marshal.AllocHGlobal(Marshal.SizeOf(tbIcons));
             Marshal.StructureToPtr(tbIcons, pTbIcons, false);
-            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_ADDTOOLBARICON, PluginBase._funcItems.Items[idMyDlg]._cmdID, pTbIcons);
+            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_ADDTOOLBARICON, PluginBase._funcItems.Items[_idMyDlg]._cmdID, pTbIcons);
             Marshal.FreeHGlobal(pTbIcons);
         }
 

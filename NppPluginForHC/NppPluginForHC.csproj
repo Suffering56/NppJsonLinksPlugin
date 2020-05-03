@@ -62,6 +62,9 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Redirect\JumpLocation.cs" />
+    <Compile Include="Redirect\DefinitionSearchEngine.cs" />
+    <Compile Include="Redirect\Settings.cs" />
     <Compile Include="MouseHook.cs" />
     <Compile Include="PluginInfrastructure\ClikeStringArray.cs" />
     <Compile Include="PluginInfrastructure\DllExport\DllExportAttribute.cs" />

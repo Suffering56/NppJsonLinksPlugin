@@ -8,18 +8,29 @@ namespace NppPluginForHC
 {
     public static class Log
     {
-        private const string TraceFilePath = "C:/NppPluginForHC/TRACE.txt";
-        private const string ErrorFilePath = "C:/NppPluginForHC/ERROR.txt";
+        private const string TraceFilePath = "C:/NppPluginForHC/output.txt";
+        private const string ErrorFilePath = "C:/NppPluginForHC/error.txt";
 
         private static readonly string TracePId = Process.GetCurrentProcess().Id.ToString("X04");
 
         [Conditional("TRACE_ALL")]
-        internal static void Trace(string msg)
+        internal static void Out(string msg)
         {
             Debug.WriteLine(msg);
+            WriteLogInto(TraceFilePath, msg);
+        }
+        [Conditional("TRACE_ALL")]
+        internal static void Error(string msg)
+        {
+            Debug.WriteLine(msg);
+            WriteLogInto(ErrorFilePath, msg);
+        }
+
+        private static void WriteLogInto(string logFilePath, string msg)
+        {
             try
             {
-                using (TextWriter w = new StreamWriter(TraceFilePath, true))
+                using (TextWriter w = new StreamWriter(logFilePath, true))
                 {
                     StackTrace stackTrace = new StackTrace();
                     MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
@@ -29,12 +40,12 @@ namespace NppPluginForHC
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error while attempting to write trace file:\n" + ex.Message,
+                MessageBox.Show("Error while attempting to write into log file:\n" + ex.Message,
                     "NppPluginForHC", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        internal static void ErrorOut(Exception ex)
+        internal static void Error(Exception ex)
         {
             try
             {
