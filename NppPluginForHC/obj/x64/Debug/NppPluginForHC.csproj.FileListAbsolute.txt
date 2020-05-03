@@ -1,9 +1,0 @@
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\bin\Debug-x64\NppPluginForHC.dll
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\bin\Debug-x64\NppPluginForHC.pdb
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.csprojAssemblyReference.cache
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.Properties.Resources.resources
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.csproj.GenerateResource.cache
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.csproj.CoreCompileInputs.cache
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.dll
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.pdb
-C:\Users\Magic\source\repos\NppPluginForHC\NppPluginForHC\obj\x64\Debug\NppPluginForHC.frmMyDlg.resources

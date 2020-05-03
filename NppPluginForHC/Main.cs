@@ -22,7 +22,7 @@ namespace NppPluginForHC
         static Bitmap tbBmp_tbTab = NppPluginForHC.Properties.Resources.star_bmp;
         static Icon tbIcon = null;
 
-        private static readonly EventHandler OnLeftMouseClick = delegate(object o, EventArgs args)
+        private static readonly EventHandler OnLeftMouseClick = delegate
         {
             if (Control.ModifierKeys == Keys.Control)
             {
