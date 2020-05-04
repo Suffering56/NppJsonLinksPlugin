@@ -45,9 +45,9 @@ namespace NppPluginForHC.PluginInfrastructure
         }
 
 
-        static readonly Func<IScintillaGateway> gatewayFactory = () => new ScintillaGateway(GetCurrentScintilla());
+        static readonly Func<IExtendedScintillaGateway> gatewayFactory = () => new ExtendedScintillaGateway(GetCurrentScintilla());
 
-        public static Func<IScintillaGateway> GetGatewayFactory()
+        public static Func<IExtendedScintillaGateway> GetGatewayFactory()
         {
             return gatewayFactory;
         }

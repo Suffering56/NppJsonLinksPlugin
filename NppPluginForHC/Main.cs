@@ -49,16 +49,16 @@ namespace NppPluginForHC
                 case (uint) NppMsg.NPPN_READY:
                     // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
                     _isPluginInited = true;
-                    
+
                     // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
                     PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
-                    
+
                     // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
                     SearchEngine.OnSwitchContext(GetCurrentFilePath());
-                    
+
                     // инициализация обработчика кликов мышкой
                     MouseHook.Start();
-                    
+
                     Logger.Out("NPPN_READY");
                     break;
 
@@ -78,65 +78,58 @@ namespace NppPluginForHC
 
                     Logger.Out("SCN_FOCUSOUT");
                     break;
-                
+
                 case (uint) SciMsg.SCN_FOCUSIN:
                     // возобновляем слушание кликов мышкой, при получении фокуса
                     MouseHook.RegisterListener(OnLeftMouseClick);
-                    
+
                     Logger.Out("SCN_FOCUSIN");
                     break;
 
                 case (uint) SciMsg.SCN_MODIFIED:
+                    //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0 
+
                     if (_isPluginInited)
                     {
-                        //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0 
-                        // Log.Out($"SCN_MODIFIED: {notification.ModificationType}");
-
-                        // var isTextInsertedOrDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT)) > 0;
-                        int linesAdded = notification.LinesAdded;
-                        // var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
-                        // var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
-
-                        if (linesAdded != 0)
+                        var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
+                        var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
+                        if (!isTextDeleted && !isTextInserted)
                         {
-                            int currentPosition = notification.Position.Value;
-                            int currentLine = (int) Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_LINEFROMPOSITION, currentPosition, 0) + 1;
+                            break;
+                        }
 
+                        var gateway = PluginBase.GetGatewayFactory().Invoke();
+                        // количество строк, которые были добавлены/удалены (если отрицательное)
+                        int linesAdded = notification.LinesAdded;
+                        // глобальная позиция каретки, ДО вставки текста
+                        int currentPosition = notification.Position.Value;
+                        // строка, в которую вставили текст
+                        int currentLine = gateway.PositionToLine(currentPosition);
+                        // чтобы было удобнее смотреть в NPP
+                        const int viewLineOffset = 1;
+
+                        if (isTextInserted)
+                        {
+                            var insertedText = gateway.GetTextFromPosition(currentPosition, notification.Length);
+                            // SearchEngine.FireInsertText(currentLine, insertedText);
+                            Logger.Out($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
+                        }
+
+                        if (isTextDeleted)
+                        {
+                            // SearchEngine.FireDeleteText(currentLine, insertedText);
                             if (linesAdded < 0)
                             {
-                                Logger.Out($"LinesDeleted: from: {currentLine + 1} to: {currentLine - linesAdded}");
+                                Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
                             }
-                            else if (linesAdded > 0)
+                            else
                             {
-                                Logger.Out($"LinesAdded: from: {currentLine + 1} to: {currentLine + linesAdded}");
+                                Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
                             }
                         }
                     }
 
                     break;
-
-                #region " switch other "
-
-                // case (uint) SciMsg.SCN_PAINTED:
-                // case (uint) SciMsg.SC_MASK_FOLDERS:
-                // case 4294967284:
-                // case 4294967294:
-                // case 4294966745:
-                // case 4294966744:
-                // case 4294966766:
-                // case 4294966774:
-                // case 4294966775:
-                // case 4294966731:
-                // case 4294966732:
-                // case 4294966733:
-                // case 4294966583:
-                // default:
-                //     Log.Out(notificationType < 2000
-                //         ? $"defaultMsg[{notificationType}]={(NppMsg) notificationType}"
-                //         : $"defaultMsg[{notificationType}]={(SciMsg) notificationType}");
-                //     break;
-
-                #endregion " switch other "
             }
         }
 

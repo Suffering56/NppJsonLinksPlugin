@@ -16,7 +16,7 @@ namespace NppPluginForHC.PluginInfrastructure
     {
         private const int Unused = 0;
 
-        private readonly IntPtr scintilla;
+        protected readonly IntPtr scintilla;
 
         public static readonly int LengthZeroTerminator = "\0".Length;
 
@@ -65,7 +65,7 @@ namespace NppPluginForHC.PluginInfrastructure
         /// </summary>
         public int GetCurrentLineNumber()
         {
-            return LineFromPosition(GetCurrentPos()); 
+            return LineFromPosition(GetCurrentPos());
         }
 
         /// <summary>
@@ -77,9 +77,9 @@ namespace NppPluginForHC.PluginInfrastructure
         public Win32.ScrollInfo GetScrollInfo(Win32.ScrollInfoMask mask = Win32.ScrollInfoMask.SIF_ALL, Win32.ScrollInfoBar scrollBar = Win32.ScrollInfoBar.SB_BOTH)
         {
             Win32.ScrollInfo scrollInfo = new Win32.ScrollInfo();
-            scrollInfo.cbSize = (uint)Marshal.SizeOf(scrollInfo);
-            scrollInfo.fMask = (uint)mask;
-            Win32.GetScrollInfo(scintilla, (int)scrollBar, ref scrollInfo);
+            scrollInfo.cbSize = (uint) Marshal.SizeOf(scrollInfo);
+            scrollInfo.fMask = (uint) mask;
+            Win32.GetScrollInfo(scintilla, (int) scrollBar, ref scrollInfo);
             return scrollInfo;
         }
 
