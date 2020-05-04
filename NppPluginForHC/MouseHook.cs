@@ -52,11 +52,18 @@ namespace NppPluginForHC
         private static IntPtr HookCallback(
             int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && MouseMessages.WM_LBUTTONUP == (MouseMessages) wParam)
+            if (nCode >= 0)
             {
-                MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT) Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
-                MouseAction(null, new EventArgs());
+                // MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT) Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
+                switch ((MouseMessages) wParam)
+                {
+                    case MouseMessages.WM_LBUTTONUP:
+                        MouseAction(null, new EventArgs());
+                        break;
+                    
+                }
             }
+
 
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
@@ -91,8 +98,7 @@ namespace NppPluginForHC
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook,
-            LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

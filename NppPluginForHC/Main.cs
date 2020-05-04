@@ -25,7 +25,7 @@ namespace NppPluginForHC
         private static Icon _tbIcon = null;
 
         private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
-        private static bool _inited = false;
+        private static bool _isPluginInited = false;
 
         private static readonly EventHandler OnLeftMouseClick = delegate
         {
@@ -47,62 +47,99 @@ namespace NppPluginForHC
             {
                 // NPP successfully started
                 case (uint) NppMsg.NPPN_READY:
-                    _inited = true;
+                    // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
+                    _isPluginInited = true;
+                    
+                    // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
+                    PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
+                    
+                    // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
                     SearchEngine.OnSwitchContext(GetCurrentFilePath());
+                    
+                    // инициализация обработчика кликов мышкой
                     MouseHook.Start();
-                    Log.Out("NPPN_READY");
+                    
+                    Logger.Out("NPPN_READY");
                     break;
 
                 // switching tabs/open file/reload file/etc
                 case (uint) NppMsg.NPPN_BUFFERACTIVATED:
-                    if (_inited)
+                    if (_isPluginInited)
                     {
                         SearchEngine.OnSwitchContext(GetCurrentFilePath());
                     }
 
-                    Log.Out($"NPPN_BUFFERACTIVATED: inited={_inited}");
-                    break;
-
-                case (uint) SciMsg.SCN_FOCUSIN:
-                    Log.Out("SCN_FOCUSIN");
-                    MouseHook.RegisterListener(OnLeftMouseClick);
+                    Logger.Out($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
                     break;
 
                 case (uint) SciMsg.SCN_FOCUSOUT:
-                    Log.Out("SCN_FOCUSOUT");
+                    // мы перестаем слушать клики мышкой, когда окно теряет фокус
                     MouseHook.CleanListeners();
+
+                    Logger.Out("SCN_FOCUSOUT");
                     break;
                 
+                case (uint) SciMsg.SCN_FOCUSIN:
+                    // возобновляем слушание кликов мышкой, при получении фокуса
+                    MouseHook.RegisterListener(OnLeftMouseClick);
+                    
+                    Logger.Out("SCN_FOCUSIN");
+                    break;
+
                 case (uint) SciMsg.SCN_MODIFIED:
-                    Log.Out($"SCN_MODIFIED: text={notification.TextPointer.ToString()}, int32={notification.TextPointer.ToInt32()}");
+                    if (_isPluginInited)
+                    {
+                        //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0 
+                        // Log.Out($"SCN_MODIFIED: {notification.ModificationType}");
+
+                        // var isTextInsertedOrDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT)) > 0;
+                        int linesAdded = notification.LinesAdded;
+                        // var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
+                        // var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
+
+                        if (linesAdded != 0)
+                        {
+                            int currentPosition = notification.Position.Value;
+                            int currentLine = (int) Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_LINEFROMPOSITION, currentPosition, 0) + 1;
+
+                            if (linesAdded < 0)
+                            {
+                                Logger.Out($"LinesDeleted: from: {currentLine + 1} to: {currentLine - linesAdded}");
+                            }
+                            else if (linesAdded > 0)
+                            {
+                                Logger.Out($"LinesAdded: from: {currentLine + 1} to: {currentLine + linesAdded}");
+                            }
+                        }
+                    }
+
                     break;
 
                 #region " switch other "
-                case (uint) SciMsg.SCN_PAINTED:
-                case (uint) SciMsg.SC_MASK_FOLDERS:
-                case (uint) SciMsg.SCN_UPDATEUI:
-                case 4294967284:
-                case 4294967294:
-                case 4294966745:
-                case 4294966744:
-                case 4294966766:
-                case 4294966774:
-                case 4294966775:
-                case 4294966731:
-                case 4294966732:
-                case 4294966733:
-                case 4294966583:
-                    break;
 
-                default:
-                    Log.Out(notificationType < 2000
-                        ? $"defaultMsg[{notificationType}]={(NppMsg) notificationType}"
-                        : $"defaultMsg[{notificationType}]={(SciMsg) notificationType}");
-                    break;
+                // case (uint) SciMsg.SCN_PAINTED:
+                // case (uint) SciMsg.SC_MASK_FOLDERS:
+                // case 4294967284:
+                // case 4294967294:
+                // case 4294966745:
+                // case 4294966744:
+                // case 4294966766:
+                // case 4294966774:
+                // case 4294966775:
+                // case 4294966731:
+                // case 4294966732:
+                // case 4294966733:
+                // case 4294966583:
+                // default:
+                //     Log.Out(notificationType < 2000
+                //         ? $"defaultMsg[{notificationType}]={(NppMsg) notificationType}"
+                //         : $"defaultMsg[{notificationType}]={(SciMsg) notificationType}");
+                //     break;
 
                 #endregion " switch other "
             }
         }
+
 
         internal static void OnShutdown()
         {
@@ -131,10 +168,6 @@ namespace NppPluginForHC
             StringBuilder sbWord = new StringBuilder(4096);
             if (Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTWORD, 4096, sbWord) != IntPtr.Zero)
             {
-                // NppMsg.NPPM_GETCURRENTDOCINDEX - документа (tab pane)
-                // int currentColumn = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTCOLUMN, 0, 0).ToInt32();
-
-
                 int currentLine = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTLINE, 0, 0).ToInt32();
                 string selectedWord = sbWord.ToString();
 
@@ -162,12 +195,13 @@ namespace NppPluginForHC
                 return sbPath.ToString();
             }
 
-            Log.Error("Current time path not found?");
+            Logger.Error("Current time path not found?");
             throw new Exception("Current time path not found?");
         }
 
 
-        static int jumpPos = 0;
+        static int jumpPos =
+            0;
 
         struct Jump
         {
@@ -475,26 +509,18 @@ namespace NppPluginForHC
 
         private static void ShowLineInNotepadPP(string file, int line)
         {
-            Log.Out($"Opening file '{file}'");
+            Logger.Out($"Opening file '{file}'");
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, file);
-
             IntPtr curScintilla = PluginBase.GetCurrentScintilla();
+
             int currentPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+
             int currentLine = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
             if ((line != 1) && (line - 1 != currentLine))
             {
                 Win32.SendMessage(curScintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
                 Win32.SendMessage(curScintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
                 Win32.SendMessage(curScintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
-
-                
-                // uint EM_SETSEL = 177; //0x0b1;//177;
-                // int newPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_POSITIONFROMLINE, line - 1, 0);
-                // Win32.SendMessage(curScintilla, EM_SETSEL, newPos, newPos + 1);
-
-                
-                // var linesOnScreen = Win32.SendMessage(curScintilla, SciMsg.SCI_LINESONSCREEN, 0, 0);
-                // Log.Out($"linesOnScreen={linesOnScreen}");
             }
 
             Win32.SendMessage(curScintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
@@ -568,6 +594,7 @@ namespace NppPluginForHC
 
                 Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
             }
+
             else
             {
                 Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _frmMyDlg.Handle);

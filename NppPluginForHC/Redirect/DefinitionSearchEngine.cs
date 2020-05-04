@@ -18,7 +18,7 @@ namespace NppPluginForHC.Redirect
 
         public void OnSwitchContext(string currentFilePath)
         {
-            Log.Out($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
+            Logger.Out($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
             if (currentFilePath != _currentFilePath)
             {
                 //TODO

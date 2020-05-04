@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace NppPluginForHC
 {
-    public static class Log
+    public static class Logger
     {
         private const string TraceFilePath = "C:/NppPluginForHC/output.txt";
         private const string ErrorFilePath = "C:/NppPluginForHC/error.txt";
