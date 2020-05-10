@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Text;
 
 namespace NppPluginForHC.PluginInfrastructure
 {
+    //TODO: мб partial это то что нужно, вместо наследования?
     public class ExtendedScintillaGateway : ScintillaGateway, IExtendedScintillaGateway
     {
         public ExtendedScintillaGateway(IntPtr scintilla) : base(scintilla)
@@ -30,6 +32,19 @@ namespace NppPluginForHC.PluginInfrastructure
                 Logger.Error(e);
                 return null;
             }
+        }
+
+        public string GetCurrentWord()
+        {
+            StringBuilder sbWord = new StringBuilder(4096);
+            return Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTWORD, 4096, sbWord) != IntPtr.Zero
+                ? sbWord.ToString()
+                : null;
+        }
+
+        public int GetCurrentLine()
+        {
+            return Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTLINE, 0, 0).ToInt32();
         }
 
         public string GetTextFromPosition(int startPosition, int length)

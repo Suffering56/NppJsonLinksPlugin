@@ -1,9 +1,9 @@
 ﻿namespace NppPluginForHC.Logic
 {
-    public struct JumpLocation
+    public class JumpLocation
     {
-        public string FilePath;
-        public int Line;
+        public string FilePath { get; }
+        public int Line { get; }
 
         public JumpLocation(string filePath, int line)
         {

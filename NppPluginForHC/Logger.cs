@@ -14,7 +14,7 @@ namespace NppPluginForHC
         private static readonly string TracePId = Process.GetCurrentProcess().Id.ToString("X04");
 
         [Conditional("TRACE_ALL")]
-        internal static void Out(string msg)
+        internal static void Info(string msg)
         {
             Debug.WriteLine(msg);
             WriteLogInto(TraceFilePath, msg);

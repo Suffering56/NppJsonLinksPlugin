@@ -1,83 +1,90 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using System.Reflection.Emit;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace NppPluginForHC.Logic
 {
     public static class SettingsParser
     {
-        public static String str = str = "{\n" +
-                                         // "  \"someSettings\": {\n" +
-                                         // "    \"example1\": \"D:/projects/shelter/gd_data/festivalGoods.json:[]: extension: rewardPackId==>D: /projects/shelter/gd_data/rewardPacks.json:[]: id\",\n" +
-                                         // "    \"example2\": \"D:/projects/shelter/gd_data/festivalGoods.json:[]: rewardPackId==>D: /projects/shelter/gd_data/rewardPacks.json:[]: id\"\n" +
-                                         // "  },\n" +
-                                         "  \"mappingFolderPrefix\": \"D:/projects/shelter/gd_data/\",\n" +
-                                         "  \"mapping\": [\n" +
-                                         "    {\n" +
-                                         "      \"description\": \"\",\n" +
-                                         "      \"src\": {\n" +
-                                         "        \"fileName\": \"festivalGoods.json\",\n" +
-                                         "        \"word\": \"rewardPackId<<extension\"\n" +
-                                         "      },\n" +
-                                         "      \"dst\": {\n" +
-                                         "        \"fileName\": \"festivalGoods.json\",\n" +
-                                         "        \"word\": \"id<<root\"\n" +
-                                         "      }\n" +
-                                         "    },\n" +
-                                         "    {\n" +
-                                         "      \"description\": \"\",\n" +
-                                         "      \"src\": {\n" +
-                                         "        \"fileName\": \"festivalGoods.json\",\n" +
-                                         "        \"word\": \"rewardPackId\"\n" +
-                                         "      },\n" +
-                                         "      \"dst\": {\n" +
-                                         "        \"fileName\": \"festivalGoods.json\",\n" +
-                                         "        \"word\": \"id<<root\"\n" +
-                                         "      }\n" +
-                                         "    }\n" +
-                                         "  ]\n" +
-                                         "}";
-
-
         public static Settings Parse(string settingsFilePath)
         {
-            return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFilePath));
+            var settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFilePath));
+            Validate(settings);
+            settings.SpecifyMapping();
+            return settings;
+        }
+
+        private static void Validate(Settings settings)
+        {
+            //TODO: как минимум проверить маппинг на отсутствие дубликатов
         }
     }
-
 
     [JsonObject]
     public class Settings
     {
-        [JsonProperty] public readonly string mappingFolderPrefix;
+        [JsonProperty(PropertyName = "mappingFilePathPrefix")]
+        internal readonly string MappingFilePathPrefix;
 
-        [JsonProperty] public readonly IList<Mapping> mapping;
+        [JsonProperty(PropertyName = "mapping")]
+        public readonly IList<MappingItem> Mapping;
 
-        [JsonObject]
-        public struct Mapping
+        internal void SpecifyMapping()
         {
-            [JsonProperty] public readonly String description;
+            if (string.IsNullOrEmpty(MappingFilePathPrefix)) return;
 
-            [JsonProperty(Required = Required.Always)]
-            public readonly Location src;
-
-            [JsonProperty(Required = Required.Always)]
-            public readonly Location dst;
+            foreach (var mappingItem in Mapping)
+            {
+                mappingItem.Src.SpecifyMapping(MappingFilePathPrefix);
+                mappingItem.Dst.SpecifyMapping(MappingFilePathPrefix);
+            }
         }
 
         [JsonObject]
-        public struct Location
+        public class MappingItem
         {
-            [JsonProperty(Required = Required.Always)]
-            public readonly string fileName;
+            [JsonProperty(PropertyName = "description")]
+            public readonly string Description;
 
-            [JsonProperty(Required = Required.Always)] [JsonConverter(typeof(WordConverter))]
-            public readonly Word word;
+            [JsonProperty(PropertyName = "src", Required = Required.Always)]
+            public readonly Location Src;
+
+            [JsonProperty(PropertyName = "dst", Required = Required.Always)]
+            public readonly Location Dst;
+
+            [JsonObject]
+            public class Location
+            {
+                [JsonProperty(PropertyName = "filePath", Required = Required.Always)]
+                private readonly string _filePath;
+
+                [JsonConverter(typeof(WordConverter))] [JsonProperty(PropertyName = "word", Required = Required.Always)]
+                public readonly Word Word;
+
+                [JsonProperty(PropertyName = "filePathPrefixDisabled")]
+                private readonly bool _filePathPrefixDisabled = false;
+
+                [JsonIgnore] private string _mappingFilePathPrefix = null;
+
+                internal void SpecifyMapping(string mappingFilePathPrefix)
+                {
+                    //TODO: пока не понял как тут работают иннер классы
+                    if (!_filePathPrefixDisabled)
+                    {
+                        _mappingFilePathPrefix = mappingFilePathPrefix;
+                    }
+                }
+
+                public string FilePath => _mappingFilePathPrefix != null
+                    ? NormalizePath(_mappingFilePathPrefix + _filePath)
+                    : NormalizePath(_filePath);
+
+                private string NormalizePath(string path)
+                {
+                    return Path.GetFullPath(path);
+                }
+            }
         }
     }
 
@@ -86,11 +93,7 @@ namespace NppPluginForHC.Logic
         public override Word ReadJson(JsonReader reader, Type objectType, Word existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var wordStr = reader.Value;
-
-            if (wordStr == null)
-            {
-                return null;
-            }
+            if (wordStr == null) return null;
 
             //TODO: existingValue? hasExistingValue? what is it?
             return Word.Parse(Convert.ToString(wordStr));
@@ -98,10 +101,10 @@ namespace NppPluginForHC.Logic
 
         public override void WriteJson(JsonWriter writer, Word value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
-
             //TODO: NPE?
             writer.WriteValue(value.ToString());
+
+            throw new NotImplementedException();
         }
     }
 }

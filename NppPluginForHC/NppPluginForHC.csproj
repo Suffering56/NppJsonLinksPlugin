@@ -68,6 +68,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logic\SearchContext.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Logic\Word.cs" />
     <Compile Include="PluginInfrastructure\ExtendedScintillaGateway.cs" />

@@ -9,5 +9,9 @@
         string GetTextFromPosition(int startPosition, int length);
         
         string GetTextFromPositionSafe(int currentPosition, int length);
+
+        string GetCurrentWord();
+        
+        int GetCurrentLine();
     }
 }

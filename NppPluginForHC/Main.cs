@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -18,15 +17,15 @@ namespace NppPluginForHC
         internal const string PluginName = "NppPluginForHC";
         internal static Settings Settings = null;
 
+        private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
+        private static bool _isPluginInited = false;
+        private static bool _isFileLoadingActive = false;
+
         private static frmMyDlg _frmMyDlg = null;
         private static int _idMyDlg = -1;
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
         private static Icon _tbIcon = null;
-
-        private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
-        private static bool _isPluginInited = false;
-        private static bool _isFileLoadingActive = false;
 
         private static readonly EventHandler OnLeftMouseClick = delegate
         {
@@ -49,8 +48,7 @@ namespace NppPluginForHC
             if (notificationType == (uint) NppMsg.NPPN_READY)
             {
                 ProcessInit();
-
-                Logger.Out("NPPN_READY");
+                Logger.Info("NPPN_READY");
             }
             else if (_isPluginInited)
             {
@@ -60,28 +58,28 @@ namespace NppPluginForHC
                         // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
                         SearchEngine.OnSwitchContext(GetCurrentFilePath());
 
-                        Logger.Out($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
+                        Logger.Info($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
                         break;
 
                     case (uint) SciMsg.SCN_FOCUSOUT:
                         // мы перестаем слушать клики мышкой, когда окно теряет фокус
                         MouseHook.CleanListeners();
 
-                        Logger.Out("SCN_FOCUSOUT");
+                        Logger.Info("SCN_FOCUSOUT");
                         break;
 
                     case (uint) SciMsg.SCN_FOCUSIN:
                         // возобновляем слушание кликов мышкой, при получении фокуса
                         MouseHook.RegisterListener(OnLeftMouseClick);
 
-                        Logger.Out("SCN_FOCUSIN");
+                        Logger.Info("SCN_FOCUSIN");
                         break;
 
                     case (uint) NppMsg.NPPN_FILEBEFORELOAD:
                         // при загрузке файла происходит вызов SCN_MODIFIED, который мы должны игнорировать
                         _isFileLoadingActive = true;
 
-                        Logger.Out("NPPN_FILEBEFORELOAD");
+                        Logger.Info("NPPN_FILEBEFORELOAD");
                         break;
 
                     case (uint) NppMsg.NPPN_FILEBEFOREOPEN: // or NppMsg.NPPN_FILEOPENED
@@ -89,7 +87,7 @@ namespace NppPluginForHC
                         // файл загружен (возможно с ошибкой) и мы больше не должны игнорировать события SCN_MODIFIED
                         _isFileLoadingActive = false;
 
-                        Logger.Out("NPPN_FILEBEFOREOPEN");
+                        Logger.Info("NPPN_FILEBEFOREOPEN");
                         break;
 
                     case (uint) SciMsg.SCN_MODIFIED:
@@ -108,7 +106,7 @@ namespace NppPluginForHC
         {
             // загружаем настройки плагина
             Settings = LoadSettings();
-            Logger.Out($"settings loaded: mappingFolderPrefix={Settings.mappingFolderPrefix}");
+            Logger.Info($"settings loaded: mappingFilePathPrefix={Settings.MappingFilePathPrefix}");
 
             // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
             PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
@@ -147,7 +145,7 @@ namespace NppPluginForHC
             {
                 var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length);
                 // SearchEngine.FireInsertText(currentLine, insertedText);
-                Logger.Out($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
+                Logger.Info($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
             }
 
             if (isTextDeleted)
@@ -155,11 +153,11 @@ namespace NppPluginForHC
                 // SearchEngine.FireDeleteText(currentLine, insertedText);
                 if (linesAdded < 0)
                 {
-                    Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
+                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
                 }
                 else
                 {
-                    Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
+                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
                 }
             }
         }
@@ -196,22 +194,24 @@ namespace NppPluginForHC
 
         private static void GoToDefinition()
         {
-            StringBuilder sbWord = new StringBuilder(4096);
-            if (Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTWORD, 4096, sbWord) != IntPtr.Zero)
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            string selectedWord = gateway.GetCurrentWord();
+
+            if (!string.IsNullOrEmpty(selectedWord))
             {
-                int currentLine = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTLINE, 0, 0).ToInt32();
-                string selectedWord = sbWord.ToString();
+                JumpLocation jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, () => new SearchContext(gateway));
 
-                if (selectedWord.Length > 0)
+                if (jumpLocation != null)
                 {
-                    JumpLocation? jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, currentLine);
-
-                    if (jumpLocation.HasValue)
-                    {
-                        ShowLineInNotepadPP(jumpLocation.Value);
-                        return;
-                    }
+                    ShowLineInNotepadPP(jumpLocation);
                 }
+                else
+                {
+                    Logger.Info($"definition not found for word: {selectedWord}");
+                    System.Media.SystemSounds.Asterisk.Play();
+                }
+
+                return;
             }
 
             Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GRABFOCUS, 0, 0);
@@ -540,7 +540,7 @@ namespace NppPluginForHC
 
         private static void ShowLineInNotepadPP(string file, int line)
         {
-            Logger.Out($"Opening file '{file}'");
+            Logger.Info($"Opening file '{file}'");
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, file);
             IntPtr curScintilla = PluginBase.GetCurrentScintilla();
 
