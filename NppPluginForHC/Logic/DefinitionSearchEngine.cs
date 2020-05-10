@@ -3,107 +3,137 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using NppPluginForHC.Core;
+using static NppPluginForHC.Logic.Settings;
 
 namespace NppPluginForHC.Logic
 {
     public class DefinitionSearchEngine
     {
-        public delegate SearchContext ContextProvider();
+        //TODO: override MappingItem equals and hashCode 
+        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToFileContainerMap; // dstFilePath -> DstFileContainer
+        private readonly ISet<string> _availableSrcWords;
 
-        private readonly IDictionary<string, FileDestinationsContainer> _sourceFilePathToContainerMap; // sourceFilePath -> FileDestinationsContainer
         private string _currentFilePath = null;
 
         public DefinitionSearchEngine()
         {
-            _sourceFilePathToContainerMap = new Dictionary<string, FileDestinationsContainer>();
+            _mappingToFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
+            _availableSrcWords = new HashSet<string>();
         }
 
-        public void OnSwitchContext(string currentFilePath)
+        public void Init(Settings settings, string currentFilePath)
         {
-            if (currentFilePath == _currentFilePath) return;
+            var dstFilePathToDstWordsMap = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
+
+            foreach (var mappingItem in settings.Mapping)
+            {
+                var dst = mappingItem.Dst;
+                var dstFilePath = dst.FilePath;
+
+                var fileDstWords = dstFilePathToDstWordsMap.ComputeIfAbsent(dstFilePath, key => new HashSet<Word>());
+                fileDstWords.Add(dst.Word);
+            }
+
+            foreach (var mappingItem in settings.Mapping)
+            {
+                var dstFilePath = mappingItem.Dst.FilePath;
+                var supportedWords = dstFilePathToDstWordsMap[dstFilePath];
+
+                Debug.Assert(!_mappingToFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
+                _mappingToFileContainerMap[mappingItem] = new DstFileContainer(dstFilePath, supportedWords);
+
+                // для быстрой проверки
+                _availableSrcWords.Add(mappingItem.Src.Word.WordString);
+            }
+
+            SwitchContext(currentFilePath);
+        }
+
+        public void SwitchContext(string currentFilePath)
+        {
+            if (currentFilePath == _currentFilePath) return; // контекст не изменился
 
             Logger.Info($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
             _currentFilePath = currentFilePath;
 
-            try
-            {
-                var fileDestinations = GetOrTryCreateFileDestinations(currentFilePath);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-                throw;
-            }
-
-            // var settings = Main.Settings;
+            //TODO: NYI
         }
 
-        public JumpLocation? FindDefinitionLocation(string selectedWord, ContextProvider contextProvider)
+        public JumpLocation? FindDefinitionLocation(string selectedWordString, SearchContextProvider searchContextProvider)
         {
-            FileDestinationsContainer fileContainer = GetCurrentFileDestinations();
-            return fileContainer?.FindDestination(selectedWord, contextProvider);
+            var mappingItem = GetMappingItem(selectedWordString, searchContextProvider);
+            var dstFileContainer = _mappingToFileContainerMap[mappingItem];
+
+            dstFileContainer.InitIfNeeded();
+
+            return dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, searchContextProvider().GetTokenValue());
         }
 
-        private FileDestinationsContainer? GetCurrentFileDestinations()
+        private MappingItem? GetMappingItem(string selectedWordString, SearchContextProvider searchContextProvider)
         {
-            return _sourceFilePathToContainerMap.TryGetValue(_currentFilePath, out var fileContainer)
-                ? fileContainer
-                : null;
-        }
+            if (!_availableSrcWords.Contains(selectedWordString)) return null;
 
-        private FileDestinationsContainer? GetOrTryCreateFileDestinations(string currentFilePath)
-        {
-            if (_sourceFilePathToContainerMap.TryGetValue(currentFilePath, out var fileContainer))
+            foreach (var mappingItem in _mappingToFileContainerMap.Keys)
             {
-                return fileContainer;
+                if (mappingItem.Src.FilePath != _currentFilePath) continue;
+
+                var srcWord = mappingItem.Src.Word;
+                if (srcWord.WordString != selectedWordString) continue;
+
+                if (!srcWord.IsComplex()) return mappingItem;
+
+                var searchContext = searchContextProvider();
+                throw new NotImplementedException("//TODO: support complex words");
             }
 
-            var mappingItems = Main.Settings.Mapping;
-            foreach (var mappingItem in mappingItems)
-            {
-                if (currentFilePath != mappingItem.Src.FilePath) continue;
-
-                if (fileContainer == null)
-                {
-                    fileContainer = new FileDestinationsContainer(currentFilePath);
-                    _sourceFilePathToContainerMap[currentFilePath] = fileContainer;
-                }
-
-                fileContainer.InitMappingLazy(mappingItem);
-            }
-
-            return fileContainer;
+            return null;
         }
 
-        private class FileDestinationsContainer
+        private class DstFileContainer
         {
-            private readonly string _sourceFileName;
-            private readonly IDictionary<Word, WordDestinationsContainer> _srcWordToContainerMap; // srcWord -> WordDestinationContainer
-            private bool _hasComplexWords;
+            private readonly string _dstFilePath;
+            private readonly IDictionary<Word, ValuesLocationContainer> _dstWordToValuesLocationContainer; // dstWord -> ValuesLocationContainer
+            private readonly bool _hasComplexWords;
+            private bool _inited;
 
-            internal FileDestinationsContainer(string sourceFileName)
+            internal DstFileContainer(string dstFilePath, ISet<Word> dstWords)
             {
-                _sourceFileName = sourceFileName;
+                _inited = false;
+                _dstFilePath = dstFilePath;
+                _dstWordToValuesLocationContainer = new Dictionary<Word, ValuesLocationContainer>();
                 _hasComplexWords = false;
-                _srcWordToContainerMap = new Dictionary<Word, WordDestinationsContainer>();
-            }
 
-            internal void InitMappingLazy(Settings.MappingItem mappingItem)
-            {
-                Word srcWord = mappingItem.Src.Word;
-                Debug.Assert(!_srcWordToContainerMap.ContainsKey(srcWord), $"word already defined for srcFile={_sourceFileName}, word={srcWord}");
-
-                _srcWordToContainerMap[srcWord] = new WordDestinationsContainer(mappingItem);
-                if (srcWord.IsComplex())
+                foreach (var dstWord in dstWords)
                 {
-                    _hasComplexWords = true;
+                    if (dstWord.IsComplex())
+                    {
+                        _hasComplexWords = true;
+                    }
+
+                    Debug.Assert(!_dstWordToValuesLocationContainer.ContainsKey(dstWord), $"inner container already contains this dstWord={dstWord}, dstFilePath={dstFilePath}");
+                    _dstWordToValuesLocationContainer[dstWord] = new ValuesLocationContainer(dstFilePath);
                 }
             }
 
-            private void InitAllWordsContainers()
+            internal JumpLocation? FindDestinationLocation(Word dstWord, object value)
             {
+                var dstValuesLocationContainer = _dstWordToValuesLocationContainer[dstWord];
+                return dstValuesLocationContainer.FindDefinitionByValue(value);
+            }
+
+            public void InitIfNeeded()
+            {
+                if (_inited) return;
+
+                if (!File.Exists(_dstFilePath))
+                {
+                    Logger.Error($"dstFile={_dstFilePath} not exist");
+                    return;
+                }
+
                 if (_hasComplexWords)
                 {
                     InitSubContainersByComplexWords();
@@ -112,26 +142,31 @@ namespace NppPluginForHC.Logic
                 {
                     InitSubContainersBySimpleWords();
                 }
+
+                _inited = true;
             }
 
             private void InitSubContainersBySimpleWords()
             {
-                
-                //нужно найти все маппинги у которых mapping.dst.filePath == dstFilePath
-                
-                using (StreamReader sr = new StreamReader("F:/mobSettings.json"))
-                    // using (StreamReader sr = new StreamReader("D:/projects/shelter/gd_data/mobSettings.json"))
-                    // using (StreamReader sr = new StreamReader(dstFilePath))
+                using StreamReader sr = new StreamReader(_dstFilePath);
+                int lineNumber = 0;
+                string lineText;
+                while ((lineText = sr.ReadLine()) != null)
                 {
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
+                    foreach (var entry in _dstWordToValuesLocationContainer)
                     {
-                        // if (line.Contains(dstWord.WordString))
-                        if (line.Contains("LID_mobs_warrior_tank"))
+                        var dstWordString = entry.Key.WordString;
+                        var valuesContainer = entry.Value;
+
+                        if (lineText.Contains(dstWordString))
                         {
-                            Logger.Info($"line={line}");
+                            object value = "MOBRANGER"; // TODO extract value
+                            // valuesContainer.PutOrReplace(value, lineNumber);
+                            valuesContainer.PutOrReplace(value, 27);
                         }
                     }
+
+                    lineNumber++;
                 }
             }
 
@@ -163,67 +198,29 @@ namespace NppPluginForHC.Logic
                     }
                 }
             }
-
-            internal JumpLocation? FindDestination(string srcWordString, ContextProvider contextProvider)
-            {
-                var srcWord = GetWord(srcWordString, contextProvider);
-                if (srcWord == null) return null; // инициализация не нужна для слов, не являющихся ссылками
-                InitAllWordsContainers();
-
-                var wordValuesContainer = _srcWordToContainerMap[srcWord];
-                var searchContext = contextProvider.Invoke();
-                var gateway = searchContext.Gateway;
-
-                object value = 123;
-
-                return wordValuesContainer.FindDefinitionByValue(value);
-            }
-
-
-            private Word? GetWord(string wordString, ContextProvider contextProvider)
-            {
-                foreach (var word in _srcWordToContainerMap.Keys)
-                {
-                    if (word.WordString == wordString)
-                    {
-                        if (!word.IsComplex()) return word;
-
-                        var searchContext = contextProvider();
-                        throw new NotImplementedException("//TODO: support complex words");
-                    }
-                }
-
-                return null;
-            }
         }
 
-        private class WordDestinationsContainer
+        private class ValuesLocationContainer
         {
-            private readonly IDictionary<object, JumpLocation> _destinationByWordValueMap; // word.value -> destination
-            internal Settings.MappingItem? MappingItem;
+            private readonly string _dstFilePath;
+            private readonly IDictionary<object, int> _valueToLineMap; // value -> JumpLocation
 
-            internal WordDestinationsContainer(Settings.MappingItem mappingItem)
+            internal ValuesLocationContainer(string dstFilePath)
             {
-                _destinationByWordValueMap = new Dictionary<object, JumpLocation>();
-                MappingItem = mappingItem;
+                _dstFilePath = dstFilePath;
+                _valueToLineMap = new Dictionary<object, int>();
             }
 
-
-            public JumpLocation? FindDefinitionByValue(object value)
+            internal JumpLocation? FindDefinitionByValue(object value)
             {
-                return _destinationByWordValueMap.TryGetValue(value, out JumpLocation jumpLocation)
-                    ? jumpLocation
+                return _valueToLineMap.TryGetValue(value, out int line)
+                    ? new JumpLocation(_dstFilePath, line)
                     : null;
             }
 
-            internal void Init()
+            internal void PutOrReplace(object value, int lineNumber)
             {
-                Debug.Assert(MappingItem != null, $"inner container already inited for word: {MappingItem}");
-
-                var dstWord = MappingItem.Dst.Word;
-                var dstFilePath = MappingItem.Dst.FilePath;
-
-                MappingItem = null;
+                _valueToLineMap[value] = lineNumber;
             }
         }
     }

@@ -68,6 +68,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Logger.cs" />
+    <Compile Include="Core\NullableDictionary.cs" />
     <Compile Include="Logic\SearchContext.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Logic\Word.cs" />
@@ -75,7 +77,6 @@
     <Compile Include="PluginInfrastructure\IExtendedScintillaGateway.cs" />
     <Compile Include="Logic\JumpLocation.cs" />
     <Compile Include="Logic\DefinitionSearchEngine.cs" />
-    <Compile Include="Logic\EngineMapping.cs" />
     <Compile Include="MouseHook.cs" />
     <Compile Include="PluginInfrastructure\ClikeStringArray.cs" />
     <Compile Include="PluginInfrastructure\DllExport\DllExportAttribute.cs" />
@@ -106,7 +107,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="PluginInfrastructure\UnmanagedExports.cs" />
-    <Compile Include="Logger.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmMyDlg.resx">

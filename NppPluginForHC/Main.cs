@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using NppPluginForHC.Core;
 using NppPluginForHC.Logic;
 using NppPluginForHC.PluginInfrastructure;
 
@@ -56,7 +57,7 @@ namespace NppPluginForHC
                 {
                     case (uint) NppMsg.NPPN_BUFFERACTIVATED:
                         // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
-                        SearchEngine.OnSwitchContext(GetCurrentFilePath());
+                        SearchEngine.SwitchContext(GetCurrentFilePath());
 
                         Logger.Info($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
                         break;
@@ -112,7 +113,7 @@ namespace NppPluginForHC
             PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
 
             // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
-            SearchEngine.OnSwitchContext(GetCurrentFilePath());
+            SearchEngine.Init(Settings, GetCurrentFilePath());
 
             // инициализация обработчика кликов мышкой
             MouseHook.Start();

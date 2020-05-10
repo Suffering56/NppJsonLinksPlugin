@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace NppPluginForHC
+namespace NppPluginForHC.Core
 {
     public static class Logger
     {
@@ -28,21 +28,21 @@ namespace NppPluginForHC
 
         private static void WriteLogInto(string logFilePath, string msg)
         {
-            // try
-            // {
-            //     using (TextWriter w = new StreamWriter(logFilePath, true))
-            //     {
-            //         StackTrace stackTrace = new StackTrace();
-            //         MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-            //         w.WriteLine(
-            //             $"{DateTime.Now.ToLongTimeString()}:{DateTime.Now.Millisecond:000} <{TracePId}> {new String(' ', (stackTrace.FrameCount - 1) * 3)}[{methodBase.Name}] {msg}");
-            //     }
-            // }
-            // catch (Exception ex)
-            // {
-            //     MessageBox.Show("Error while attempting to write into log file:\n" + ex.Message,
-            //         "NppPluginForHC", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            // }
+            try
+            {
+                using (TextWriter w = new StreamWriter(logFilePath, true))
+                {
+                    StackTrace stackTrace = new StackTrace();
+                    MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
+                    w.WriteLine(
+                        $"{DateTime.Now.ToLongTimeString()}:{DateTime.Now.Millisecond:000} <{TracePId}> {new String(' ', (stackTrace.FrameCount - 1) * 3)}[{methodBase.Name}] {msg}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error while attempting to write into log file:\n" + ex.Message,
+                    "NppPluginForHC", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         internal static void Error(Exception ex)
