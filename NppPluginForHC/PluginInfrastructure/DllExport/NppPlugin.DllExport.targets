@@ -30,7 +30,7 @@
 		On 32 bit windows usually C:\Program Files\
 		On 64 bit windows usually C:\Program Files (x86)\
 		$(ProgramW6432) points to the 64bit Program Files (on 32 bit windows it is blank) -->
-    <Copy 
+        <Copy 
         SourceFiles="$(TargetPath)" 
         DestinationFolder="$(MSBuildProgramFiles32)\Notepad++\plugins\NppPluginForHC\" 
         Condition="Exists('$(MSBuildProgramFiles32)\Notepad++\plugins\NppPluginForHC\') AND '$(Platform)'=='x86'"

@@ -1,4 +1,4 @@
-﻿namespace NppPluginForHC.Redirect
+﻿namespace NppPluginForHC.Logic
 {
     public struct JumpLocation
     {

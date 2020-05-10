@@ -7,5 +7,7 @@
         int LineToPosition(int line);
 
         string GetTextFromPosition(int startPosition, int length);
+        
+        string GetTextFromPositionSafe(int currentPosition, int length);
     }
 }

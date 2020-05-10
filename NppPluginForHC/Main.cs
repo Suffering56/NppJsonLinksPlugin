@@ -7,8 +7,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using NppPluginForHC.Logic;
 using NppPluginForHC.PluginInfrastructure;
-using NppPluginForHC.Redirect;
 
 namespace NppPluginForHC
 {
@@ -16,8 +16,8 @@ namespace NppPluginForHC
     internal static class Main
     {
         internal const string PluginName = "NppPluginForHC";
-        private static string _iniFilePath = null;
-        private static bool _someSetting = false;
+        internal static Settings Settings = null;
+
         private static frmMyDlg _frmMyDlg = null;
         private static int _idMyDlg = -1;
         private static readonly Bitmap TbBmp = Properties.Resources.star;
@@ -26,6 +26,7 @@ namespace NppPluginForHC
 
         private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
         private static bool _isPluginInited = false;
+        private static bool _isFileLoadingActive = false;
 
         private static readonly EventHandler OnLeftMouseClick = delegate
         {
@@ -43,93 +44,137 @@ namespace NppPluginForHC
         public static void OnNotification(ScNotification notification)
         {
             var notificationType = notification.Header.Code;
-            switch (notificationType)
+
+            // NPP successfully started
+            if (notificationType == (uint) NppMsg.NPPN_READY)
             {
-                // NPP successfully started
-                case (uint) NppMsg.NPPN_READY:
-                    // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
-                    _isPluginInited = true;
+                ProcessInit();
 
-                    // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
-                    PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
-
-                    // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
-                    SearchEngine.OnSwitchContext(GetCurrentFilePath());
-
-                    // инициализация обработчика кликов мышкой
-                    MouseHook.Start();
-
-                    Logger.Out("NPPN_READY");
-                    break;
-
-                // switching tabs/open file/reload file/etc
-                case (uint) NppMsg.NPPN_BUFFERACTIVATED:
-                    if (_isPluginInited)
-                    {
+                Logger.Out("NPPN_READY");
+            }
+            else if (_isPluginInited)
+            {
+                switch (notificationType)
+                {
+                    case (uint) NppMsg.NPPN_BUFFERACTIVATED:
+                        // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
                         SearchEngine.OnSwitchContext(GetCurrentFilePath());
-                    }
 
-                    Logger.Out($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
-                    break;
+                        Logger.Out($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
+                        break;
 
-                case (uint) SciMsg.SCN_FOCUSOUT:
-                    // мы перестаем слушать клики мышкой, когда окно теряет фокус
-                    MouseHook.CleanListeners();
+                    case (uint) SciMsg.SCN_FOCUSOUT:
+                        // мы перестаем слушать клики мышкой, когда окно теряет фокус
+                        MouseHook.CleanListeners();
 
-                    Logger.Out("SCN_FOCUSOUT");
-                    break;
+                        Logger.Out("SCN_FOCUSOUT");
+                        break;
 
-                case (uint) SciMsg.SCN_FOCUSIN:
-                    // возобновляем слушание кликов мышкой, при получении фокуса
-                    MouseHook.RegisterListener(OnLeftMouseClick);
+                    case (uint) SciMsg.SCN_FOCUSIN:
+                        // возобновляем слушание кликов мышкой, при получении фокуса
+                        MouseHook.RegisterListener(OnLeftMouseClick);
 
-                    Logger.Out("SCN_FOCUSIN");
-                    break;
+                        Logger.Out("SCN_FOCUSIN");
+                        break;
 
-                case (uint) SciMsg.SCN_MODIFIED:
-                    //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0 
+                    case (uint) NppMsg.NPPN_FILEBEFORELOAD:
+                        // при загрузке файла происходит вызов SCN_MODIFIED, который мы должны игнорировать
+                        _isFileLoadingActive = true;
 
-                    if (_isPluginInited)
-                    {
-                        var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
-                        var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
-                        if (!isTextDeleted && !isTextInserted)
+                        Logger.Out("NPPN_FILEBEFORELOAD");
+                        break;
+
+                    case (uint) NppMsg.NPPN_FILEBEFOREOPEN: // or NppMsg.NPPN_FILEOPENED
+                    case (uint) NppMsg.NPPN_FILELOADFAILED:
+                        // файл загружен (возможно с ошибкой) и мы больше не должны игнорировать события SCN_MODIFIED
+                        _isFileLoadingActive = false;
+
+                        Logger.Out("NPPN_FILEBEFOREOPEN");
+                        break;
+
+                    case (uint) SciMsg.SCN_MODIFIED:
+                        //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, поэтому пока все работает хорошо только на 32-битной
+                        if (!_isFileLoadingActive)
                         {
-                            break;
+                            ProcessModified(notification);
                         }
 
-                        var gateway = PluginBase.GetGatewayFactory().Invoke();
-                        // количество строк, которые были добавлены/удалены (если отрицательное)
-                        int linesAdded = notification.LinesAdded;
-                        // глобальная позиция каретки, ДО вставки текста
-                        int currentPosition = notification.Position.Value;
-                        // строка, в которую вставили текст
-                        int currentLine = gateway.PositionToLine(currentPosition);
-                        // чтобы было удобнее смотреть в NPP
-                        const int viewLineOffset = 1;
+                        break;
+                }
+            }
+        }
 
-                        if (isTextInserted)
-                        {
-                            var insertedText = gateway.GetTextFromPosition(currentPosition, notification.Length);
-                            // SearchEngine.FireInsertText(currentLine, insertedText);
-                            Logger.Out($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
-                        }
+        private static void ProcessInit()
+        {
+            // загружаем настройки плагина
+            Settings = LoadSettings();
+            Logger.Out($"settings loaded: mappingFolderPrefix={Settings.mappingFolderPrefix}");
 
-                        if (isTextDeleted)
-                        {
-                            // SearchEngine.FireDeleteText(currentLine, insertedText);
-                            if (linesAdded < 0)
-                            {
-                                Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
-                            }
-                            else
-                            {
-                                Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
-                            }
-                        }
-                    }
+            // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
+            PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
 
-                    break;
+            // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
+            SearchEngine.OnSwitchContext(GetCurrentFilePath());
+
+            // инициализация обработчика кликов мышкой
+            MouseHook.Start();
+            MouseHook.RegisterListener(OnLeftMouseClick);
+
+            // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
+            _isPluginInited = true;
+        }
+
+        private static void ProcessModified(ScNotification notification)
+        {
+            var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
+            var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
+            if (!isTextDeleted && !isTextInserted)
+            {
+                return;
+            }
+
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            // количество строк, которые были добавлены/удалены (если отрицательное)
+            int linesAdded = notification.LinesAdded;
+            // глобальная позиция каретки, ДО вставки текста
+            int currentPosition = notification.Position.Value;
+            // строка, в которую вставили текст
+            int currentLine = gateway.PositionToLine(currentPosition);
+            // чтобы было удобнее смотреть в NPP
+            const int viewLineOffset = 1;
+
+            if (isTextInserted)
+            {
+                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length);
+                // SearchEngine.FireInsertText(currentLine, insertedText);
+                Logger.Out($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
+            }
+
+            if (isTextDeleted)
+            {
+                // SearchEngine.FireDeleteText(currentLine, insertedText);
+                if (linesAdded < 0)
+                {
+                    Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
+                }
+                else
+                {
+                    Logger.Out($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
+                }
+            }
+        }
+
+        private static Settings LoadSettings()
+        {
+            try
+            {
+                return SettingsParser.Parse($"plugins/{Main.PluginName}/settings.json");
+            }
+            catch (Exception e)
+            {
+                Logger.Error("LoadSettings exception: " + e.GetType());
+                Logger.Error(e);
+                throw;
             }
         }
 
@@ -143,13 +188,6 @@ namespace NppPluginForHC
 
         internal static void CommandMenuInit()
         {
-            StringBuilder sbIniFilePath = new StringBuilder(Win32.MAX_PATH);
-            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_GETPLUGINSCONFIGDIR, Win32.MAX_PATH, sbIniFilePath);
-            _iniFilePath = sbIniFilePath.ToString();
-            if (!Directory.Exists(_iniFilePath)) Directory.CreateDirectory(_iniFilePath);
-            _iniFilePath = Path.Combine(_iniFilePath, PluginName + ".ini");
-            _someSetting = (Win32.GetPrivateProfileInt("SomeSection", "SomeKey", 0, _iniFilePath) != 0);
-
             PluginBase.SetCommand(0, "Version", GetVersion, new ShortcutKey(false, false, false, Keys.None));
             PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
             _idMyDlg = 1;

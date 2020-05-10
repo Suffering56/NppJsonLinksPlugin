@@ -1574,7 +1574,7 @@ namespace NppPluginForHC.PluginInfrastructure
         /// Returns the length of the line.
         /// (Scintilla feature 2153)
         /// </summary>
-        public unsafe string GetLine(int line)
+        public unsafe string GetLineText(int line)
         {
             byte[] textBuffer = new byte[10000];
             fixed (byte* textPtr = textBuffer)

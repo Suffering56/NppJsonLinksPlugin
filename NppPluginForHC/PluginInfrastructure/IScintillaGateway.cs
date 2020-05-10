@@ -770,7 +770,7 @@ namespace NppPluginForHC.PluginInfrastructure
         /// Returns the length of the line.
         /// (Scintilla feature 2153)
         /// </summary>
-        unsafe string GetLine(int line);
+        unsafe string GetLineText(int line);
 
         /// <summary>Returns the number of lines in the document. There is always at least one. (Scintilla feature 2154)</summary>
         int GetLineCount();

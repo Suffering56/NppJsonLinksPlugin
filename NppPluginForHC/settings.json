@@ -1,0 +1,31 @@
+{
+  "someSettings": {
+    "example1": "D:/projects/shelter/gd_data/festivalGoods.json:[]: extension: rewardPackId==>D: /projects/shelter/gd_data/rewardPacks.json:[]: id",
+    "example2": "D:/projects/shelter/gd_data/festivalGoods.json:[]: rewardPackId==>D: /projects/shelter/gd_data/rewardPacks.json:[]: id"
+  },
+  "mappingFolderPrefix": "D:/projects/shelter/gd_data/",
+  "mapping": [
+    {
+      "description": "",
+      "src": {
+        "fileName": "festivalGoods.json",
+        "word": "rewardPackId<<extension"
+      },
+      "dst": {
+        "fileName": "festivalGoods.json",
+        "word": "id<<root"
+      }
+    },
+    {
+      "description": "",
+      "src": {
+        "fileName": "festivalGoods.json",
+        "word": "rewardPackId"
+      },
+      "dst": {
+        "fileName": "festivalGoods.json",
+        "word": "id<<root"
+      }
+    }
+  ]
+}

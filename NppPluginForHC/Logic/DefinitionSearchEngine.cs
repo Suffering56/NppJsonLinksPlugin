@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
-namespace NppPluginForHC.Redirect
+namespace NppPluginForHC.Logic
 {
     public class DefinitionSearchEngine
     {
+        private Dictionary<string, FileLinksContainer> linksMap; // filename -> FileLinksContainer
+
         private string _currentFilePath = null;
 
         public JumpLocation? FindDefinitionLocation(string selectedWord, int currentLine)
@@ -22,9 +26,21 @@ namespace NppPluginForHC.Redirect
             if (currentFilePath != _currentFilePath)
             {
                 //TODO
+
+                var settings = Main.Settings;
             }
 
             _currentFilePath = currentFilePath;
+        }
+
+        private class FileLinksContainer
+        {
+            private Dictionary<Word, WordDestinationContainer> wordDestinationContainersMap; // word -> WordDestinationContainer
+        }
+
+        private class WordDestinationContainer
+        {
+            private Dictionary<object, JumpLocation> destinationByValueMap; // value -> destination
         }
     }
 }
