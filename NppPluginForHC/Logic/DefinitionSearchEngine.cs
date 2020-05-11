@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 using NppPluginForHC.Core;
 using static NppPluginForHC.Logic.Settings;

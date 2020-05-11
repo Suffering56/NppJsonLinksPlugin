@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
+    <Compile Include="Logic\RawSettings.cs" />
     <Compile Include="Logic\SearchContext.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Logic\Word.cs" />
