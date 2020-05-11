@@ -40,8 +40,8 @@ namespace NppPluginForHC.Logic
             {
                 Word = location.Word,
                 FilePath = location.FilePathPrefixDisabled
-                    ? Path.GetFullPath(mappingFilePathPrefix + location.FilePath)
-                    : Path.GetFullPath(location.FilePath)
+                    ? Path.GetFullPath(location.FilePath)
+                    : Path.GetFullPath(mappingFilePathPrefix + location.FilePath)
             };
         }
 

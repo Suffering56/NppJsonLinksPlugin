@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NppPluginForHC.Core;
 using static NppPluginForHC.Logic.Settings;
@@ -64,11 +67,16 @@ namespace NppPluginForHC.Logic
         public JumpLocation? FindDefinitionLocation(string selectedWordString, SearchContextProvider searchContextProvider)
         {
             var mappingItem = GetMappingItem(selectedWordString, searchContextProvider);
+            if (mappingItem == null) return null;
+
             var dstFileContainer = _mappingToFileContainerMap[mappingItem];
 
             dstFileContainer.InitIfNeeded();
 
-            return dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, searchContextProvider().GetTokenValue());
+            string tokenValue = searchContextProvider().GetTokenValue(selectedWordString);
+            if (tokenValue == null) return null;
+
+            return dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, tokenValue);
         }
 
         private MappingItem? GetMappingItem(string selectedWordString, SearchContextProvider searchContextProvider)
@@ -117,7 +125,7 @@ namespace NppPluginForHC.Logic
                 }
             }
 
-            internal JumpLocation? FindDestinationLocation(Word dstWord, object value)
+            internal JumpLocation? FindDestinationLocation(Word dstWord, string value)
             {
                 var dstValuesLocationContainer = _dstWordToValuesLocationContainer[dstWord];
                 return dstValuesLocationContainer.FindDefinitionByValue(value);
@@ -147,31 +155,78 @@ namespace NppPluginForHC.Logic
 
             private void InitSubContainersBySimpleWords()
             {
-                using StreamReader sr = new StreamReader(_dstFilePath);
-                int lineNumber = 0;
-                string lineText;
-                while ((lineText = sr.ReadLine()) != null)
+                string expectedWord = null;
+
+                using JsonTextReader reader = new JsonTextReader(new StreamReader(_dstFilePath));
+                while (reader.Read())
                 {
+                    if (reader.Value == null) continue;
+
                     foreach (var entry in _dstWordToValuesLocationContainer)
                     {
                         var dstWordString = entry.Key.WordString;
                         var valuesContainer = entry.Value;
 
-                        if (lineText.Contains(dstWordString))
-                        {
-                            object value = "MOBRANGER"; // TODO extract value
-                            // valuesContainer.PutOrReplace(value, lineNumber);
-                            valuesContainer.PutOrReplace(value, 27);
-                        }
-                    }
+                        var tokenType = reader.TokenType;
 
-                    lineNumber++;
+                        //ожидаем property
+                        if (tokenType == JsonToken.PropertyName) // TODO: or StartToken/EndToken/etc..
+                        {
+                            expectedWord = null;
+
+                            if (dstWordString == reader.Value.ToString())
+                            {
+                                expectedWord = dstWordString;
+                            }
+
+                            continue;
+                        }
+
+                        if (expectedWord != dstWordString) continue;
+
+                        //ожидаем value
+                        string valueString = reader.Value.ToString();
+                        switch (tokenType)
+                        {
+                            case JsonToken.Boolean:
+                                valueString = valueString.ToLower();
+                                break;
+
+                            case JsonToken.Float:
+                                valueString = valueString.Replace(',', '.');
+                                break;
+
+                            case JsonToken.Integer:
+                            case JsonToken.String:
+                                break;
+                            default:
+                                continue;
+                        }
+
+                        valuesContainer.PutOrReplace(valueString, reader.LineNumber);
+                        expectedWord = null;
+                    }
                 }
             }
 
             private void InitSubContainersByComplexWords()
             {
                 throw new NotImplementedException();
+
+                // Token: StartObject
+                // Token: PropertyName, Value: CPU
+                // Token: String, Value: Intel
+                // Token: PropertyName, Value: PSU
+                // Token: String, Value: 500W
+                // Token: PropertyName, Value: Drives
+                // Token: StartArray
+                // Token: String, Value: DVD read/writer
+                // Token: Comment, Value: (broken)
+                //     Token: String, Value: 500 gigabyte hard drive
+                // Token: String, Value: 200 gigabyte hard drive
+                // Token: EndArray
+                // Token: EndObject
+
 
                 string json = @"{
                                'CPU': 'Intel',
@@ -197,27 +252,48 @@ namespace NppPluginForHC.Logic
                     }
                 }
             }
+
+            // using StreamReader sr = new StreamReader(_dstFilePath);
+            // int lineNumber = 0;
+            // string lineText;
+            // while ((lineText = sr.ReadLine()) != null)
+            // {
+            //     foreach (var entry in _dstWordToValuesLocationContainer)
+            //     {
+            //         var dstWordString = entry.Key.WordString;
+            //         var valuesContainer = entry.Value;
+            //
+            //         if (lineText.Contains(dstWordString))
+            //         {
+            //             object value = "MOBRANGER"; // TODO extract value
+            //             // valuesContainer.PutOrReplace(value, lineNumber);
+            //             valuesContainer.PutOrReplace(value, 27);
+            //         }
+            //     }
+            //
+            //     lineNumber++;
+            // }
         }
 
         private class ValuesLocationContainer
         {
             private readonly string _dstFilePath;
-            private readonly IDictionary<object, int> _valueToLineMap; // value -> JumpLocation
+            private readonly IDictionary<string, int> _valueToLineMap; // value -> JumpLocation
 
             internal ValuesLocationContainer(string dstFilePath)
             {
                 _dstFilePath = dstFilePath;
-                _valueToLineMap = new Dictionary<object, int>();
+                _valueToLineMap = new Dictionary<string, int>();
             }
 
-            internal JumpLocation? FindDefinitionByValue(object value)
+            internal JumpLocation? FindDefinitionByValue(string value)
             {
                 return _valueToLineMap.TryGetValue(value, out int line)
                     ? new JumpLocation(_dstFilePath, line)
                     : null;
             }
 
-            internal void PutOrReplace(object value, int lineNumber)
+            internal void PutOrReplace(string value, int lineNumber)
             {
                 _valueToLineMap[value] = lineNumber;
             }

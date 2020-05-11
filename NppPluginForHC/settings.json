@@ -12,6 +12,16 @@
         "filePath": "battleClasses.json",
         "word": "type"
       }
+    },
+    {
+      "src": {
+        "filePath": "mobSettings.json",
+        "word": "abilityId"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
     }
   ]
 }
