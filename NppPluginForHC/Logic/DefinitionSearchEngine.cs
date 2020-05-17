@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NppPluginForHC.Core;
 using static NppPluginForHC.Logic.Settings;
@@ -141,19 +138,19 @@ namespace NppPluginForHC.Logic
                     return;
                 }
 
-                if (_hasComplexWords)
+                try
                 {
-                    InitSubContainersByComplexWords();
+                    InitSubContainersByJsonReader();
                 }
-                else
+                catch (Exception)
                 {
-                    InitSubContainersBySimpleWords();
+                    InitSubContainersByStringReader();
                 }
 
                 _inited = true;
             }
 
-            private void InitSubContainersBySimpleWords()
+            private void InitSubContainersByJsonReader()
             {
                 string expectedWord = null;
 
@@ -164,53 +161,101 @@ namespace NppPluginForHC.Logic
 
                     foreach (var entry in _dstWordToValuesLocationContainer)
                     {
-                        var dstWordString = entry.Key.WordString;
+                        var dstWord = entry.Key;
                         var valuesContainer = entry.Value;
+                        // var dstWordString = entry.Key.WordString;
+                        // var tokenType = reader.TokenType;
 
-                        var tokenType = reader.TokenType;
-
-                        //ожидаем property
-                        if (tokenType == JsonToken.PropertyName) // TODO: or StartToken/EndToken/etc..
+                        if (!dstWord.IsComplex())
                         {
-                            expectedWord = null;
-
-                            if (dstWordString == reader.Value.ToString())
-                            {
-                                expectedWord = dstWordString;
-                            }
-
-                            continue;
+                            ParseSimpleWord(reader, valuesContainer, dstWord, ref expectedWord);
                         }
-
-                        if (expectedWord != dstWordString) continue;
-
-                        //ожидаем value
-                        string valueString = reader.Value.ToString();
-                        switch (tokenType)
-                        {
-                            case JsonToken.Boolean:
-                                valueString = valueString.ToLower();
-                                break;
-
-                            case JsonToken.Float:
-                                valueString = valueString.Replace(',', '.');
-                                break;
-
-                            case JsonToken.Integer:
-                            case JsonToken.String:
-                                break;
-                            default:
-                                continue;
-                        }
-
-                        valuesContainer.PutOrReplace(valueString, reader.LineNumber);
-                        expectedWord = null;
                     }
                 }
             }
 
-            private void InitSubContainersByComplexWords()
+            private static void ParseSimpleWord(JsonTextReader reader, ValuesLocationContainer valuesContainer, Word dstWord, ref string expectedWord)
             {
+                var tokenType = reader.TokenType;
+
+                //ожидаем property
+                if (tokenType == JsonToken.PropertyName) // TODO: or StartToken/EndToken/etc..
+                {
+                    expectedWord = null;
+
+                    if (dstWord.WordString == reader.Value.ToString())
+                    {
+                        expectedWord = dstWord.WordString;
+                    }
+
+                    return;
+                }
+
+                if (expectedWord != dstWord.WordString) return;
+
+                //ожидаем value
+                string valueString = reader.Value.ToString();
+                switch (tokenType)
+                {
+                    case JsonToken.Boolean:
+                        valueString = valueString.ToLower();
+                        break;
+
+                    case JsonToken.Float:
+                        valueString = valueString.Replace(',', '.');
+                        break;
+
+                    case JsonToken.Integer:
+                    case JsonToken.String:
+                        break;
+
+                    case JsonToken.None:
+                    case JsonToken.StartObject:
+                    case JsonToken.StartArray:
+                    case JsonToken.StartConstructor:
+                    case JsonToken.PropertyName:
+                    case JsonToken.Comment:
+                    case JsonToken.Raw:
+                    case JsonToken.Null:
+                    case JsonToken.Undefined:
+                    case JsonToken.EndObject:
+                    case JsonToken.EndArray:
+                    case JsonToken.EndConstructor:
+                    case JsonToken.Date:
+                    case JsonToken.Bytes:
+                    default:
+                        return;
+                }
+
+                valuesContainer.PutOrReplace(valueString, reader.LineNumber);
+                expectedWord = null;
+            }
+
+            private void InitSubContainersByStringReader()
+            {
+                using StreamReader sr = new StreamReader(_dstFilePath);
+                int lineNumber = 0;
+                string lineText;
+                while ((lineText = sr.ReadLine()) != null)
+                {
+                    foreach (var entry in _dstWordToValuesLocationContainer)
+                    {
+                        var dstWordString = entry.Key.WordString;
+                        var valuesContainer = entry.Value;
+
+                        if (!lineText.Contains($"\"{dstWordString}\"")) continue;
+
+                        string value = Utils.ExtractTokenValueByLine(lineText, dstWordString);
+                        if (value != null)
+                        {
+                            valuesContainer.PutOrReplace(value, lineNumber);
+                        }
+                    }
+
+                    lineNumber++;
+                }
+
+                return;
                 throw new NotImplementedException();
 
                 // Token: StartObject
@@ -252,27 +297,6 @@ namespace NppPluginForHC.Logic
                     }
                 }
             }
-
-            // using StreamReader sr = new StreamReader(_dstFilePath);
-            // int lineNumber = 0;
-            // string lineText;
-            // while ((lineText = sr.ReadLine()) != null)
-            // {
-            //     foreach (var entry in _dstWordToValuesLocationContainer)
-            //     {
-            //         var dstWordString = entry.Key.WordString;
-            //         var valuesContainer = entry.Value;
-            //
-            //         if (lineText.Contains(dstWordString))
-            //         {
-            //             object value = "MOBRANGER"; // TODO extract value
-            //             // valuesContainer.PutOrReplace(value, lineNumber);
-            //             valuesContainer.PutOrReplace(value, 27);
-            //         }
-            //     }
-            //
-            //     lineNumber++;
-            // }
         }
 
         private class ValuesLocationContainer
