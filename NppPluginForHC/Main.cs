@@ -90,12 +90,16 @@ namespace NppPluginForHC
 
                         Logger.Info("NPPN_FILEBEFOREOPEN");
                         break;
-
+                    
+                    // case (uint) SciMsg.SCN_CHARADDED:
+                    //     Logger.Info("SCN_CHARADDED");
+                    //     break;
                     case (uint) SciMsg.SCN_MODIFIED:
                         //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, поэтому пока все работает хорошо только на 32-битной
                         if (!_isFileLoadingActive)
                         {
                             ProcessModified(notification);
+                            // Logger.Info("SCN_MODIFIED");
                         }
 
                         break;
@@ -144,7 +148,7 @@ namespace NppPluginForHC
 
             if (isTextInserted)
             {
-                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length);
+                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length, notification.LinesAdded);
                 // SearchEngine.FireInsertText(currentLine, insertedText);
                 Logger.Info($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
             }
