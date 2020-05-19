@@ -70,7 +70,9 @@
   <ItemGroup>
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
+    <Compile Include="Core\JsonStringUtils.cs" />
     <Compile Include="Core\Utils.cs" />
+    <Compile Include="Logic\SearchEngineJsonParser.cs" />
     <Compile Include="Logic\RawSettings.cs" />
     <Compile Include="Logic\SearchContext.cs" />
     <Compile Include="Logic\Settings.cs" />
@@ -78,7 +80,7 @@
     <Compile Include="PluginInfrastructure\ExtendedScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\IExtendedScintillaGateway.cs" />
     <Compile Include="Logic\JumpLocation.cs" />
-    <Compile Include="Logic\DefinitionSearchEngine.cs" />
+    <Compile Include="Logic\SearchEngine.cs" />
     <Compile Include="MouseHook.cs" />
     <Compile Include="PluginInfrastructure\ClikeStringArray.cs" />
     <Compile Include="PluginInfrastructure\DllExport\DllExportAttribute.cs" />

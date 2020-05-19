@@ -9,6 +9,12 @@ namespace NppPluginForHC.Logic
     {
         [JsonProperty(PropertyName = "mappingFilePathPrefix")]
         public string MappingFilePathPrefix;
+        
+        [JsonProperty(PropertyName = "cacheEnabled")]
+        public bool CacheEnabled = false;
+
+        [JsonProperty(PropertyName = "jumpToLineDelay")]
+        public int JumpToLineDelay = Settings.DefaultJumpToLineDelay;
 
         [JsonProperty(PropertyName = "mapping")]
         public IList<RawMappingItem> Mapping;
@@ -34,8 +40,8 @@ namespace NppPluginForHC.Logic
                 [JsonConverter(typeof(WordConverter))] [JsonProperty(PropertyName = "word", Required = Required.Always)]
                 public Word Word;
 
-                [JsonProperty(PropertyName = "filePathPrefixDisabled")]
-                public bool FilePathPrefixDisabled = false;
+                [JsonProperty(PropertyName = "filePathPrefixEnabled")]
+                public bool FilePathPrefixEnabled = true;
             }
         }
     }

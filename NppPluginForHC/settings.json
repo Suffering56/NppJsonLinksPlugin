@@ -1,12 +1,13 @@
 {
-  "mappingFilePathPrefix": "D:/projects/shelter/gd_data/",
+  "mappingFilePathPrefix": "F:/gd_data/",
+  "cacheEnabled": false,
+  "jumpToLineDelay": 100,
   "mapping": [
     {
-      "description": "",
+      "description": "обычная настройка маппинга",
       "src": {
         "filePath": "mobSettings.json",
-        "word": "battleClass",
-        "filePathPrefixDisabled": false
+        "word": "battleClass"
       },
       "dst": {
         "filePath": "battleClasses.json",
@@ -14,13 +15,26 @@
       }
     },
     {
+      "description": "обычная настройка маппинга + filePathPrefixEnabled (по умолчанию = true) - настройка позволяющая задавать абсолютный путь к файлу в filePath, если ее установить в false",
       "src": {
         "filePath": "mobSettings.json",
-        "word": "abilityId"
+        "word": "abilityId",
+        "filePathPrefixEnabled": true
       },
       "dst": {
         "filePath": "abilities.json",
         "word": "id"
+      }
+    },
+    {
+      "description": "пример сложного маппинга. в файле equipments есть несколько разных полей с одинаковым именем <id>, поэтому используется уточняющий путь (id<<ROOT)",
+      "src": {
+        "filePath": "rewardPacks.json",
+        "word": "equipmentId"
+      },
+      "dst": {
+        "filePath": "equipments.json",
+        "word": "id<<ROOT"
       }
     }
   ]

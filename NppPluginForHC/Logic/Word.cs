@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace NppPluginForHC.Logic
 {
     public class Word
     {
-        private const string WordSeparator = "<<";
+        public const string WordSeparator = "<<";
         private static readonly string[] WordSeparatorForSplit = {WordSeparator};
 
         public readonly string WordString;
@@ -36,6 +36,18 @@ namespace NppPluginForHC.Logic
         public bool IsComplex()
         {
             return Parent != null;
+        }
+
+        public Word GetWordByDeep(int deep)
+        {
+            Word word = this;
+            for (int i = 1; i <= deep; i++)
+            {
+                Debug.Assert(word.Parent != null, $"parent word by deep={deep} is null");
+                word = word.Parent;
+            }
+
+            return word;
         }
 
         private bool Equals(Word other)

@@ -44,14 +44,14 @@ namespace NppPluginForHC
         internal static void CommandMenuInit()
         {
             _idMyDlg = 1;
-            
-            PluginBase.SetCommand(0, "Version", () =>  MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
+
+            PluginBase.SetCommand(0, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
             // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
             PluginBase.SetCommand(1, "", null);
             PluginBase.SetCommand(2, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
 
-            PluginBase.SetCommand(3, "Navigate Backward", NavigateBackward, new ShortcutKey(false, true, false, Keys.Left));
-            PluginBase.SetCommand(4, "Navigate Forward", NavigateForward, new ShortcutKey(false, true, false, Keys.Right));
+            PluginBase.SetCommand(3, "Navigate Backward", NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
+            PluginBase.SetCommand(4, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
         }
 
         public static void OnNotification(ScNotification notification)
@@ -113,6 +113,15 @@ namespace NppPluginForHC
                         }
 
                         break;
+
+                    case (uint) SciMsg.SCN_SAVEPOINTREACHED:
+                        SearchEngine.FireSaveFile();
+                        Logger.Info("SCN_SAVEPOINTREACHED");
+                        break;
+
+                    case (uint) NppMsg.NPPN_FILEOPENED:
+                        Logger.Info("NPPN_FILEOPENED");
+                        break;
                 }
             }
         }
@@ -158,14 +167,14 @@ namespace NppPluginForHC
 
             if (isTextInserted)
             {
-                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length, notification.LinesAdded);
-                // SearchEngine.FireInsertText(currentLine, insertedText);
+                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length, linesAdded);
+                SearchEngine.FireInsertText(currentLine, linesAdded, insertedText);
                 Logger.Info($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
             }
 
             if (isTextDeleted)
             {
-                // SearchEngine.FireDeleteText(currentLine, insertedText);
+                SearchEngine.FireDeleteText(currentLine, -linesAdded);
                 if (linesAdded < 0)
                 {
                     Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
@@ -210,7 +219,7 @@ namespace NppPluginForHC
 
                 if (jumpLocation != null)
                 {
-                    ShowLineInNotepadPP(jumpLocation);
+                    JumpToLocation(jumpLocation);
                 }
                 else
                 {
@@ -237,35 +246,38 @@ namespace NppPluginForHC
             throw new Exception("Current time path not found?");
         }
 
-        private static void ShowLineInNotepadPP(JumpLocation jumpLocation)
+        private static void JumpToLocation(JumpLocation jumpLocation)
         {
             PushJump(jumpLocation.FilePath, jumpLocation.Line);
-            ShowLineInNotepadPP(jumpLocation.FilePath, jumpLocation.Line);
-        }
 
-        private static void ShowLineInNotepadPP(string file, int line)
-        {
+            string file = jumpLocation.FilePath;
+            int line = jumpLocation.Line;
+
             Logger.Info($"Opening file '{file}'");
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, file);
-            IntPtr curScintilla = PluginBase.GetCurrentScintilla();
 
-            Utils.ExecuteDelayed(() => // задержка фиксит багу с выделением текста при переходе
-            {
-                int currentPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
-
-                int currentLine = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
-                if ((line != 1) && (line - 1 != currentLine))
-                {
-                    Win32.SendMessage(curScintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
-                    Win32.SendMessage(curScintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
-                    Win32.SendMessage(curScintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
-                }
-
-                Win32.SendMessage(curScintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
-            }, 100);
+            // задержка фиксит багу с выделением текста при переходе
+            Utils.ExecuteDelayed(() => JumpToLine(line), _settings.JumpToLineDelay);
         }
 
-        internal static void PushJump(string source, int line)
+        private static void JumpToLine(int line)
+        {
+            IntPtr curScintilla = PluginBase.GetCurrentScintilla();
+
+            int currentPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+
+            int currentLine = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
+            if ((line != 1) && (line - 1 != currentLine))
+            {
+                Win32.SendMessage(curScintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
+                Win32.SendMessage(curScintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
+                Win32.SendMessage(curScintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
+            }
+
+            Win32.SendMessage(curScintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
+        }
+
+        private static void PushJump(string source, int line)
         {
             StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
             if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
@@ -295,7 +307,7 @@ namespace NppPluginForHC
             {
                 if ((_jumpPos <= 1)) throw new Exception();
                 int newPos = JumpStack.Count - (--_jumpPos);
-                ShowLineInNotepadPP(JumpStack.ToArray()[newPos]);
+                JumpToLocation(JumpStack.ToArray()[newPos]);
             }
             catch
             {
@@ -309,7 +321,7 @@ namespace NppPluginForHC
             {
                 if (JumpStack.Count <= _jumpPos) throw new Exception();
                 int newPos = JumpStack.Count - (++_jumpPos);
-                ShowLineInNotepadPP(JumpStack.ToArray()[newPos]);
+                JumpToLocation(JumpStack.ToArray()[newPos]);
             }
             catch
             {
@@ -325,7 +337,7 @@ namespace NppPluginForHC
             if (_frmMyDlg == null)
             {
                 _frmMyDlg = new frmMyDlg();
-        
+
                 using (Bitmap newBmp = new Bitmap(16, 16))
                 {
                     Graphics g = Graphics.FromImage(newBmp);
@@ -338,7 +350,7 @@ namespace NppPluginForHC
                     g.DrawImage(TbBmpTbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
                     _tbIcon = Icon.FromHandle(newBmp.GetHicon());
                 }
-        
+
                 NppTbData _nppTbData = new NppTbData();
                 _nppTbData.hClient = _frmMyDlg.Handle;
                 _nppTbData.pszName = "My dockable dialog";
@@ -348,10 +360,10 @@ namespace NppPluginForHC
                 _nppTbData.pszModuleName = PluginName;
                 IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
                 Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
-        
+
                 Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
             }
-        
+
             else
             {
                 Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _frmMyDlg.Handle);

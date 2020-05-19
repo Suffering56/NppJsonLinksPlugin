@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using NppPluginForHC.Core;
 using static NppPluginForHC.Logic.Settings;
@@ -16,6 +17,7 @@ namespace NppPluginForHC.Logic
         private readonly ISet<string> _availableSrcWords;
 
         private string _currentFilePath = null;
+        private bool _cacheEnabled;
 
         public DefinitionSearchEngine()
         {
@@ -25,6 +27,7 @@ namespace NppPluginForHC.Logic
 
         public void Init(Settings settings, string currentFilePath)
         {
+            _cacheEnabled = settings.CacheEnabled;
             var dstFilePathToDstWordsMap = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
 
             foreach (var mappingItem in settings.Mapping)
@@ -57,8 +60,22 @@ namespace NppPluginForHC.Logic
 
             Logger.Info($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
             _currentFilePath = currentFilePath;
+        }
 
-            //TODO: NYI
+        public void FireInsertText(int currentLine, int linesAdded, string insertedText)
+        {
+            // GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
+        }
+
+        public void FireDeleteText(int currentLine, int linesDeleted)
+        {
+            //from = currentLine + 1, to =  currentLine - linesAdded
+            // GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
+        }
+
+        public void FireSaveFile()
+        {
+            GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
         }
 
         public JumpLocation? FindDefinitionLocation(string selectedWordString, SearchContextProvider searchContextProvider)
@@ -67,6 +84,12 @@ namespace NppPluginForHC.Logic
             if (mappingItem == null) return null;
 
             var dstFileContainer = _mappingToFileContainerMap[mappingItem];
+
+
+            if (!_cacheEnabled)
+            {
+                dstFileContainer.ClearIfChanged();
+            }
 
             dstFileContainer.InitIfNeeded();
 
@@ -90,25 +113,33 @@ namespace NppPluginForHC.Logic
                 if (!srcWord.IsComplex()) return mappingItem;
 
                 var searchContext = searchContextProvider();
-                throw new NotImplementedException("//TODO: support complex words");
+
+                if (searchContext.IsSelectedWordEqualsWith(srcWord)) return mappingItem;
             }
 
             return null;
         }
 
+        private DstFileContainer GetContainerByDstFilePath(string dstFilePath)
+        {
+            return _mappingToFileContainerMap.Values.FirstOrDefault(dstFileContainer => dstFileContainer.DstFilePath == dstFilePath);
+        }
+
         private class DstFileContainer
         {
-            private readonly string _dstFilePath;
+            internal string DstFilePath { get; }
             private readonly IDictionary<Word, ValuesLocationContainer> _dstWordToValuesLocationContainer; // dstWord -> ValuesLocationContainer
             private readonly bool _hasComplexWords;
             private bool _inited;
+            private bool _changed;
 
             internal DstFileContainer(string dstFilePath, ISet<Word> dstWords)
             {
                 _inited = false;
-                _dstFilePath = dstFilePath;
+                DstFilePath = dstFilePath;
                 _dstWordToValuesLocationContainer = new Dictionary<Word, ValuesLocationContainer>();
                 _hasComplexWords = false;
+                _changed = false;
 
                 foreach (var dstWord in dstWords)
                 {
@@ -132,177 +163,53 @@ namespace NppPluginForHC.Logic
             {
                 if (_inited) return;
 
-                if (!File.Exists(_dstFilePath))
+                if (!File.Exists(DstFilePath))
                 {
-                    Logger.Error($"dstFile={_dstFilePath} not exist");
+                    Logger.Error($"dstFile={DstFilePath} not exist");
                     return;
                 }
 
+                var parser = new SearchEngineJsonParser(_dstWordToValuesLocationContainer);
                 try
                 {
-                    InitSubContainersByJsonReader();
+                    parser.TryParseValidJson(DstFilePath);
                 }
                 catch (Exception)
                 {
-                    InitSubContainersByStringReader();
+                    if (_hasComplexWords)
+                    {
+                        Logger.Error($"cannot parse invalid json file: {DstFilePath}");
+                    }
+
+                    parser.ParseInvalidJson(DstFilePath);
                 }
 
                 _inited = true;
             }
 
-            private void InitSubContainersByJsonReader()
+            internal void ClearIfChanged()
             {
-                string expectedWord = null;
+                if (!_changed) return;
 
-                using JsonTextReader reader = new JsonTextReader(new StreamReader(_dstFilePath));
-                while (reader.Read())
+                _inited = false;
+                foreach (var entry in _dstWordToValuesLocationContainer)
                 {
-                    if (reader.Value == null) continue;
-
-                    foreach (var entry in _dstWordToValuesLocationContainer)
-                    {
-                        var dstWord = entry.Key;
-                        var valuesContainer = entry.Value;
-                        // var dstWordString = entry.Key.WordString;
-                        // var tokenType = reader.TokenType;
-
-                        if (!dstWord.IsComplex())
-                        {
-                            ParseSimpleWord(reader, valuesContainer, dstWord, ref expectedWord);
-                        }
-                    }
+                    entry.Value.Clear();
                 }
+
+                _changed = false;
             }
 
-            private static void ParseSimpleWord(JsonTextReader reader, ValuesLocationContainer valuesContainer, Word dstWord, ref string expectedWord)
+            internal void OnContentChanged()
             {
-                var tokenType = reader.TokenType;
-
-                //ожидаем property
-                if (tokenType == JsonToken.PropertyName) // TODO: or StartToken/EndToken/etc..
-                {
-                    expectedWord = null;
-
-                    if (dstWord.WordString == reader.Value.ToString())
-                    {
-                        expectedWord = dstWord.WordString;
-                    }
-
-                    return;
-                }
-
-                if (expectedWord != dstWord.WordString) return;
-
-                //ожидаем value
-                string valueString = reader.Value.ToString();
-                switch (tokenType)
-                {
-                    case JsonToken.Boolean:
-                        valueString = valueString.ToLower();
-                        break;
-
-                    case JsonToken.Float:
-                        valueString = valueString.Replace(',', '.');
-                        break;
-
-                    case JsonToken.Integer:
-                    case JsonToken.String:
-                        break;
-
-                    case JsonToken.None:
-                    case JsonToken.StartObject:
-                    case JsonToken.StartArray:
-                    case JsonToken.StartConstructor:
-                    case JsonToken.PropertyName:
-                    case JsonToken.Comment:
-                    case JsonToken.Raw:
-                    case JsonToken.Null:
-                    case JsonToken.Undefined:
-                    case JsonToken.EndObject:
-                    case JsonToken.EndArray:
-                    case JsonToken.EndConstructor:
-                    case JsonToken.Date:
-                    case JsonToken.Bytes:
-                    default:
-                        return;
-                }
-
-                valuesContainer.PutOrReplace(valueString, reader.LineNumber);
-                expectedWord = null;
-            }
-
-            private void InitSubContainersByStringReader()
-            {
-                using StreamReader sr = new StreamReader(_dstFilePath);
-                int lineNumber = 0;
-                string lineText;
-                while ((lineText = sr.ReadLine()) != null)
-                {
-                    foreach (var entry in _dstWordToValuesLocationContainer)
-                    {
-                        var dstWordString = entry.Key.WordString;
-                        var valuesContainer = entry.Value;
-
-                        if (!lineText.Contains($"\"{dstWordString}\"")) continue;
-
-                        string value = Utils.ExtractTokenValueByLine(lineText, dstWordString);
-                        if (value != null)
-                        {
-                            valuesContainer.PutOrReplace(value, lineNumber);
-                        }
-                    }
-
-                    lineNumber++;
-                }
-
-                return;
-                throw new NotImplementedException();
-
-                // Token: StartObject
-                // Token: PropertyName, Value: CPU
-                // Token: String, Value: Intel
-                // Token: PropertyName, Value: PSU
-                // Token: String, Value: 500W
-                // Token: PropertyName, Value: Drives
-                // Token: StartArray
-                // Token: String, Value: DVD read/writer
-                // Token: Comment, Value: (broken)
-                //     Token: String, Value: 500 gigabyte hard drive
-                // Token: String, Value: 200 gigabyte hard drive
-                // Token: EndArray
-                // Token: EndObject
-
-
-                string json = @"{
-                               'CPU': 'Intel',
-                               'PSU': '500W',
-                               'Drives': [
-                                 'DVD read/writer'
-                                 /*(broken)*/,
-                                 '500 gigabyte hard drive',
-                                 '200 gigabyte hard drive'
-                               ]
-                            }";
-
-                JsonTextReader reader = new JsonTextReader(new StringReader(json));
-                while (reader.Read())
-                {
-                    if (reader.Value != null)
-                    {
-                        Logger.Info($"Token: {reader.TokenType}, Value: {reader.Value}");
-                    }
-                    else
-                    {
-                        Logger.Info($"Token: {reader.TokenType}");
-                    }
-                }
+                _changed = true;
             }
         }
 
-        private class ValuesLocationContainer
+        public class ValuesLocationContainer
         {
             private readonly string _dstFilePath;
-            private readonly IDictionary<string, int> _valueToLineMap; // value -> JumpLocation
+            private readonly IDictionary<string, int> _valueToLineMap; // value ->  jumpLine
 
             internal ValuesLocationContainer(string dstFilePath)
             {
@@ -320,6 +227,11 @@ namespace NppPluginForHC.Logic
             internal void PutOrReplace(string value, int lineNumber)
             {
                 _valueToLineMap[value] = lineNumber;
+            }
+
+            internal void Clear()
+            {
+                _valueToLineMap.Clear();
             }
         }
     }

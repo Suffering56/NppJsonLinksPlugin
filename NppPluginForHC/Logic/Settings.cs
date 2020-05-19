@@ -30,6 +30,8 @@ namespace NppPluginForHC.Logic
             return new Settings
             {
                 MappingFilePathPrefix = rawSettings.MappingFilePathPrefix,
+                CacheEnabled = rawSettings.CacheEnabled,
+                JumpToLineDelay = rawSettings.JumpToLineDelay,
                 Mapping = mappingItems
             };
         }
@@ -39,9 +41,9 @@ namespace NppPluginForHC.Logic
             return new Settings.MappingItem.Location
             {
                 Word = location.Word,
-                FilePath = location.FilePathPrefixDisabled
-                    ? Path.GetFullPath(location.FilePath)
-                    : Path.GetFullPath(mappingFilePathPrefix + location.FilePath)
+                FilePath = location.FilePathPrefixEnabled
+                    ? Path.GetFullPath(mappingFilePathPrefix + location.FilePath)
+                    : Path.GetFullPath(location.FilePath)
             };
         }
 
@@ -50,11 +52,18 @@ namespace NppPluginForHC.Logic
             //TODO: как минимум проверить маппинг на отсутствие дубликатов
         }
     }
-    
+
     [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public class Settings
     {
+        public const string RootTokenPropertyName = "ROOT";
+        public const int DefaultJumpToLineDelay = 100;
+
         public string MappingFilePathPrefix { get; internal set; }
+
+        public bool CacheEnabled { get; internal set; }
+
+        public int JumpToLineDelay { get; internal set; }
 
         public IEnumerable<MappingItem> Mapping { get; internal set; }
 
