@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -26,6 +27,8 @@ namespace NppPluginForHC
 
         private static readonly SearchEngine SearchEngine = new SearchEngine();
         private static bool _isPluginInited = false;
+        internal static bool IsPluginEnabled = true;
+
         private static bool _isFileLoadingActive = false;
 
         private static int _jumpPos = 0;
@@ -63,7 +66,6 @@ namespace NppPluginForHC
         {
             var notificationType = notification.Header.Code;
 
-            // NPP successfully started
             if (notificationType == (uint) NppMsg.NPPN_READY)
             {
                 ProcessInit();
@@ -134,24 +136,32 @@ namespace NppPluginForHC
 
         private static void ProcessInit()
         {
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            try
+            {
+                var gateway = PluginBase.GetGatewayFactory().Invoke();
 
-            // загружаем настройки плагина
-            _settings = LoadSettings();
-            Logger.Info($"settings loaded: mappingFilePathPrefix={_settings.MappingFilePathPrefix}");
+                // загружаем настройки плагина
+                _settings = LoadSettings();
+                Logger.Info($"settings loaded: mappingFilePathPrefix={_settings.MappingFilePathPrefix}");
 
-            // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
-            gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
+                // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
+                gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
 
-            // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
-            SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
+                // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
+                SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
 
-            // инициализация обработчика кликов мышкой
-            MouseHook.Start();
-            MouseHook.RegisterListener(OnLeftMouseClick);
+                // инициализация обработчика кликов мышкой
+                MouseHook.Start();
+                MouseHook.RegisterListener(OnLeftMouseClick);
 
-            // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
-            _isPluginInited = true;
+                // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
+                _isPluginInited = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private static void ProcessModified(ScNotification notification)
@@ -229,13 +239,14 @@ namespace NppPluginForHC
                     JumpToLocation(jumpLocation);
                     return;
                 }
-                else
-                {
-                    System.Media.SystemSounds.Asterisk.Play();
-                }
             }
 
             gateway.GrabFocus();
+
+            if (_settings.SoundEnabled)
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+            }
         }
 
         private static void JumpToLocation(JumpLocation jumpLocation)

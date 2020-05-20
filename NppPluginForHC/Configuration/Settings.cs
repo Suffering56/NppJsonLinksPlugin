@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using NppPluginForHC.Core;
 using NppPluginForHC.Logic;
 
 namespace NppPluginForHC.Configuration
@@ -13,7 +15,19 @@ namespace NppPluginForHC.Configuration
         {
             var rawSettings = JsonConvert.DeserializeObject<RawSettings>(File.ReadAllText(settingsFilePath));
             Settings settings = ConvertRawSettings(rawSettings);
-            Validate(settings);
+            
+            Logger.SetMode(settings.LoggerMode, settings.LogPathPrefix);
+            
+            try
+            {
+                Validate(settings);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorMsgBox(e.Message);
+                Main.IsPluginEnabled = false;
+            }
+
             return settings;
         }
 
@@ -29,9 +43,12 @@ namespace NppPluginForHC.Configuration
 
             return new Settings
             {
-                MappingFilePathPrefix = rawSettings.MappingFilePathPrefix,
+                LoggerMode = rawSettings.LoggerMode,
+                LogPathPrefix = rawSettings.LogPathPrefix,
                 CacheEnabled = rawSettings.CacheEnabled,
+                SoundEnabled = rawSettings.SoundEnabled,
                 JumpToLineDelay = rawSettings.JumpToLineDelay,
+                MappingFilePathPrefix = rawSettings.MappingFilePathPrefix,
                 Mapping = mappingItems
             };
         }
@@ -49,21 +66,23 @@ namespace NppPluginForHC.Configuration
 
         private static void Validate(Settings settings)
         {
-            //TODO: как минимум проверить маппинг на отсутствие дубликатов
         }
     }
 
     [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public class Settings
     {
-        public const string RootTokenPropertyName = "ROOT";
-        public const int DefaultJumpToLineDelay = 100;
+        public Logger.Mode LoggerMode { get; internal set; }
 
-        public string MappingFilePathPrefix { get; internal set; }
+        public string LogPathPrefix { get; internal set; }
 
         public bool CacheEnabled { get; internal set; }
 
+        public bool SoundEnabled { get; internal set; }
+
         public int JumpToLineDelay { get; internal set; }
+
+        public string MappingFilePathPrefix { get; internal set; }
 
         public IEnumerable<MappingItem> Mapping { get; internal set; }
 

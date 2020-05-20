@@ -1,7 +1,12 @@
 {
-  "mappingFilePathPrefix": "F:/gd_data/",
+  "loggerMode": "ENABLED",
+  "logPathPrefix": "C:/NppPluginForHC/",
+  
   "cacheEnabled": false,
+  "soundEnabled": true,
   "jumpToLineDelay": 100,
+
+  "mappingFilePathPrefix": "F:/gd_data/",
   "mapping": [
     {
       "description": "обычная настройка маппинга",

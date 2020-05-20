@@ -68,6 +68,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppConstants.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\MouseHook.cs" />
     <Compile Include="Core\NullableDictionary.cs" />

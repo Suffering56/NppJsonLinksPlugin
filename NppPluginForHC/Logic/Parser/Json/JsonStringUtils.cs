@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using NppPluginForHC.Configuration;
 
 namespace NppPluginForHC.Logic.Parser.Json
 {
@@ -11,7 +10,7 @@ namespace NppPluginForHC.Logic.Parser.Json
         private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
         public delegate string LineTextProvider(int lineIndex);
 
-        private static readonly TokenResult RootTokenResult = new TokenResult(Settings.RootTokenPropertyName, 0);
+        private static readonly TokenResult RootTokenResult = new TokenResult(AppConstants.RootTokenPropertyName, 0);
         private const char ExpectNamedObjectChar = ':';
         private const char PropertyBorderChar = '"';
         private const string EmptyString = "";

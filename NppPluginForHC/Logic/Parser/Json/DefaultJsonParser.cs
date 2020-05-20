@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using NppPluginForHC.Configuration;
-using NppPluginForHC.Core;
 
 namespace NppPluginForHC.Logic.Parser.Json
 {
     public class DefaultJsonParser : IDocumentParser
     {
-        public void ParseValidDocument(string filePath, ICollection<Word> expectedWords, OnExpectedValueFound onValueFound)
+        public void ParseValidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
         {
             string expectedWord = null;
             string currentPropertyName = null;
 
             Stack<string> propertyStack = new Stack<string>();
-            propertyStack.Push(Settings.RootTokenPropertyName);
+            propertyStack.Push(AppConstants.RootTokenPropertyName);
 
             using JsonTextReader reader = new JsonTextReader(new StreamReader(filePath));
             while (reader.Read())
@@ -28,17 +26,17 @@ namespace NppPluginForHC.Logic.Parser.Json
 
                     if (!dstWord.IsComplex())
                     {
-                        ParseSimpleWord(tokenType, value, dstWord, ref expectedWord, val => onValueFound.Invoke(dstWord, lineNumber, val));
+                        ParseSimpleWord(tokenType, value, dstWord, ref expectedWord, val => valueConsumer.Invoke(dstWord, lineNumber, val));
                     }
                     else
                     {
-                        ParseComplexWord(tokenType, value, dstWord, ref currentPropertyName, propertyStack, val => onValueFound.Invoke(dstWord, lineNumber, val));
+                        ParseComplexWord(tokenType, value, dstWord, ref currentPropertyName, propertyStack, val => valueConsumer.Invoke(dstWord, lineNumber, val));
                     }
                 }
             }
         }
 
-        public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, OnExpectedValueFound onValueFound)
+        public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
         {
             int lineNumber = 0;
             string lineText;
@@ -54,7 +52,7 @@ namespace NppPluginForHC.Logic.Parser.Json
                     string value = JsonStringUtils.ExtractTokenValueByLine(lineText, dstWordString);
                     if (value != null)
                     {
-                        onValueFound.Invoke(dstWord, lineNumber, value);
+                        valueConsumer.Invoke(dstWord, lineNumber, value);
                     }
                 }
 
