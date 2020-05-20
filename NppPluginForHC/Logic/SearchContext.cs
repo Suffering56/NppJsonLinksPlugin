@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using NppPluginForHC.Core;
 using NppPluginForHC.PluginInfrastructure;
+using IScintillaGateway = NppPluginForHC.PluginInfrastructure.Gateway.IScintillaGateway;
 
 namespace NppPluginForHC.Logic
 {

@@ -2,7 +2,7 @@
 
 using System;
 
-namespace NppPluginForHC.PluginInfrastructure
+namespace NppPluginForHC.PluginInfrastructure.Gateway
 {
     /// <summary>
     /// This it the plugin-writers primary interface to Notepad++/Scintilla.

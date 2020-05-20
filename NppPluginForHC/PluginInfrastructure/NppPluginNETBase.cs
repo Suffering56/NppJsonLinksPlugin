@@ -1,6 +1,7 @@
 ﻿// NPP plugin platform for .Net v0.94.00 by Kasper B. Graversen etc.
 
 using System;
+using NppPluginForHC.PluginInfrastructure.Gateway;
 
 namespace NppPluginForHC.PluginInfrastructure
 {

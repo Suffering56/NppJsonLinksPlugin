@@ -1,4 +1,4 @@
-﻿namespace NppPluginForHC.PluginInfrastructure
+﻿namespace NppPluginForHC.PluginInfrastructure.Gateway
 {
     public partial interface IScintillaGateway
     {

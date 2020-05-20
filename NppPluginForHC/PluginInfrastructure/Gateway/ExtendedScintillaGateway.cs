@@ -2,7 +2,7 @@
 using System.Text;
 using NppPluginForHC.Core;
 
-namespace NppPluginForHC.PluginInfrastructure
+namespace NppPluginForHC.PluginInfrastructure.Gateway
 {
     public partial class ScintillaGateway : IScintillaGateway
     {

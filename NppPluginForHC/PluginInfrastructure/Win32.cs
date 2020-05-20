@@ -4,6 +4,7 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using NppPluginForHC.PluginInfrastructure.Gateway;
 
 namespace NppPluginForHC.PluginInfrastructure
 {
@@ -81,7 +82,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -90,7 +91,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -99,7 +100,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -108,7 +109,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -117,7 +118,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -128,7 +129,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -139,7 +140,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -150,7 +151,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -164,7 +165,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -175,7 +176,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -186,7 +187,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -197,7 +198,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -208,7 +209,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -219,7 +220,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -230,7 +231,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -241,7 +242,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -252,7 +253,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as 
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.  
         /// If gateways are missing or incomplete, please help extend them and send your code to the project 
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>
@@ -263,7 +264,7 @@ namespace NppPluginForHC.PluginInfrastructure
 
         /// <summary>
         /// You should try to avoid calling this method in your plugin code. Rather use one of the gateways such as
-        /// <see cref="ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.
+        /// <see cref="Gateway.ScintillaGateway"/> or <see cref="NotepadPPGateway"/>.
         /// If gateways are missing or incomplete, please help extend them and send your code to the project
         /// at https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net
         /// </summary>

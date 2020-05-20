@@ -10,7 +10,7 @@
     <AssemblyName>NppPluginForHC</AssemblyName>
     <OutputPath>bin\Debug\</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <LangVersion>7</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -76,7 +76,6 @@
     <Compile Include="Logic\Parser\DefaultJsonParser.cs" />
     <Compile Include="Logic\SearchContext.cs" />
     <Compile Include="Logic\Word.cs" />
-    <Compile Include="PluginInfrastructure\ExtendedScintillaGateway.cs" />
     <Compile Include="Logic\JumpLocation.cs" />
     <Compile Include="Logic\SearchEngine.cs" />
     <Compile Include="MouseHook.cs" />
@@ -88,13 +87,14 @@
     <Compile Include="Forms\frmMyDlg.Designer.cs">
       <DependentUpon>frmMyDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="PluginInfrastructure\IExtendedScintillaGateway.cs" />
+    <Compile Include="PluginInfrastructure\Gateway\ExtendedScintillaGateway.cs" />
+    <Compile Include="PluginInfrastructure\Gateway\IExtendedScintillaGateway.cs" />
+    <Compile Include="PluginInfrastructure\Gateway\IScintillaGateway.cs" />
+    <Compile Include="PluginInfrastructure\Gateway\ScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\Win32.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="PluginInfrastructure\GatewayDomain.cs" />
     <Compile Include="PluginInfrastructure\NotepadPPGateway.cs" />
-    <Compile Include="PluginInfrastructure\ScintillaGateway.cs" />
-    <Compile Include="PluginInfrastructure\IScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\NppPluginNETBase.cs" />
     <Compile Include="PluginInfrastructure\NppPluginNETHelper.cs" />
     <Compile Include="PluginInfrastructure\Docking_h.cs" />

@@ -1,5 +1,4 @@
-﻿// #nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,8 +11,7 @@ namespace NppPluginForHC.Logic
 {
     public class DefinitionSearchEngine
     {
-        //TODO: override MappingItem equals and hashCode 
-        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToFileContainerMap; // dstFilePath -> DstFileContainer
+        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToFileContainerMap;
         private readonly ISet<string> _availableSrcWords;
 
         private string _currentFilePath = null;
