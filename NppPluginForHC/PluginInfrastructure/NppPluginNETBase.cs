@@ -39,17 +39,15 @@ namespace NppPluginForHC.PluginInfrastructure
 
         internal static IntPtr GetCurrentScintilla()
         {
-            int curScintilla;
-            Win32.SendMessage(nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTSCINTILLA, 0, out curScintilla);
+            Win32.SendMessage(nppData._nppHandle, (uint) NppMsg.NPPM_GETCURRENTSCINTILLA, 0, out var curScintilla);
             return (curScintilla == 0) ? nppData._scintillaMainHandle : nppData._scintillaSecondHandle;
         }
 
+        private static readonly Func<IScintillaGateway> GatewayFactory = () => new ScintillaGateway(GetCurrentScintilla());
 
-        static readonly Func<IExtendedScintillaGateway> gatewayFactory = () => new ExtendedScintillaGateway(GetCurrentScintilla());
-
-        public static Func<IExtendedScintillaGateway> GetGatewayFactory()
+        public static Func<IScintillaGateway> GetGatewayFactory()
         {
-            return gatewayFactory;
+            return GatewayFactory;
         }
     }
 }

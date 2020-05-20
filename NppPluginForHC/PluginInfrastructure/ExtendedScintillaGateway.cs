@@ -4,14 +4,8 @@ using NppPluginForHC.Core;
 
 namespace NppPluginForHC.PluginInfrastructure
 {
-    //TODO: мб partial это то что нужно, вместо наследования?
-    public class ExtendedScintillaGateway : ScintillaGateway, IExtendedScintillaGateway
+    public partial class ScintillaGateway : IScintillaGateway
     {
-        public ExtendedScintillaGateway(IntPtr scintilla) : base(scintilla)
-        {
-            // do nothing: all right
-        }
-
         public int PositionToLine(int position)
         {
             return (int) Win32.SendMessage(scintilla, SciMsg.SCI_LINEFROMPOSITION, position, 0);
@@ -74,7 +68,7 @@ namespace NppPluginForHC.PluginInfrastructure
                 {
                     text = text.TrimEnd('\r', '\n');
                 }
-                
+
                 if (startOffset > 0)
                 {
                     if (startOffset >= text.Length)
@@ -83,6 +77,7 @@ namespace NppPluginForHC.PluginInfrastructure
                         // я пока не могу объяснить такое поведение, так же как и менее костыльно его обработать
                         startOffset = text.Length - 1;
                     }
+
                     text = text.Substring(startOffset, text.Length - startOffset);
                     startOffset = 0;
                 }

@@ -1,11 +1,11 @@
-﻿#nullable enable
+﻿// #nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using NppPluginForHC.Core;
+using NppPluginForHC.Logic.Parser;
 using static NppPluginForHC.Logic.Settings;
 
 namespace NppPluginForHC.Logic
@@ -18,11 +18,13 @@ namespace NppPluginForHC.Logic
 
         private string _currentFilePath = null;
         private bool _cacheEnabled;
+        private readonly IDocumentParser _parser;
 
         public DefinitionSearchEngine()
         {
             _mappingToFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
             _availableSrcWords = new HashSet<string>();
+            _parser = new DefaultJsonParser();
         }
 
         public void Init(Settings settings, string currentFilePath)
@@ -45,7 +47,7 @@ namespace NppPluginForHC.Logic
                 var supportedWords = dstFilePathToDstWordsMap[dstFilePath];
 
                 Debug.Assert(!_mappingToFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
-                _mappingToFileContainerMap[mappingItem] = new DstFileContainer(dstFilePath, supportedWords);
+                _mappingToFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
 
                 // для быстрой проверки
                 _availableSrcWords.Add(mappingItem.Src.Word.WordString);
@@ -127,17 +129,20 @@ namespace NppPluginForHC.Logic
 
         private class DstFileContainer
         {
+            private readonly IDocumentParser _parser;
             internal string DstFilePath { get; }
             private readonly IDictionary<Word, ValuesLocationContainer> _dstWordToValuesLocationContainer; // dstWord -> ValuesLocationContainer
             private readonly bool _hasComplexWords;
             private bool _inited;
             private bool _changed;
 
-            internal DstFileContainer(string dstFilePath, ISet<Word> dstWords)
+            internal DstFileContainer(IDocumentParser parser, string dstFilePath, ISet<Word> dstWords)
             {
-                _inited = false;
+                _parser = parser;
                 DstFilePath = dstFilePath;
                 _dstWordToValuesLocationContainer = new Dictionary<Word, ValuesLocationContainer>();
+
+                _inited = false;
                 _hasComplexWords = false;
                 _changed = false;
 
@@ -159,6 +164,11 @@ namespace NppPluginForHC.Logic
                 return dstValuesLocationContainer.FindDefinitionByValue(value);
             }
 
+            private void OnDstValueFound(Word dstWord, int lineNumber, string value)
+            {
+                _dstWordToValuesLocationContainer[dstWord].PutOrReplace(value, lineNumber);
+            }
+
             public void InitIfNeeded()
             {
                 if (_inited) return;
@@ -169,10 +179,9 @@ namespace NppPluginForHC.Logic
                     return;
                 }
 
-                var parser = new SearchEngineJsonParser(_dstWordToValuesLocationContainer);
                 try
                 {
-                    parser.TryParseValidJson(DstFilePath);
+                    _parser.ParseValidDocument(DstFilePath, _dstWordToValuesLocationContainer.Keys, OnDstValueFound);
                 }
                 catch (Exception)
                 {
@@ -181,7 +190,7 @@ namespace NppPluginForHC.Logic
                         Logger.Error($"cannot parse invalid json file: {DstFilePath}");
                     }
 
-                    parser.ParseInvalidJson(DstFilePath);
+                    _parser.ParseInvalidDocument(DstFilePath, _dstWordToValuesLocationContainer.Keys, OnDstValueFound);
                 }
 
                 _inited = true;
@@ -206,7 +215,7 @@ namespace NppPluginForHC.Logic
             }
         }
 
-        public class ValuesLocationContainer
+        private class ValuesLocationContainer
         {
             private readonly string _dstFilePath;
             private readonly IDictionary<string, int> _valueToLineMap; // value ->  jumpLine

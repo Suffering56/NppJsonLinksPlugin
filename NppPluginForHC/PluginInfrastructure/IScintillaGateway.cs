@@ -10,7 +10,7 @@ namespace NppPluginForHC.PluginInfrastructure
     ///
     /// See http://www.scintilla.org/ScintillaDoc.html for further details.
     /// </summary>
-    public interface IScintillaGateway
+    public partial interface IScintillaGateway
     {
         int GetSelectionLength();
         void AppendTextAndMoveCursor(string text);

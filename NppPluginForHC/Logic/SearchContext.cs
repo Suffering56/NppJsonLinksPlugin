@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using NppPluginForHC.Core;
 using NppPluginForHC.PluginInfrastructure;
@@ -9,9 +8,9 @@ namespace NppPluginForHC.Logic
 
     public class SearchContext
     {
-        public IExtendedScintillaGateway Gateway { get; }
+        public IScintillaGateway Gateway { get; }
 
-        public SearchContext(IExtendedScintillaGateway gateway)
+        public SearchContext(IScintillaGateway gateway)
         {
             Gateway = gateway;
         }
@@ -19,7 +18,7 @@ namespace NppPluginForHC.Logic
         public string GetTokenValue(string propertyName)
         {
             string currentLineText = Gateway.GetLineText(Gateway.GetCurrentLine());
-            return Utils.ExtractTokenValueByLine(currentLineText, propertyName);
+            return JsonStringUtils.ExtractTokenValueByLine(currentLineText, propertyName);
         }
 
         public bool IsSelectedWordEqualsWith(Word expectedWord)

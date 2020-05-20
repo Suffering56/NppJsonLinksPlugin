@@ -12,11 +12,11 @@ namespace NppPluginForHC.PluginInfrastructure
     ///
     /// See http://www.scintilla.org/ScintillaDoc.html for further details.
     /// </summary>
-    public class ScintillaGateway : IScintillaGateway
+    public partial class ScintillaGateway : IScintillaGateway
     {
         private const int Unused = 0;
 
-        protected readonly IntPtr scintilla;
+        private readonly IntPtr scintilla;
 
         public static readonly int LengthZeroTerminator = "\0".Length;
 

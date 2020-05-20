@@ -1,14 +1,33 @@
 using System;
+using System.Text;
+using System.Text.RegularExpressions;
 using NppPluginForHC.Logic;
 
 namespace NppPluginForHC.Core
 {
-    public class JsonStringUtils
+    public static class JsonStringUtils
     {
         private static readonly TokenResult RootTokenResult = new TokenResult(Settings.RootTokenPropertyName, 0);
         private const char ExpectNamedObjectChar = ':';
         private const char PropertyBorderChar = '"';
         private const string EmptyString = "";
+
+        //TODO не учитываются строки с нецифрами и небуквами
+        private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
+
+        public static string ExtractTokenValueByLine(string lineText, string propertyName)
+        {
+            string pattern = new StringBuilder(TokenValuePattern).Replace("[PROPERTY_NAME]", propertyName).ToString();
+
+            var match = new Regex(pattern).Match(lineText);
+            if (!match.Success) return null;
+
+            var matchGroup = match.Groups[1];
+            return matchGroup.Success
+                ? matchGroup.Value
+                : null;
+        }
+
 
         public delegate string LineTextProvider(int lineIndex);
 

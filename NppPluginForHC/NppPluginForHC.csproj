@@ -10,7 +10,7 @@
     <AssemblyName>NppPluginForHC</AssemblyName>
     <OutputPath>bin\Debug\</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <LangVersion>8</LangVersion>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -70,15 +70,13 @@
   <ItemGroup>
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
-    <Compile Include="Core\JsonStringUtils.cs" />
+    <Compile Include="Core\StringUtils.cs" />
     <Compile Include="Core\Utils.cs" />
-    <Compile Include="Logic\SearchEngineJsonParser.cs" />
-    <Compile Include="Logic\RawSettings.cs" />
+    <Compile Include="Logic\Parser\IDocumentParser.cs" />
+    <Compile Include="Logic\Parser\DefaultJsonParser.cs" />
     <Compile Include="Logic\SearchContext.cs" />
-    <Compile Include="Logic\Settings.cs" />
     <Compile Include="Logic\Word.cs" />
     <Compile Include="PluginInfrastructure\ExtendedScintillaGateway.cs" />
-    <Compile Include="PluginInfrastructure\IExtendedScintillaGateway.cs" />
     <Compile Include="Logic\JumpLocation.cs" />
     <Compile Include="Logic\SearchEngine.cs" />
     <Compile Include="MouseHook.cs" />
@@ -90,6 +88,7 @@
     <Compile Include="Forms\frmMyDlg.Designer.cs">
       <DependentUpon>frmMyDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="PluginInfrastructure\IExtendedScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\Win32.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="PluginInfrastructure\GatewayDomain.cs" />
@@ -111,6 +110,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="PluginInfrastructure\UnmanagedExports.cs" />
+    <Compile Include="Settings\RawSettings.cs" />
+    <Compile Include="Settings\Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmMyDlg.resx">

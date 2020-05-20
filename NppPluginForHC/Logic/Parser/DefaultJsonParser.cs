@@ -1,25 +1,15 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 using NppPluginForHC.Core;
-using static NppPluginForHC.Logic.DefinitionSearchEngine;
 
-namespace NppPluginForHC.Logic
+namespace NppPluginForHC.Logic.Parser
 {
-    public class SearchEngineJsonParser
+    public class DefaultJsonParser : IDocumentParser
     {
-        private readonly IDictionary<Word, ValuesLocationContainer> _valuesContainerByWordMap;
-
-        private delegate void ValueConsumer(string value);
-
-        public SearchEngineJsonParser(IDictionary<Word, ValuesLocationContainer> valuesContainerByWordMap)
-        {
-            _valuesContainerByWordMap = valuesContainerByWordMap;
-        }
-
-        public void TryParseValidJson(string filePath)
+        public void ParseValidDocument(string filePath, ICollection<Word> expectedWords, OnExpectedValueFound onValueFound)
         {
             string expectedWord = null;
             string currentPropertyName = null;
@@ -27,33 +17,52 @@ namespace NppPluginForHC.Logic
             Stack<string> propertyStack = new Stack<string>();
             propertyStack.Push(Settings.RootTokenPropertyName);
 
-            // using JsonTextReader reader = new JsonTextReader(new StreamReader("F:/gd_data/convertPrices.json"));
             using JsonTextReader reader = new JsonTextReader(new StreamReader(filePath));
             while (reader.Read())
             {
-                foreach (var entry in _valuesContainerByWordMap)
+                foreach (var dstWord in expectedWords)
                 {
-                    var dstWord = entry.Key;
-                    var valuesContainer = entry.Value;
-
                     var tokenType = reader.TokenType;
                     object value = reader.Value;
+                    int lineNumber = reader.LineNumber;
 
                     if (!dstWord.IsComplex())
                     {
-                        // ReSharper disable once AccessToDisposedClosure
-                        ParseSimpleWord(tokenType, value, dstWord, ref expectedWord, val => valuesContainer.PutOrReplace(val, reader.LineNumber));
+                        ParseSimpleWord(tokenType, value, dstWord, ref expectedWord, val => onValueFound.Invoke(dstWord, lineNumber, val));
                     }
                     else
                     {
-                        // ReSharper disable once AccessToDisposedClosure
-                        ParseComplexWord(tokenType, value, dstWord, ref currentPropertyName, propertyStack, val => valuesContainer.PutOrReplace(val, reader.LineNumber));
+                        ParseComplexWord(tokenType, value, dstWord, ref currentPropertyName, propertyStack, val => onValueFound.Invoke(dstWord, lineNumber, val));
                     }
                 }
             }
         }
 
-        private static void ParseComplexWord(JsonToken tokenType, object? value, Word dstWord, ref string propertyName, Stack<string> propertyStack, ValueConsumer valueConsumer)
+        public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, OnExpectedValueFound onValueFound)
+        {
+            int lineNumber = 0;
+            string lineText;
+            using StreamReader sr = new StreamReader(filePath);
+            while ((lineText = sr.ReadLine()) != null)
+            {
+                foreach (var dstWord in expectedWords)
+                {
+                    var dstWordString = dstWord.WordString;
+
+                    if (!lineText.Contains($"\"{dstWordString}\"")) continue;
+
+                    string value = JsonStringUtils.ExtractTokenValueByLine(lineText, dstWordString);
+                    if (value != null)
+                    {
+                        onValueFound.Invoke(dstWord, lineNumber, value);
+                    }
+                }
+
+                lineNumber++;
+            }
+        }
+
+        private static void ParseComplexWord(JsonToken tokenType, object? value, Word dstWord, ref string propertyName, Stack<string> propertyStack, Action<string> valueConsumer)
         {
             switch (tokenType)
             {
@@ -129,37 +138,14 @@ namespace NppPluginForHC.Logic
                 if (parent != null) continue;
 
                 // все совпало, это наш токен. сохраняем значение
-
                 valueConsumer.Invoke(valueString);
-                // Print(propertyName, valueString, propertyStack);
                 return;
             }
 
             // стек закончился, а нам dstWord нет. значит это не тот токен
         }
 
-        private static void Print(string propertyName, string propertyValue, Stack<string> propertyStack)
-        {
-            string propertyPath = propertyName + Word.WordSeparator + propertyStack.Aggregate((current, next) =>
-            {
-                if (next == null)
-                {
-                    return current;
-                }
-
-                if (current == null)
-                {
-                    return next;
-                }
-
-                return current + Word.WordSeparator + next;
-            });
-
-            // Console.WriteLine($"{propertyPath}\t\t\t={propertyValue}");
-            Logger.Info($"{propertyPath}\t\t\t={propertyValue}");
-        }
-
-        private static void ParseSimpleWord(JsonToken tokenType, object? value, Word dstWord, ref string expectedWord, ValueConsumer valueConsumer)
+        private static void ParseSimpleWord(JsonToken tokenType, object? value, Word dstWord, ref string expectedWord, Action<string> valueConsumer)
         {
             if (value == null) return;
 
@@ -199,31 +185,6 @@ namespace NppPluginForHC.Logic
 
             valueConsumer.Invoke(valueString);
             expectedWord = null;
-        }
-
-        public void ParseInvalidJson(string filePath)
-        {
-            int lineNumber = 0;
-            string lineText;
-            using StreamReader sr = new StreamReader(filePath);
-            while ((lineText = sr.ReadLine()) != null)
-            {
-                foreach (var entry in _valuesContainerByWordMap)
-                {
-                    var dstWordString = entry.Key.WordString;
-                    var valuesContainer = entry.Value;
-
-                    if (!lineText.Contains($"\"{dstWordString}\"")) continue;
-
-                    string value = Utils.ExtractTokenValueByLine(lineText, dstWordString);
-                    if (value != null)
-                    {
-                        valuesContainer.PutOrReplace(value, lineNumber);
-                    }
-                }
-
-                lineNumber++;
-            }
         }
     }
 }
