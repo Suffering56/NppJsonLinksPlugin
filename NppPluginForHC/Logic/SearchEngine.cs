@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using NppPluginForHC.Configuration;
 using NppPluginForHC.Core;
+using NppPluginForHC.Logic.Context;
 using NppPluginForHC.Logic.Parser;
-using static NppPluginForHC.Logic.Settings;
+using NppPluginForHC.Logic.Parser.Json;
+using static NppPluginForHC.Configuration.Settings;
 
 namespace NppPluginForHC.Logic
 {
-    public class DefinitionSearchEngine
+    public class SearchEngine
     {
-        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToFileContainerMap;
+        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
         private readonly ISet<string> _availableSrcWords;
 
         private string _currentFilePath = null;
         private bool _cacheEnabled;
         private readonly IDocumentParser _parser;
 
-        public DefinitionSearchEngine()
+        public SearchEngine()
         {
-            _mappingToFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
+            _mappingToDstFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
             _availableSrcWords = new HashSet<string>();
             _parser = new DefaultJsonParser();
         }
@@ -28,24 +31,24 @@ namespace NppPluginForHC.Logic
         public void Init(Settings settings, string currentFilePath)
         {
             _cacheEnabled = settings.CacheEnabled;
-            var dstFilePathToDstWordsMap = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
+            var dstFilePathToDstWordsCache = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
 
             foreach (var mappingItem in settings.Mapping)
             {
                 var dst = mappingItem.Dst;
                 var dstFilePath = dst.FilePath;
 
-                var fileDstWords = dstFilePathToDstWordsMap.ComputeIfAbsent(dstFilePath, key => new HashSet<Word>());
+                var fileDstWords = dstFilePathToDstWordsCache.ComputeIfAbsent(dstFilePath, key => new HashSet<Word>());
                 fileDstWords.Add(dst.Word);
             }
 
             foreach (var mappingItem in settings.Mapping)
             {
                 var dstFilePath = mappingItem.Dst.FilePath;
-                var supportedWords = dstFilePathToDstWordsMap[dstFilePath];
+                var supportedWords = dstFilePathToDstWordsCache[dstFilePath];
 
-                Debug.Assert(!_mappingToFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
-                _mappingToFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
+                Debug.Assert(!_mappingToDstFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
+                _mappingToDstFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
 
                 // для быстрой проверки
                 _availableSrcWords.Add(mappingItem.Src.Word.WordString);
@@ -78,32 +81,44 @@ namespace NppPluginForHC.Logic
             GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
         }
 
-        public JumpLocation? FindDefinitionLocation(string selectedWordString, SearchContextProvider searchContextProvider)
+        public JumpLocation? FindDefinitionLocation(string selectedWordString, ISearchContext searchContext)
         {
-            var mappingItem = GetMappingItem(selectedWordString, searchContextProvider);
-            if (mappingItem == null) return null;
-
-            var dstFileContainer = _mappingToFileContainerMap[mappingItem];
-
-
-            if (!_cacheEnabled)
+            var mappingItem = GetMappingItem(selectedWordString, searchContext);
+            if (mappingItem == null)
             {
-                dstFileContainer.ClearIfChanged();
+                Logger.Info($"FAIL: selected word: <{selectedWordString}> does not match with any srcWord");
+                return null;
             }
 
-            dstFileContainer.InitIfNeeded();
+            var dstFileContainer = _mappingToDstFileContainerMap[mappingItem];
+            dstFileContainer.InitIfNeeded(_cacheEnabled);
 
-            string tokenValue = searchContextProvider().GetTokenValue(selectedWordString);
-            if (tokenValue == null) return null;
+            string tokenValue = searchContext.GetTokenValue(selectedWordString);
 
-            return dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, tokenValue);
+
+            if (tokenValue == null)
+            {
+                Logger.Info($"FAIL: token value not found for selected srcWord: <{mappingItem.Src.Word}>");
+                return null;
+            }
+
+            var jumpLocation = dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, tokenValue);
+
+            if (jumpLocation == null)
+            {
+                Logger.Info($"FAIL: could not find suitable location for mappingItem=[{mappingItem}] and tokenValue=<{tokenValue}>");
+                return null;
+            }
+
+            Logger.Info($"SUCCESS: destination location successfully found for mappingItem=[{mappingItem}] and tokenValue={tokenValue}. JumpLocation=[{jumpLocation}]");
+            return jumpLocation;
         }
 
-        private MappingItem? GetMappingItem(string selectedWordString, SearchContextProvider searchContextProvider)
+        private MappingItem? GetMappingItem(string selectedWordString, ISearchContext searchContext)
         {
             if (!_availableSrcWords.Contains(selectedWordString)) return null;
 
-            foreach (var mappingItem in _mappingToFileContainerMap.Keys)
+            foreach (var mappingItem in _mappingToDstFileContainerMap.Keys)
             {
                 if (mappingItem.Src.FilePath != _currentFilePath) continue;
 
@@ -112,9 +127,7 @@ namespace NppPluginForHC.Logic
 
                 if (!srcWord.IsComplex()) return mappingItem;
 
-                var searchContext = searchContextProvider();
-
-                if (searchContext.IsSelectedWordEqualsWith(srcWord)) return mappingItem;
+                if (searchContext.MatchesWith(srcWord)) return mappingItem;
             }
 
             return null;
@@ -122,7 +135,7 @@ namespace NppPluginForHC.Logic
 
         private DstFileContainer GetContainerByDstFilePath(string dstFilePath)
         {
-            return _mappingToFileContainerMap.Values.FirstOrDefault(dstFileContainer => dstFileContainer.DstFilePath == dstFilePath);
+            return _mappingToDstFileContainerMap.Values.FirstOrDefault(dstFileContainer => dstFileContainer.DstFilePath == dstFilePath);
         }
 
         private class DstFileContainer
@@ -167,9 +180,16 @@ namespace NppPluginForHC.Logic
                 _dstWordToValuesLocationContainer[dstWord].PutOrReplace(value, lineNumber);
             }
 
-            public void InitIfNeeded()
+            public void InitIfNeeded(bool cacheEnabled)
             {
+                if (!cacheEnabled)
+                {
+                    ClearIfChanged();
+                }
+
                 if (_inited) return;
+
+                Logger.Info($"Init container for dstFile={DstFilePath}");
 
                 if (!File.Exists(DstFilePath))
                 {
@@ -194,9 +214,11 @@ namespace NppPluginForHC.Logic
                 _inited = true;
             }
 
-            internal void ClearIfChanged()
+            private void ClearIfChanged()
             {
                 if (!_changed) return;
+
+                Logger.Info($"Clear container for dstFile={DstFilePath}");
 
                 _inited = false;
                 foreach (var entry in _dstWordToValuesLocationContainer)
@@ -209,6 +231,9 @@ namespace NppPluginForHC.Logic
 
             internal void OnContentChanged()
             {
+                if (_changed) return;
+
+                Logger.Info($"Container for dstFile={DstFilePath} mark changed");
                 _changed = true;
             }
         }

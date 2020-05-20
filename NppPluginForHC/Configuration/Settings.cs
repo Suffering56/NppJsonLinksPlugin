@@ -3,9 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
-using static NppPluginForHC.Logic.RawSettings;
+using NppPluginForHC.Logic;
 
-namespace NppPluginForHC.Logic
+namespace NppPluginForHC.Configuration
 {
     public static class SettingsParser
     {
@@ -36,11 +36,11 @@ namespace NppPluginForHC.Logic
             };
         }
 
-        private static Settings.MappingItem.Location ConvertRawLocation(RawMappingItem.RawLocation location, string mappingFilePathPrefix)
+        private static Settings.MappingItem.Location ConvertRawLocation(RawSettings.RawMappingItem.RawLocation location, string mappingFilePathPrefix)
         {
             return new Settings.MappingItem.Location
             {
-                Word = location.Word,
+                Word = Word.Parse(location.Word),
                 FilePath = location.FilePathPrefixEnabled
                     ? Path.GetFullPath(mappingFilePathPrefix + location.FilePath)
                     : Path.GetFullPath(location.FilePath)
@@ -71,6 +71,11 @@ namespace NppPluginForHC.Logic
         {
             public Location Src { get; internal set; }
             public Location Dst { get; internal set; }
+
+            public override string ToString()
+            {
+                return $"src=\"{Src.Word}\" to dst=\"{Dst.Word}\"";
+            }
 
             private bool Equals(MappingItem other)
             {

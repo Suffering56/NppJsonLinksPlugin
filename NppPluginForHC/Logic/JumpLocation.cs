@@ -10,5 +10,10 @@
             FilePath = filePath;
             Line = line;
         }
+
+        public override string ToString()
+        {
+            return $"file=<{FilePath}>, line={Line}";
+        }
     }
 }

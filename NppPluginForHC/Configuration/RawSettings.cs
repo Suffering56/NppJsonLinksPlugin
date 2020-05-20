@@ -1,15 +1,14 @@
-using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace NppPluginForHC.Logic
+namespace NppPluginForHC.Configuration
 {
     [JsonObject]
     public class RawSettings
     {
         [JsonProperty(PropertyName = "mappingFilePathPrefix")]
         public string MappingFilePathPrefix;
-        
+
         [JsonProperty(PropertyName = "cacheEnabled")]
         public bool CacheEnabled = false;
 
@@ -37,32 +36,12 @@ namespace NppPluginForHC.Logic
                 [JsonProperty(PropertyName = "filePath", Required = Required.Always)]
                 public string FilePath;
 
-                [JsonConverter(typeof(WordConverter))] [JsonProperty(PropertyName = "word", Required = Required.Always)]
-                public Word Word;
+                [JsonProperty(PropertyName = "word", Required = Required.Always)]
+                public string Word;
 
                 [JsonProperty(PropertyName = "filePathPrefixEnabled")]
                 public bool FilePathPrefixEnabled = true;
             }
-        }
-    }
-
-    internal class WordConverter : JsonConverter<Word>
-    {
-        public override Word ReadJson(JsonReader reader, Type objectType, Word existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            var wordStr = reader.Value;
-            if (wordStr == null) return null;
-
-            //TODO: existingValue? hasExistingValue? what is it?
-            return Word.Parse(Convert.ToString(wordStr));
-        }
-
-        public override void WriteJson(JsonWriter writer, Word value, JsonSerializer serializer)
-        {
-            //TODO: NPE?
-            writer.WriteValue(value.ToString());
-
-            throw new NotImplementedException();
         }
     }
 }

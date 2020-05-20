@@ -2,6 +2,10 @@
 {
     public partial interface IScintillaGateway
     {
+        void OpenFile(string filePath);
+
+        string GetFullCurrentPath();
+
         int PositionToLine(int position);
 
         int LineToPosition(int line);
@@ -13,5 +17,7 @@
         string GetCurrentWord();
 
         int GetCurrentLine();
+
+        void JumpToLine(int line);
     }
 }

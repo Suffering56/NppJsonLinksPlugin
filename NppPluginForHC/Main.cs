@@ -7,9 +7,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using NppPluginForHC.Configuration;
 using NppPluginForHC.Core;
 using NppPluginForHC.Logic;
+using NppPluginForHC.Logic.Context;
 using NppPluginForHC.PluginInfrastructure;
+using NppPluginForHC.PluginInfrastructure.Gateway;
 
 namespace NppPluginForHC
 {
@@ -19,8 +22,9 @@ namespace NppPluginForHC
         internal const string PluginName = "NppPluginForHC";
         private const string PluginVersion = "0.0.3";
         private static Settings _settings = null;
+        private static readonly Func<IScintillaGateway, ISearchContext> SearchContextFactory = gateway => new JsonSearchContext(gateway);
 
-        private static readonly DefinitionSearchEngine SearchEngine = new DefinitionSearchEngine();
+        private static readonly SearchEngine SearchEngine = new SearchEngine();
         private static bool _isPluginInited = false;
         private static bool _isFileLoadingActive = false;
 
@@ -32,6 +36,7 @@ namespace NppPluginForHC
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
         private static Icon _tbIcon = null;
+
 
         private static readonly EventHandler OnLeftMouseClick = delegate
         {
@@ -63,80 +68,83 @@ namespace NppPluginForHC
             {
                 ProcessInit();
                 Logger.Info("NPPN_READY");
+                return;
             }
-            else if (_isPluginInited)
+
+            if (!_isPluginInited) return;
+
+            switch (notificationType)
             {
-                switch (notificationType)
-                {
-                    case (uint) NppMsg.NPPN_BUFFERACTIVATED:
-                        // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
-                        SearchEngine.SwitchContext(GetCurrentFilePath());
+                case (uint) NppMsg.NPPN_BUFFERACTIVATED:
+                    // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
+                    var gateway = PluginBase.GetGatewayFactory().Invoke();
+                    SearchEngine.SwitchContext(gateway.GetFullCurrentPath());
 
-                        Logger.Info($"NPPN_BUFFERACTIVATED: inited={_isPluginInited}");
-                        break;
+                    Logger.Info($"NPPN_BUFFERACTIVATED");
+                    break;
 
-                    case (uint) SciMsg.SCN_FOCUSOUT:
-                        // мы перестаем слушать клики мышкой, когда окно теряет фокус
-                        MouseHook.CleanListeners();
+                case (uint) SciMsg.SCN_FOCUSOUT:
+                    // мы перестаем слушать клики мышкой, когда окно теряет фокус
+                    MouseHook.CleanListeners();
 
-                        Logger.Info("SCN_FOCUSOUT");
-                        break;
+                    Logger.Info("SCN_FOCUSOUT");
+                    break;
 
-                    case (uint) SciMsg.SCN_FOCUSIN:
-                        // возобновляем слушание кликов мышкой, при получении фокуса
-                        MouseHook.RegisterListener(OnLeftMouseClick);
+                case (uint) SciMsg.SCN_FOCUSIN:
+                    // возобновляем слушание кликов мышкой, при получении фокуса
+                    MouseHook.RegisterListener(OnLeftMouseClick);
 
-                        Logger.Info("SCN_FOCUSIN");
-                        break;
+                    Logger.Info("SCN_FOCUSIN");
+                    break;
 
-                    case (uint) NppMsg.NPPN_FILEBEFORELOAD:
-                        // при загрузке файла происходит вызов SCN_MODIFIED, который мы должны игнорировать
-                        _isFileLoadingActive = true;
+                case (uint) NppMsg.NPPN_FILEBEFORELOAD:
+                    // при загрузке файла происходит вызов SCN_MODIFIED, который мы должны игнорировать
+                    _isFileLoadingActive = true;
 
-                        Logger.Info("NPPN_FILEBEFORELOAD");
-                        break;
+                    Logger.Info("NPPN_FILEBEFORELOAD");
+                    break;
 
-                    case (uint) NppMsg.NPPN_FILEBEFOREOPEN: // or NppMsg.NPPN_FILEOPENED
-                    case (uint) NppMsg.NPPN_FILELOADFAILED:
-                        // файл загружен (возможно с ошибкой) и мы больше не должны игнорировать события SCN_MODIFIED
-                        _isFileLoadingActive = false;
+                case (uint) NppMsg.NPPN_FILEBEFOREOPEN: // or NppMsg.NPPN_FILEOPENED
+                case (uint) NppMsg.NPPN_FILELOADFAILED:
+                    // файл загружен (возможно с ошибкой) и мы больше не должны игнорировать события SCN_MODIFIED
+                    _isFileLoadingActive = false;
 
-                        Logger.Info("NPPN_FILEBEFOREOPEN");
-                        break;
+                    Logger.Info("NPPN_FILEBEFOREOPEN");
+                    break;
 
-                    case (uint) SciMsg.SCN_MODIFIED:
-                        //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, поэтому пока все работает хорошо только на 32-битной
-                        if (!_isFileLoadingActive)
-                        {
-                            ProcessModified(notification);
-                            // Logger.Info("SCN_MODIFIED");
-                        }
+                case (uint) SciMsg.SCN_SAVEPOINTREACHED:
+                    // пользователь сохранил изменения в текущем файле (ctrl + s)
+                    SearchEngine.FireSaveFile();
+                    Logger.Info("SCN_SAVEPOINTREACHED");
+                    break;
 
-                        break;
+                case (uint) SciMsg.SCN_MODIFIED:
+                    //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, поэтому пока все работает хорошо только на 32-битной
+                    if (!_isFileLoadingActive)
+                    {
+                        // при отключенном кэше SearchEngine - нам не нужно отслеживать вставленный/удаленный текст
+                        if (!_settings.CacheEnabled) return;
 
-                    case (uint) SciMsg.SCN_SAVEPOINTREACHED:
-                        SearchEngine.FireSaveFile();
-                        Logger.Info("SCN_SAVEPOINTREACHED");
-                        break;
+                        ProcessModified(notification);
+                    }
 
-                    case (uint) NppMsg.NPPN_FILEOPENED:
-                        Logger.Info("NPPN_FILEOPENED");
-                        break;
-                }
+                    break;
             }
         }
 
         private static void ProcessInit()
         {
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+
             // загружаем настройки плагина
             _settings = LoadSettings();
             Logger.Info($"settings loaded: mappingFilePathPrefix={_settings.MappingFilePathPrefix}");
 
             // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
-            PluginBase.GetGatewayFactory().Invoke().SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
+            gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
 
             // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
-            SearchEngine.Init(_settings, GetCurrentFilePath());
+            SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
 
             // инициализация обработчика кликов мышкой
             MouseHook.Start();
@@ -190,7 +198,7 @@ namespace NppPluginForHC
         {
             try
             {
-                return SettingsParser.Parse($"plugins/{Main.PluginName}/settings.json");
+                return SettingsParser.Parse($"plugins/{PluginName}/settings.json");
             }
             catch (Exception e)
             {
@@ -199,7 +207,6 @@ namespace NppPluginForHC
                 throw;
             }
         }
-
 
         internal static void OnShutdown()
         {
@@ -215,35 +222,20 @@ namespace NppPluginForHC
 
             if (!string.IsNullOrEmpty(selectedWord))
             {
-                JumpLocation jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, () => new SearchContext(gateway));
+                JumpLocation jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, SearchContextFactory.Invoke(gateway));
 
                 if (jumpLocation != null)
                 {
                     JumpToLocation(jumpLocation);
+                    return;
                 }
                 else
                 {
-                    Logger.Info($"definition not found for word: {selectedWord}");
                     System.Media.SystemSounds.Asterisk.Play();
                 }
-
-                return;
             }
 
-            Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GRABFOCUS, 0, 0);
-            System.Media.SystemSounds.Hand.Play();
-        }
-
-        private static string GetCurrentFilePath()
-        {
-            StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
-            if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
-            {
-                return sbPath.ToString();
-            }
-
-            Logger.Error("Current time path not found?");
-            throw new Exception("Current time path not found?");
+            gateway.GrabFocus();
         }
 
         private static void JumpToLocation(JumpLocation jumpLocation)
@@ -254,27 +246,12 @@ namespace NppPluginForHC
             int line = jumpLocation.Line;
 
             Logger.Info($"Opening file '{file}'");
-            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, file);
+
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            gateway.OpenFile(file);
 
             // задержка фиксит багу с выделением текста при переходе
-            Utils.ExecuteDelayed(() => JumpToLine(line), _settings.JumpToLineDelay);
-        }
-
-        private static void JumpToLine(int line)
-        {
-            IntPtr curScintilla = PluginBase.GetCurrentScintilla();
-
-            int currentPos = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
-
-            int currentLine = (int) Win32.SendMessage(curScintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
-            if ((line != 1) && (line - 1 != currentLine))
-            {
-                Win32.SendMessage(curScintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
-                Win32.SendMessage(curScintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
-                Win32.SendMessage(curScintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
-            }
-
-            Win32.SendMessage(curScintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
+            Utils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
         }
 
         private static void PushJump(string source, int line)

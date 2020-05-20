@@ -1,19 +1,20 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using NppPluginForHC.Logic;
+using NppPluginForHC.Configuration;
 
-namespace NppPluginForHC.Core
+namespace NppPluginForHC.Logic.Parser.Json
 {
     public static class JsonStringUtils
     {
+        //TODO не учитываются строки с нецифрами и небуквами
+        private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
+        public delegate string LineTextProvider(int lineIndex);
+
         private static readonly TokenResult RootTokenResult = new TokenResult(Settings.RootTokenPropertyName, 0);
         private const char ExpectNamedObjectChar = ':';
         private const char PropertyBorderChar = '"';
         private const string EmptyString = "";
-
-        //TODO не учитываются строки с нецифрами и небуквами
-        private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
 
         public static string ExtractTokenValueByLine(string lineText, string propertyName)
         {
@@ -27,9 +28,6 @@ namespace NppPluginForHC.Core
                 ? matchGroup.Value
                 : null;
         }
-
-
-        public delegate string LineTextProvider(int lineIndex);
 
         public static TokenResult GetParentToken(string initialPropertyName, int initialLineIndex, LineTextProvider lineTextProvider)
         {

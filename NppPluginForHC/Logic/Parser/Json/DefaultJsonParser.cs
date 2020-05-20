@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using NppPluginForHC.Configuration;
 using NppPluginForHC.Core;
 
-namespace NppPluginForHC.Logic.Parser
+namespace NppPluginForHC.Logic.Parser.Json
 {
     public class DefaultJsonParser : IDocumentParser
     {

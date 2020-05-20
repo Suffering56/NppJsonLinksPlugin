@@ -6,6 +6,22 @@ namespace NppPluginForHC.PluginInfrastructure.Gateway
 {
     public partial class ScintillaGateway : IScintillaGateway
     {
+        public void OpenFile(string filePath)
+        {
+            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DOOPEN, 0, filePath);
+        }
+
+        public string GetFullCurrentPath()
+        {
+            StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
+            if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
+            {
+                return sbPath.ToString();
+            }
+
+            return null;
+        }
+
         public int PositionToLine(int position)
         {
             return (int) Win32.SendMessage(scintilla, SciMsg.SCI_LINEFROMPOSITION, position, 0);
@@ -92,6 +108,21 @@ namespace NppPluginForHC.PluginInfrastructure.Gateway
             }
 
             return resultText;
+        }
+
+        public void JumpToLine(int line)
+        {
+            int currentPos = (int) Win32.SendMessage(scintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+
+            int currentLine = (int) Win32.SendMessage(scintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
+            if ((line != 1) && (line - 1 != currentLine))
+            {
+                Win32.SendMessage(scintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
+                Win32.SendMessage(scintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
+                Win32.SendMessage(scintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
+            }
+
+            Win32.SendMessage(scintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
         }
     }
 }

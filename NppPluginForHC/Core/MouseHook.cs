@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace NppPluginForHC
+namespace NppPluginForHC.Core
 {
     public static class MouseHook
     {
