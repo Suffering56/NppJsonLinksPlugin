@@ -1,0 +1,94 @@
+{
+  "loggerMode": "ENABLED",
+  "logPathPrefix": "C:/NppJsonLinksPlugin/",
+  "cacheEnabled": false,
+  "soundEnabled": true,
+  "jumpToLineDelay": 100,
+  "mappingFilePathPrefix": "F:/gd_data/",
+  "mapping": [
+    {
+      "description": "обычная настройка маппинга",
+      "src": {
+        "filePath": "mobSettings.json",
+        "word": "battleClass"
+      },
+      "dst": {
+        "filePath": "battleClasses.json",
+        "word": "type"
+      }
+    },
+    {
+      "description": "обычная настройка маппинга + filePathPrefixEnabled (по умолчанию = true) - настройка позволяющая задавать абсолютный путь к файлу в filePath, если ее установить в false",
+      "src": {
+        "filePath": "mobSettings.json",
+        "word": "abilityId",
+        "filePathPrefixEnabled": true
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "description": "пример сложного маппинга. в файле equipments есть несколько разных полей с одинаковым именем <id>, поэтому используется уточняющий путь (id<<ROOT)",
+      "src": {
+        "filePath": "rewardPacks.json",
+        "word": "equipmentId"
+      },
+      "dst": {
+        "filePath": "equipments.json",
+        "word": "id<<ROOT"
+      }
+    },
+    {
+      "src": {
+        "filePath": "equipmentTiers.json",
+        "word": "id<<abilityRef"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<abilities"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<from<<abilityMappings"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<to<<abilityMappings"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "src": {
+        "filePath": "mobSettings.json",
+        "word": "defaultEquipmentIds"
+      },
+      "dst": {
+        "filePath": "defaultEquipments.json",
+        "word": "id<<ROOT"
+      }
+    }
+  ]
+}

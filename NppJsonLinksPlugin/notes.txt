@@ -1,0 +1,69 @@
+﻿remember:
+    - c# language level = 8
+    - #nullable enable НЕ РАБОТАЕТ
+    - у меня настроено NppPlugin.DllExport.targets ==> SdkPath="$(SDK35ToolsPath)",
+        - потому что у меня есть: C:\Windows\Microsoft.NET\Framework\v3.5\MSBuild.exe
+
+necessary: 
+    + найти либу по работе с Json-ами 
+    + do fix: при открытии любого файла происходит вызов SCN_MODIFIED, который нужно игнорировать
+    + понять какой нужен будет формат маппинга
+    ﻿+ отлавливать добавление/удаление строк (источников ссылок), определять что именно изменилось
+    + TODO: override MappingItem equals and hashCode 
+    + переделать настройки. надо сделать что-то в стиле Settings.wrap(SettingsJson); + Settings.toJson(); и 2 интерфейса IMutableSettings и ISettings
+    
+    + do fix: при "прыжке" выделяется текст (от текущей позиции курсора до линии на которую прыгнули)
+        + костыльное решение с задержкой перед прыжком на линию помогло, через нотификации (NPPN_BUFFER_ACTIVATED) ничего не вышло
+        + settings.jumpToLineDelay
+        
+    + предлагаю сделать быстрое решение по поводу фиксации изменений
+            + settings.cacheEnabled: false 
+            + рефрешить dstContainer, если файл был изменен (после сохранения)
+
+    + complex words support:
+            + get src parent
+            + dst property path   
+            
+   + выводить в лог подробную причину невозможности перехода по ссылке
+   + звуковое сопровождение утащить в настройки
+   + включение/отключение логирования
+   + по хорошему вот это тоже стоит уметь обрабатывать: "defaultEquipmentIds": [310,501],
+   + подумать о том, что строковое значение токена может содержать последовательность \"
+   + подумать о том, что значение токена может оказаться не на одной строке с ключом. Например:   "id":\r\n\t 101,     
+
+   - поддержать src.filePath =  "*.json" (тут еще про префикс надо подумать)     например для  roomId<<extension<<restrictions 
+   - mapping: src to repeated; dst is single;
+   
+   - настроить маппинг для самых основных ссылок:
+        id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
+        roomId<<?extension<<?restrictions   for rewardPacks.json
+        tierId<<?elements                   for equipmentSets.json
+        
+   - settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
+   - перезагрузка настроек после рестарта NPP
+  
+  
+    
+    - menu -> settings:
+        - enabled/disabled
+        - logs enabled
+        - log file path
+        - settings path
+        - mappingFilePathPrefix
+        - mapping
+        
+unnecessary:
+    - GetParentPropertyName: TODO: было бы неплохо возвращать null если json невалиден
+
+    - фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять
+    
+    - невалидный json + isComplex
+    
+    - gateway.getTextFromPosition плохо работает с русскими символами (если вставить текст "12345\r\nы\r\nы") то getTextFromPosition вернет  "2345\r\nы\r\nы"
+        - выглядит так словно бага проявляется если последний введенный/вставленный символ - кириллический.
+        - шанс на багу оч мал, поэтому пока можно забить, хотя неприятно
+        
+    - do fix: многократный вызов NPPN_BUFFERACTIVATED при релоаде файла (если файл изменили за пределами NPP)   
+        - // стоит посмотреть в сторону Main._isFileLoadingActive (мб там тоже самое)
+        
+    - do fix: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, и вообще как-то там плохо парсится ScNotification
