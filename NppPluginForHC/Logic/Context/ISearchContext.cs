@@ -2,7 +2,11 @@ namespace NppPluginForHC.Logic.Context
 {
     public interface ISearchContext
     {
-        string GetTokenValue(string propertyName);
+        bool IsValid();
+        
+        string GetSelectedWord();
+
+        Property GetSelectedProperty();
 
         bool MatchesWith(Word expectedWord);
     }

@@ -21,14 +21,15 @@ namespace NppPluginForHC
     internal static class Main
     {
         internal const string PluginName = "NppPluginForHC";
-        private const string PluginVersion = "0.0.3";
+        private const string PluginVersion = "0.1.1";
         private static Settings _settings = null;
-        private static readonly Func<IScintillaGateway, ISearchContext> SearchContextFactory = gateway => new JsonSearchContext(gateway);
+        private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
 
         private static readonly SearchEngine SearchEngine = new SearchEngine();
+        
+        //TODO многовато флагов
         private static bool _isPluginInited = false;
-        internal static bool IsPluginEnabled = true;
-
+        internal static bool IsPluginEnabled = true;    //TODO: unsupported
         private static bool _isFileLoadingActive = false;
 
         private static int _jumpPos = 0;
@@ -232,7 +233,7 @@ namespace NppPluginForHC
 
             if (!string.IsNullOrEmpty(selectedWord))
             {
-                JumpLocation jumpLocation = SearchEngine.FindDefinitionLocation(selectedWord, SearchContextFactory.Invoke(gateway));
+                JumpLocation jumpLocation = SearchEngine.FindDefinitionLocation(SearchContextFactory.Invoke(selectedWord, gateway));
 
                 if (jumpLocation != null)
                 {
@@ -262,7 +263,7 @@ namespace NppPluginForHC
             gateway.OpenFile(file);
 
             // задержка фиксит багу с выделением текста при переходе
-            Utils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
+            ThreadSupport.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
         }
 
         private static void PushJump(string source, int line)

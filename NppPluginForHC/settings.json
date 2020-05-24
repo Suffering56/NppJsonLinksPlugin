@@ -1,11 +1,9 @@
 {
   "loggerMode": "ENABLED",
   "logPathPrefix": "C:/NppPluginForHC/",
-  
   "cacheEnabled": false,
   "soundEnabled": true,
   "jumpToLineDelay": 100,
-
   "mappingFilePathPrefix": "F:/gd_data/",
   "mapping": [
     {
@@ -39,6 +37,61 @@
       },
       "dst": {
         "filePath": "equipments.json",
+        "word": "id<<ROOT"
+      }
+    },
+    {
+      "description": "new 1",
+      "src": {
+        "filePath": "equipmentTiers.json",
+        "word": "id<<abilityRef"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "description": "new 2",
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<abilities"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "description": "new 3",
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<from<<abilityMappings"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "description": "new 4",
+      "src": {
+        "filePath": "equipmentSets.json",
+        "word": "id<<to<<abilityMappings"
+      },
+      "dst": {
+        "filePath": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "description": "new 5",
+      "src": {
+        "filePath": "mobSettings.json",
+        "word": "defaultEquipmentIds"
+      },
+      "dst": {
+        "filePath": "defaultEquipments.json",
         "word": "id<<ROOT"
       }
     }

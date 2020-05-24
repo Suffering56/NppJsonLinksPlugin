@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace NppPluginForHC.Logic.Parser.Json
@@ -13,7 +15,7 @@ namespace NppPluginForHC.Logic.Parser.Json
             string currentPropertyName = null;
 
             Stack<string> propertyStack = new Stack<string>();
-            propertyStack.Push(AppConstants.RootTokenPropertyName);
+            propertyStack.Push(AppConstants.RootPropertyName);
 
             using JsonTextReader reader = new JsonTextReader(new StreamReader(filePath));
             while (reader.Read())
@@ -49,7 +51,7 @@ namespace NppPluginForHC.Logic.Parser.Json
 
                     if (!lineText.Contains($"\"{dstWordString}\"")) continue;
 
-                    string value = JsonStringUtils.ExtractTokenValueByLine(lineText, dstWordString);
+                    string value = ExtractTokenValueByLine(lineText, dstWordString);
                     if (value != null)
                     {
                         valueConsumer.Invoke(dstWord, lineNumber, value);
@@ -183,6 +185,21 @@ namespace NppPluginForHC.Logic.Parser.Json
 
             valueConsumer.Invoke(valueString);
             expectedWord = null;
+        }
+
+        private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
+
+        private static string ExtractTokenValueByLine(string lineText, string propertyName)
+        {
+            string pattern = new StringBuilder(TokenValuePattern).Replace("[PROPERTY_NAME]", propertyName).ToString();
+
+            var match = new Regex(pattern).Match(lineText);
+            if (!match.Success) return null;
+
+            var matchGroup = match.Groups[1];
+            return matchGroup.Success
+                ? matchGroup.Value
+                : null;
         }
     }
 }

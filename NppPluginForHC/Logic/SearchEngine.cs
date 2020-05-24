@@ -15,7 +15,6 @@ namespace NppPluginForHC.Logic
     public class SearchEngine
     {
         private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
-        private readonly ISet<string> _availableSrcWords;
 
         private string _currentFilePath = null;
         private bool _cacheEnabled;
@@ -24,7 +23,6 @@ namespace NppPluginForHC.Logic
         public SearchEngine()
         {
             _mappingToDstFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
-            _availableSrcWords = new HashSet<string>();
             _parser = new DefaultJsonParser();
         }
 
@@ -49,9 +47,6 @@ namespace NppPluginForHC.Logic
 
                 Debug.Assert(!_mappingToDstFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
                 _mappingToDstFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
-
-                // для быстрой проверки
-                _availableSrcWords.Add(mappingItem.Src.Word.WordString);
             }
 
             SwitchContext(currentFilePath);
@@ -81,27 +76,28 @@ namespace NppPluginForHC.Logic
             GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
         }
 
-        public JumpLocation? FindDefinitionLocation(string selectedWordString, ISearchContext searchContext)
+        public JumpLocation? FindDefinitionLocation(ISearchContext searchContext)
         {
-            var mappingItem = GetMappingItem(selectedWordString, searchContext);
+            Logger.Info($"try find definition location for: selectedWord: {searchContext.GetSelectedWord()}");
+            var property = searchContext.GetSelectedProperty();
+            
+            if (property == null)
+            {
+                Logger.Info($"FAIL: selected token not found for selected word: \"{searchContext.GetSelectedWord()}\"");
+                return null;
+            }
+
+            var mappingItem = GetMappingItem(property.Name, searchContext);
             if (mappingItem == null)
             {
-                Logger.Info($"FAIL: selected word: <{selectedWordString}> does not match with any srcWord");
+                Logger.Info($"FAIL: mapping not found! selected word: \"{searchContext.GetSelectedWord()}\" does not match with any srcWord");
                 return null;
             }
 
             var dstFileContainer = _mappingToDstFileContainerMap[mappingItem];
             dstFileContainer.InitIfNeeded(_cacheEnabled);
 
-            string tokenValue = searchContext.GetTokenValue(selectedWordString);
-
-
-            if (tokenValue == null)
-            {
-                Logger.Info($"FAIL: token value not found for selected srcWord: <{mappingItem.Src.Word}>");
-                return null;
-            }
-
+            var tokenValue = property.Value;
             var jumpLocation = dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, tokenValue);
 
             if (jumpLocation == null)
@@ -114,16 +110,14 @@ namespace NppPluginForHC.Logic
             return jumpLocation;
         }
 
-        private MappingItem? GetMappingItem(string selectedWordString, ISearchContext searchContext)
+        private MappingItem? GetMappingItem(string propertyName, ISearchContext searchContext)
         {
-            if (!_availableSrcWords.Contains(selectedWordString)) return null;
-
             foreach (var mappingItem in _mappingToDstFileContainerMap.Keys)
             {
                 if (mappingItem.Src.FilePath != _currentFilePath) continue;
 
                 var srcWord = mappingItem.Src.Word;
-                if (srcWord.WordString != selectedWordString) continue;
+                if (srcWord.WordString != propertyName) continue;
 
                 if (!srcWord.IsComplex()) return mappingItem;
 

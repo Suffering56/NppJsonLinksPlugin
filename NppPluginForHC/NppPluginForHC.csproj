@@ -75,9 +75,9 @@
     <Compile Include="Core\CommonUtils.cs" />
     <Compile Include="Logic\Context\ISearchContext.cs" />
     <Compile Include="Logic\Context\JsonSearchContext.cs" />
+    <Compile Include="Logic\Context\Property.cs" />
     <Compile Include="Logic\Parser\IDocumentParser.cs" />
     <Compile Include="Logic\Parser\Json\DefaultJsonParser.cs" />
-    <Compile Include="Logic\Parser\Json\JsonStringUtils.cs" />
     <Compile Include="Logic\Word.cs" />
     <Compile Include="Logic\JumpLocation.cs" />
     <Compile Include="Logic\SearchEngine.cs" />
