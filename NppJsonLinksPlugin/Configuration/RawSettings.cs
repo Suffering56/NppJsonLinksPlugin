@@ -22,8 +22,8 @@ namespace NppJsonLinksPlugin.Configuration
         [JsonProperty(PropertyName = "jumpToLineDelay")]
         public int JumpToLineDelay = AppConstants.DefaultJumpToLineDelay;
 
-        [JsonProperty(PropertyName = "mappingFilePathPrefix")]
-        public string MappingFilePathPrefix;
+        [JsonProperty(PropertyName = "mappingDefaultFilePath")]
+        public string MappingDefaultFilePath;
 
         [JsonProperty(PropertyName = "mapping")]
         public IList<RawMappingItem> Mapping;
@@ -35,7 +35,7 @@ namespace NppJsonLinksPlugin.Configuration
             public string Description;
 
             [JsonProperty(PropertyName = "src", Required = Required.Always)]
-            public RawLocation Src;
+            public IList<RawLocation> Src;
 
             [JsonProperty(PropertyName = "dst", Required = Required.Always)]
             public RawLocation Dst;
@@ -43,19 +43,15 @@ namespace NppJsonLinksPlugin.Configuration
             [JsonObject]
             public class RawLocation
             {
-                [JsonProperty(PropertyName = "filePath", Required = Required.Always)]
-                public string FilePath;
+                [JsonProperty(PropertyName = "overrideFilePath")]
+                public string OverrideFilePath;
+                
+                [JsonProperty(PropertyName = "fileName", Required = Required.Always)]
+                public string FileName;
 
                 [JsonProperty(PropertyName = "word", Required = Required.Always)]
                 public string Word;
-
-                [JsonProperty(PropertyName = "filePathPrefixEnabled")]
-                public bool FilePathPrefixEnabled = true;
             }
-        }
-
-        public class RawLoggerSettings
-        {
         }
     }
 }

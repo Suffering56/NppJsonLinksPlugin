@@ -28,11 +28,18 @@ necessary:
    + звуковое сопровождение утащить в настройки
    + включение/отключение логирования
    + по хорошему вот это тоже стоит уметь обрабатывать: "defaultEquipmentIds": [310,501],
-   + подумать о том, что строковое значение токена может содержать последовательность \"
-   + подумать о том, что значение токена может оказаться не на одной строке с ключом. Например:   "id":\r\n\t 101,     
-
-   - поддержать src.filePath =  "*.json" (тут еще про префикс надо подумать)     например для  roomId<<extension<<restrictions 
-   - mapping: src to repeated; dst is single;
+  
+   +- подумать о том, что строковое значение property может содержать последовательность \":
+        + src 
+        - dst
+   +- подумать о том, что значение propertyValue может оказаться не на одной строке с ключом propertyName. Например:   "id":\r\n\t 101,     
+        + src
+        - dst
+        
+   + поддержать src.filePath =  "*.json" (тут еще про префикс надо подумать)     например для  roomId<<extension<<restrictions 
+   + mapping: src to repeated; dst is single;
+   
+   - * в srcWord;
    
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?

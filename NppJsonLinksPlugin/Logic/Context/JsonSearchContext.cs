@@ -461,6 +461,7 @@ namespace NppJsonLinksPlugin.Logic.Context
                 var propertyResult = GetParentPropertyName(lineIndex, lineOffset - 1);
                 if (propertyResult.FoundPropertyName != parent.WordString)
                 {
+                    Logger.Info($"FAIL: expected complex word: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.FoundPropertyName} != {parent.WordString}");
                     return false;
                 }
 

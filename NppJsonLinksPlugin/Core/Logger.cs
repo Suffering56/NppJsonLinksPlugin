@@ -62,6 +62,11 @@ namespace NppJsonLinksPlugin.Core
             Debug.WriteLine(msg);
             WriteLogInto(_infoPathPrefix, msg);
         }
+        
+        public static void Warn(string msg)
+        {
+            Info($"WARN: {msg}");
+        }
 
         [Conditional("TRACE_ALL")]
         internal static void Error(string msg)

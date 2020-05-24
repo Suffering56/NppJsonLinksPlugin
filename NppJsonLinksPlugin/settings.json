@@ -4,90 +4,100 @@
   "cacheEnabled": false,
   "soundEnabled": true,
   "jumpToLineDelay": 100,
-  "mappingFilePathPrefix": "F:/gd_data/",
+  "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
     {
-      "description": "обычная настройка маппинга",
-      "src": {
-        "filePath": "mobSettings.json",
-        "word": "battleClass"
-      },
+      "description": "abilities",
+      "src": [
+        {
+          "overrideFilePath": "*",
+          "fileName": "*.json",
+          "word": "abilityId"
+        },
+        {
+          "fileName": "equipmentSets.json",
+          "word": "id<<abilities"
+        },
+        {
+          "fileName": "equipmentSets.json",
+          "word": "id<<from<<abilityMappings"
+        },
+        {
+          "fileName": "equipmentSets.json",
+          "word": "id<<to<<abilityMappings"
+        },
+        {
+          "fileName": "equipmentTiers.json",
+          "word": "id<<abilityRef"
+        }
+      ],
       "dst": {
-        "filePath": "battleClasses.json",
+        "fileName": "abilities.json",
+        "word": "id"
+      }
+    },
+    {
+      "src": [
+        {
+          "overrideFilePath": "F:/gd_data/",
+          "fileName": "mobSettings.json",
+          "word": "battleClass"
+        }
+      ],
+      "dst": {
+        "fileName": "battleClasses.json",
         "word": "type"
       }
     },
     {
-      "description": "обычная настройка маппинга + filePathPrefixEnabled (по умолчанию = true) - настройка позволяющая задавать абсолютный путь к файлу в filePath, если ее установить в false",
-      "src": {
-        "filePath": "mobSettings.json",
-        "word": "abilityId",
-        "filePathPrefixEnabled": true
-      },
+      "src": [
+        {
+          "fileName": "rewardPacks.json",
+          "word": "equipmentId"
+        }
+      ],
       "dst": {
-        "filePath": "abilities.json",
-        "word": "id"
-      }
-    },
-    {
-      "description": "пример сложного маппинга. в файле equipments есть несколько разных полей с одинаковым именем <id>, поэтому используется уточняющий путь (id<<ROOT)",
-      "src": {
-        "filePath": "rewardPacks.json",
-        "word": "equipmentId"
-      },
-      "dst": {
-        "filePath": "equipments.json",
+        "fileName": "equipments.json",
         "word": "id<<ROOT"
       }
     },
     {
-      "src": {
-        "filePath": "equipmentTiers.json",
-        "word": "id<<abilityRef"
-      },
+      "src": [
+        {
+          "fileName": "mobSettings.json",
+          "word": "defaultEquipmentIds"
+        }
+      ],
       "dst": {
-        "filePath": "abilities.json",
-        "word": "id"
-      }
-    },
-    {
-      "src": {
-        "filePath": "equipmentSets.json",
-        "word": "id<<abilities"
-      },
-      "dst": {
-        "filePath": "abilities.json",
-        "word": "id"
-      }
-    },
-    {
-      "src": {
-        "filePath": "equipmentSets.json",
-        "word": "id<<from<<abilityMappings"
-      },
-      "dst": {
-        "filePath": "abilities.json",
-        "word": "id"
-      }
-    },
-    {
-      "src": {
-        "filePath": "equipmentSets.json",
-        "word": "id<<to<<abilityMappings"
-      },
-      "dst": {
-        "filePath": "abilities.json",
-        "word": "id"
-      }
-    },
-    {
-      "src": {
-        "filePath": "mobSettings.json",
-        "word": "defaultEquipmentIds"
-      },
-      "dst": {
-        "filePath": "defaultEquipments.json",
+        "fileName": "defaultEquipments.json",
         "word": "id<<ROOT"
+      }
+    },
+    {
+      "description": "*.json - предполагает, что встреченная кнструкция srcWord будет проверяться в каждом файле в папке ",
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "roomId<<extension<<restrictions"
+        }
+      ],
+      "dst": {
+        "fileName": "rooms.json",
+        "word": "id<<ROOT"
+      }
+    },
+    {
+      "description": "example: '*' в overrideFilePath позволяет сравнивать только имя файла, игнорируя путь",
+      "src": [
+        {
+          "overrideFilePath": "*",
+          "fileName": "nonexistentSrcFile.json",
+          "word": "nonexistentMappingWord"
+        }
+      ],
+      "dst": {
+        "fileName": "nonexistentDstFile.json",
+        "word": "nonexistentMappingWord"
       }
     }
   ]

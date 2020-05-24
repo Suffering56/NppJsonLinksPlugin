@@ -10,5 +10,10 @@ namespace NppJsonLinksPlugin.Logic.Context
             Name = propertyName;
             Value = propertyValue;
         }
+
+        public override string ToString()
+        {
+            return $"[{nameof(Name)}: {Name}, {nameof(Value)}: {Value}]";
+        }
     }
 }

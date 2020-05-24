@@ -59,14 +59,14 @@ namespace NppJsonLinksPlugin.Logic
         public override string ToString()
         {
             Word cur = this;
-            string result = cur.WordString;
+            string result = "[" + cur.WordString;
             while (cur.Parent != null)
             {
                 cur = cur.Parent;
                 result += WordSeparator + cur.WordString;
             }
 
-            return result;
+            return result + "]";
         }
     }
 }

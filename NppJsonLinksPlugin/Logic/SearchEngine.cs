@@ -14,7 +14,7 @@ namespace NppJsonLinksPlugin.Logic
 {
     public class SearchEngine
     {
-        private readonly IExtendedDictionary<Settings.MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
+        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
 
         private string _currentFilePath = null;
         private bool _cacheEnabled;
@@ -22,7 +22,7 @@ namespace NppJsonLinksPlugin.Logic
 
         public SearchEngine()
         {
-            _mappingToDstFileContainerMap = new ExtendedDictionary<Settings.MappingItem, DstFileContainer>();
+            _mappingToDstFileContainerMap = new ExtendedDictionary<MappingItem, DstFileContainer>();
             _parser = new DefaultJsonParser();
         }
 
@@ -34,7 +34,7 @@ namespace NppJsonLinksPlugin.Logic
             foreach (var mappingItem in settings.Mapping)
             {
                 var dst = mappingItem.Dst;
-                var dstFilePath = dst.FilePath;
+                var dstFilePath = dst.FullPath;
 
                 var fileDstWords = dstFilePathToDstWordsCache.ComputeIfAbsent(dstFilePath, key => new HashSet<Word>());
                 fileDstWords.Add(dst.Word);
@@ -42,7 +42,7 @@ namespace NppJsonLinksPlugin.Logic
 
             foreach (var mappingItem in settings.Mapping)
             {
-                var dstFilePath = mappingItem.Dst.FilePath;
+                var dstFilePath = mappingItem.Dst.FullPath;
                 var supportedWords = dstFilePathToDstWordsCache[dstFilePath];
 
                 Debug.Assert(!_mappingToDstFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
@@ -54,6 +54,7 @@ namespace NppJsonLinksPlugin.Logic
 
         public void SwitchContext(string currentFilePath)
         {
+            currentFilePath = StringSupport.NormalizePath(currentFilePath);
             if (currentFilePath == _currentFilePath) return; // контекст не изменился
 
             Logger.Info($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
@@ -80,7 +81,7 @@ namespace NppJsonLinksPlugin.Logic
         {
             Logger.Info($"try find definition location for: selectedWord: {searchContext.GetSelectedWord()}");
             var property = searchContext.GetSelectedProperty();
-            
+
             if (property == null)
             {
                 Logger.Info($"FAIL: selected token not found for selected word: \"{searchContext.GetSelectedWord()}\"");
@@ -110,11 +111,11 @@ namespace NppJsonLinksPlugin.Logic
             return jumpLocation;
         }
 
-        private Settings.MappingItem? GetMappingItem(string propertyName, ISearchContext searchContext)
+        private MappingItem? GetMappingItem(string propertyName, ISearchContext searchContext)
         {
             foreach (var mappingItem in _mappingToDstFileContainerMap.Keys)
             {
-                if (mappingItem.Src.FilePath != _currentFilePath) continue;
+                if (!mappingItem.Src.MatchesWithPath(_currentFilePath)) continue;
 
                 var srcWord = mappingItem.Src.Word;
                 if (srcWord.WordString != propertyName) continue;
