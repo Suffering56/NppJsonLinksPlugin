@@ -1,8 +1,8 @@
 ﻿# Default ignored files
 /.idea/
 /.vs/
-/NppPluginForHC/bin/
-/NppPluginForHC/obj/
-/NppPluginForHC.sln.DotSettings.user
-/NppPluginForHC/NppPluginForHC.csproj.DotSettings
+/NppJsonLinksPlugin/bin/
+/NppJsonLinksPlugin/obj/
+/NppJsonLinksPlugin.sln.DotSettings.user
+/NppJsonLinksPlugin/NppJsonLinksPlugin.csproj.DotSettings
 /packages/

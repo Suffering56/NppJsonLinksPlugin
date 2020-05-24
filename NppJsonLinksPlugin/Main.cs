@@ -21,7 +21,7 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PluginName = "NppJsonLinksPlugin";
-        private const string PluginVersion = "0.1.2";
+        private const string PluginVersion = "0.1.3";
         private static Settings _settings = null;
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
 
