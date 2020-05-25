@@ -68,5 +68,10 @@ namespace NppJsonLinksPlugin.Logic
 
             return result + "]";
         }
+
+        public bool EqualsWith(string propertyName)
+        {
+            return WordString == propertyName;
+        }
     }
 }

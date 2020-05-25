@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
@@ -10,25 +11,20 @@ namespace NppJsonLinksPlugin.Logic.Context
     public class JsonSearchContext : ISearchContext
     {
         private readonly Property _selectedProperty;
-        
+
         private readonly string _selectedWord;
         private readonly IScintillaGateway _gateway;
-        private readonly int _initialLineIndex;
         private readonly int _totalLinesCount;
-        private readonly int _indexOfSelectedWord;
-        private readonly string _currentLineText;
 
         public JsonSearchContext(string selectedWord, IScintillaGateway gateway)
         {
             _gateway = gateway;
             _selectedWord = selectedWord;
-
             _totalLinesCount = _gateway.GetLineCount();
-            _initialLineIndex = _gateway.GetCurrentLine();
-            _indexOfSelectedWord = gateway.GetCurrentPos().Value - gateway.LineToPosition(_initialLineIndex) - _selectedWord.Length;
-            _currentLineText = _gateway.GetLineText(_initialLineIndex);
 
-            _selectedProperty = TryInitSelectedProperty();
+            var initialLineIndex = _gateway.GetCurrentLine();
+            var indexOfSelectedWord = _gateway.GetCurrentPos().Value - _gateway.LineToPosition(initialLineIndex) - _selectedWord.Length;
+            _selectedProperty = TryInitSelectedProperty(initialLineIndex, indexOfSelectedWord);
         }
 
         public bool IsValid()
@@ -45,7 +41,7 @@ namespace NppJsonLinksPlugin.Logic.Context
         {
             return _selectedProperty;
         }
-        
+
         private string GetLineText(int lineIndex)
         {
             if (lineIndex < 0 || lineIndex >= _totalLinesCount)
@@ -54,52 +50,52 @@ namespace NppJsonLinksPlugin.Logic.Context
                 return null;
             }
 
-            if (lineIndex == _initialLineIndex)
-            {
-                return _currentLineText;
-            }
-
             return _gateway.GetLineText(lineIndex);
         }
 
-        private Property TryInitSelectedProperty()
+        private Property TryInitSelectedProperty(int initialLineIndex, int indexOfSelectedWord)
         {
-            string lineText = GetLineText(_initialLineIndex);
-            var direction = ChooseDirection(_selectedWord, _indexOfSelectedWord, lineText);
-            string propertyName;
+            string lineText = GetLineText(initialLineIndex);
+            var direction = ChooseDirection(_selectedWord, indexOfSelectedWord, lineText);
 
             if (direction == null)
             {
-                Console.WriteLine("direction is null");
+                Logger.Fail($"direction is null for selectedWord: {_selectedWord}");
                 return null;
             }
 
+            return FindPropertyByDirection(initialLineIndex, indexOfSelectedWord, direction);
+        }
+
+        private Property FindPropertyByDirection(int initialLineIndex, int indexOfSelectedWord, Direction? direction)
+        {
             switch (direction)
             {
                 case Direction.LEFT:
-                    propertyName = GoLeftForPropertyName(_initialLineIndex, _indexOfSelectedWord - 1);
-                    if (propertyName != null) return new Property(propertyName, _selectedWord);
+                    int lineOffset = indexOfSelectedWord - 1;
+                    int lineIndex = initialLineIndex;
+                    if (lineOffset == -1) lineIndex--;
+
+                    var propertyNameLocation = GoLeftForPropertyName(lineIndex, lineOffset);
+                    if (propertyNameLocation != null) return new Property(propertyNameLocation, _selectedWord);
                     break;
 
                 case Direction.RIGHT:
                     // selectedWord окружено кавычками. наиболее вероятно что selectedWord это propertyName, идем на право за propertyValue
-                    var rightResult = GoRightForPropertyValue(_initialLineIndex, _indexOfSelectedWord + _selectedWord.Length + 1); // +1 потому что скипаем кавычку "
+                    var rightResult = GoRightForPropertyValue(initialLineIndex, indexOfSelectedWord + _selectedWord.Length + 1); // +1 потому что скипаем кавычку "
                     // встречено что-то невалидное или неожиданное (и неподдержанное мною)
                     if (rightResult == null) return null;
 
                     if (rightResult.IsNeedGoLeft())
                     {
                         // мы поняли, что selectedWord - это stringPropertyValue, идем налево за propertyName
-                        propertyName = GoLeftForPropertyName(_initialLineIndex, _indexOfSelectedWord - 1);
-                        if (propertyName != null) return new Property(propertyName, _selectedWord);
+                        return FindPropertyByDirection(initialLineIndex, indexOfSelectedWord, Direction.LEFT);
                     }
                     else
                     {
                         // мы успешно нашли propertyValue (после двоеточия как положено)
-                        return new Property(_selectedWord, rightResult.PropertyValue);
+                        return new Property(_selectedWord, initialLineIndex, indexOfSelectedWord, rightResult.PropertyValue);
                     }
-
-                    break;
             }
 
             return null;
@@ -107,7 +103,7 @@ namespace NppJsonLinksPlugin.Logic.Context
 
         private RightResult GoRightForPropertyValue(int lineIndex, int lineOffset)
         {
-            if (lineIndex >= _totalLinesCount) return null;
+            if (!IsValidLineIndex(lineIndex)) return null;
             string lineText = GetLineText(lineIndex);
 
             int lineLength = lineText.Length;
@@ -137,9 +133,9 @@ namespace NppJsonLinksPlugin.Logic.Context
             return GoRightForPropertyValue(lineIndex + 1, 0);
         }
 
-        private string GoLeftForPropertyName(int lineIndex, int lineOffset)
+        private PropertyNameLocation GoLeftForPropertyName(int lineIndex, int lineOffset)
         {
-            if (lineIndex < 0) return null;
+            if (!IsValidLineIndex(lineIndex)) return null;
 
             string lineText = GetLineText(lineIndex);
 
@@ -154,19 +150,20 @@ namespace NppJsonLinksPlugin.Logic.Context
                 switch (ch)
                 {
                     case ':':
-                        return ExtractPropertyName(lineIndex, i - 1);
+                        return ExtractCurrentPropertyName(lineIndex, i - 1);
                     case ',':
                     case '[':
-                        return GetParentPropertyName(lineIndex, i).FoundPropertyName;
+                        return ExtractParentPropertyName(lineIndex, i);
                 }
             }
 
             return GoLeftForPropertyName(lineIndex - 1, -1);
         }
 
-        private string ExtractPropertyName(int lineIndex, int lineOffset)
+        private PropertyNameLocation ExtractCurrentPropertyName(int lineIndex, int lineOffset)
         {
-            if (lineIndex >= _totalLinesCount) return null;
+            if (!IsValidLineIndex(lineIndex)) return null;
+
             string lineText = GetLineText(lineIndex);
             if (lineOffset == -1) lineOffset = lineText.Length - 1;
 
@@ -176,19 +173,19 @@ namespace NppJsonLinksPlugin.Logic.Context
 
                 if (ch.IsWhiteSpace()) continue;
 
-                if (ch == '"') return ExtractContinuousForPropertyName(lineText, i);
+                if (ch == '"') return ExtractContinuousWordReverse(lineText, lineIndex, i);
 
                 return null;
             }
 
-            return ExtractPropertyValue(lineIndex + 1, 0);
+            return ExtractCurrentPropertyName(lineIndex - 1, -1);
         }
 
-        private string ExtractContinuousForPropertyName(string lineText, int endQuoteIndex)
+        private PropertyNameLocation ExtractContinuousWordReverse(string lineText, int lineIndex, int lineOffset)
         {
             StringBuilder propertyNameBuilder = new StringBuilder();
 
-            for (int i = endQuoteIndex - 1; i >= 0; i--)
+            for (int i = lineOffset - 1; i >= 0; i--)
             {
                 var ch = lineText[i];
 
@@ -198,16 +195,16 @@ namespace NppJsonLinksPlugin.Logic.Context
                     continue;
                 }
 
-                if (ch == '"' && (i == 0 || lineText[i] != '\\'))
+                if (ch == '"' && (i == 0 || lineText[i - 1] != '\\'))
                 {
                     // начало propertyName
-                    return propertyNameBuilder.ToString().Reverse();
+                    return new PropertyNameLocation(propertyNameBuilder.ToString().Reverse(), lineIndex, i);
                 }
 
                 return null;
             }
 
-            // мы достигли начал строки, но так и не извлекли полноценный propertyName 
+            // мы достигли начала строки, но так и не извлекли полноценный propertyName 
             return null;
         }
 
@@ -217,7 +214,6 @@ namespace NppJsonLinksPlugin.Logic.Context
 
             var lineLength = lineText.Length;
 
-            // line = <value>
             // по сути проверка эквивалентна if (startBorderPos == -1 && endBorderPos == lineLength)
             if (wordLength == lineLength)
             {
@@ -231,50 +227,41 @@ namespace NppJsonLinksPlugin.Logic.Context
 
             int endBorderPos = indexOfWord + wordLength;
 
-            // line = <integerValue         >
             if (startBorderPos == -1)
             {
-                if (lineText[endBorderPos].IsWhiteSpaceOr(',', '}', ']'))
-                {
-                    if (selectedWord.IsInteger()) return Direction.LEFT;
-                }
-
+                if (!lineText[endBorderPos].IsWhiteSpaceOr(',', '}', ']')) return null;
+                if (selectedWord.IsInteger()) return Direction.LEFT;
                 return null;
             }
 
-            // line = <         integerValue>
             if (endBorderPos == lineLength)
             {
-                if (lineText[startBorderPos].IsWhiteSpaceOr(',', '[', ':'))
-                {
-                    if (selectedWord.IsInteger()) return Direction.LEFT;
-                }
-
+                if (!lineText[startBorderPos].IsWhiteSpaceOr(',', '[', ':')) return null;
+                if (selectedWord.IsInteger()) return Direction.LEFT;
                 return null;
             }
 
             var startBorderChar = lineText[startBorderPos];
-
             var endBorderChar = lineText[endBorderPos];
 
-            // line = <      "propertyName"    >        ||     <      "stringValue"    >
             if (startBorderChar == '"' && endBorderChar == '"')
             {
                 // это либо propertyName, либо stringValue, но пойдем направо, думая что это первый вариант более вероятен
                 return Direction.RIGHT;
             }
 
-            // line = <      "invalid    >        ||     <      "multiwords text value"    >
             if (startBorderChar == '"' || endBorderChar == '"')
             {
                 // кавычка стоит только с одной стороны - это либо невалидный JSON, либо это строка с текстом из нескольких слов
                 return null;
             }
 
+            if (!selectedWord.IsInteger()) return null;
+
             if (startBorderChar.IsWhiteSpaceOr(',', '[', ':')
                 && endBorderChar.IsWhiteSpaceOr(',', ']', '}'))
             {
-                if (selectedWord.IsInteger()) return Direction.LEFT;
+                return Direction.LEFT;
             }
 
             return null;
@@ -295,7 +282,7 @@ namespace NppJsonLinksPlugin.Logic.Context
 
                 if (ch == '"' || ch.IsDigitOrMinus())
                 {
-                    return ExtractContinuousForPropertyValue(lineText, i);
+                    return ExtractContinuousWord(lineText, i);
                 }
 
                 // после двоеточия мы ожидаем либо string либо integer value
@@ -305,11 +292,11 @@ namespace NppJsonLinksPlugin.Logic.Context
             return ExtractPropertyValue(lineIndex + 1, 0);
         }
 
-        // return:
-        //     если это integer -> значение в формате -12345
-        //     если это строка -> строку в формате <слово_которое_МОЖЕТ_быть_разделено__только_нижними_подчеркиваниями_и_содержать_цифры123_45> (без кавычек)
-        //     null - если невалидный json, или строка, состоящая из нескольких слов, или начался новый объект '{' или массив '['
-        private string ExtractContinuousForPropertyValue(string lineText, int lineOffset)
+        // @return:
+        // - если это integer -> значение в формате -12345
+        // - если это строка -> строку в формате <слово_которое_МОЖЕТ_быть_разделено__только_нижними_подчеркиваниями_и_содержать_цифры123_45> (без кавычек)
+        // - null - если невалидный json, или строка, состоящая из нескольких слов, или начался новый объект '{' или массив '['
+        private string ExtractContinuousWord(string lineText, int lineOffset)
         {
             var lineLength = lineText.Length;
             if (lineOffset >= lineLength)
@@ -364,9 +351,9 @@ namespace NppJsonLinksPlugin.Logic.Context
                 : null; // строковое значение всегда должно заканчиватсья двойными кавычками и не может быть растянуто на несколько линий
         }
 
-        
+
         //GetParentPropertyName: TODO: было бы неплохо возвращать null если json невалиден
-        private PropertyNameLocation GetParentPropertyName(int initialLineIndex, int initialLineOffset)
+        private PropertyNameLocation ExtractParentPropertyName(int initialLineIndex, int initialLineOffset)
         {
             var nestingCounter = 0;
             char? expectedChar = null;
@@ -440,38 +427,38 @@ namespace NppJsonLinksPlugin.Logic.Context
             return PropertyNameLocation.Root;
         }
 
-
         public bool MatchesWith(Word expectedWord)
         {
-            var selectedWord = _selectedProperty.Name;
-            Debug.Assert(expectedWord.WordString == selectedWord, $"initial expectedWord={expectedWord} string is not equal with selected word={selectedWord}");
+            var propertyName = _selectedProperty.Name;
 
-            var lineIndex = _initialLineIndex;
-            var propertyName = expectedWord.WordString;
+            if (!expectedWord.EqualsWith(propertyName)) return false;
+            if (!expectedWord.IsComplex()) return true;
 
-            var lineOffset = _currentLineText.IndexOf($"\"{propertyName}\"", StringComparison.Ordinal);
-            if (lineOffset == -1)
-            {
-                throw new Exception($"currentWordStr={propertyName} not found in line={propertyName}");
-            }
+            var lineIndex = _selectedProperty.NameLineIndex;
+            // var lineOffset = _selectedProperty.NameLineOffset - 1;
+            var lineOffset = _selectedProperty.NameLineOffset;
 
             Word parent = expectedWord;
             while ((parent = parent.Parent) != null)
             {
-                var propertyResult = GetParentPropertyName(lineIndex, lineOffset - 1);
-                if (propertyResult.FoundPropertyName != parent.WordString)
+                var propertyResult = ExtractParentPropertyName(lineIndex, lineOffset - 1);
+                if (!parent.EqualsWith(propertyResult.PropertyName))
                 {
-                    Logger.Info($"FAIL: expected complex word: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.FoundPropertyName} != {parent.WordString}");
+                    Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.WordString}");
                     return false;
                 }
 
-                lineIndex = propertyResult.StopPositionLineIndex;
-                lineOffset = propertyResult.StopPositionLineOffset;
+                lineIndex = propertyResult.StopLineIndex;
+                lineOffset = propertyResult.StopLineOffset;
             }
 
             return true;
         }
 
+        private bool IsValidLineIndex(int lineIndex)
+        {
+            return 0 <= lineIndex && lineIndex < _totalLinesCount;
+        }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         private enum Direction
@@ -497,27 +484,6 @@ namespace NppJsonLinksPlugin.Logic.Context
             public bool IsNeedGoLeft()
             {
                 return PropertyValue == null;
-            }
-        }
-
-        private class PropertyNameLocation
-        {
-            internal static readonly PropertyNameLocation Root = new PropertyNameLocation(AppConstants.RootPropertyName, 0, 0);
-
-            public readonly string FoundPropertyName;
-            public readonly int StopPositionLineIndex;
-            public readonly int StopPositionLineOffset;
-
-            public PropertyNameLocation(string foundPropertyName, int stopPositionLineIndex, int stopPositionLineOffset)
-            {
-                FoundPropertyName = foundPropertyName;
-                StopPositionLineIndex = stopPositionLineIndex;
-                StopPositionLineOffset = stopPositionLineOffset;
-            }
-
-            public bool IsRoot()
-            {
-                return this == Root;
             }
         }
     }

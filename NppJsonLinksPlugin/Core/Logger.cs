@@ -67,6 +67,11 @@ namespace NppJsonLinksPlugin.Core
         {
             Info($"WARN: {msg}");
         }
+        
+        public static void Fail(string msg)
+        {
+            Info($"FAIL: {msg}");
+        }
 
         [Conditional("TRACE_ALL")]
         internal static void Error(string msg)

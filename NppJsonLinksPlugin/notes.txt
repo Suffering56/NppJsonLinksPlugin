@@ -38,6 +38,8 @@ necessary:
         
    + поддержать src.filePath =  "*.json" (тут еще про префикс надо подумать)     например для  roomId<<extension<<restrictions 
    + mapping: src to repeated; dst is single;
+   + MatchesWith: initialOffset + initialLine fix;
+   
    
    - * в srcWord;
    
@@ -60,6 +62,8 @@ necessary:
         - mapping
         
 unnecessary:
+    - иногда GetCurrentWord возвращает кусок слова и соответственно ctrl + click не срабатывает. это можно пофиксить прям в IScintillaGateway
+    
     - GetParentPropertyName: TODO: было бы неплохо возвращать null если json невалиден
 
     - фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять

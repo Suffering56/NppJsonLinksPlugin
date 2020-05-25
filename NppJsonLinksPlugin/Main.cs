@@ -54,13 +54,27 @@ namespace NppJsonLinksPlugin
         {
             _idMyDlg = 1;
 
-            PluginBase.SetCommand(0, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
             // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
-            PluginBase.SetCommand(1, "", null);
-            PluginBase.SetCommand(2, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
 
-            PluginBase.SetCommand(3, "Navigate Backward", NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
-            PluginBase.SetCommand(4, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
+            PluginBase.SetCommand(2, "", null);
+            
+            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
+            PluginBase.SetCommand(4, "Navigate Backward", NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
+            PluginBase.SetCommand(5, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(6, "", null);
+            
+            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
+
+        }
+
+        private static void ReloadPlugin()
+        {
+            MouseHook.Stop();
+            MouseHook.CleanListeners();
+            
+            MouseHook.Start();
+            MouseHook.RegisterListener(OnLeftMouseClick);
         }
 
         public static void OnNotification(ScNotification notification)

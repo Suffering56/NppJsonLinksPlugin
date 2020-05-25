@@ -88,10 +88,10 @@ namespace NppJsonLinksPlugin.Logic
                 return null;
             }
 
-            var mappingItem = GetMappingItem(property.Name, searchContext);
+            var mappingItem = GetMappingItem(searchContext);
             if (mappingItem == null)
             {
-                Logger.Info($"FAIL: mapping not found! selected word: \"{searchContext.GetSelectedWord()}\" does not match with any srcWord");
+                Logger.Info($"FAIL: mapping not found! selectedProperty={property} by selectedWord=\"{searchContext.GetSelectedWord()}\" does not match with any srcWord");
                 return null;
             }
 
@@ -111,18 +111,13 @@ namespace NppJsonLinksPlugin.Logic
             return jumpLocation;
         }
 
-        private MappingItem? GetMappingItem(string propertyName, ISearchContext searchContext)
+        private MappingItem? GetMappingItem(ISearchContext searchContext)
         {
             foreach (var mappingItem in _mappingToDstFileContainerMap.Keys)
             {
                 if (!mappingItem.Src.MatchesWithPath(_currentFilePath)) continue;
 
-                var srcWord = mappingItem.Src.Word;
-                if (srcWord.WordString != propertyName) continue;
-
-                if (!srcWord.IsComplex()) return mappingItem;
-
-                if (searchContext.MatchesWith(srcWord)) return mappingItem;
+                if (searchContext.MatchesWith(mappingItem.Src.Word)) return mappingItem;
             }
 
             return null;
