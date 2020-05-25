@@ -7,98 +7,122 @@
   "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
     {
-      "description": "abilities",
+      "description": "TODO:roomId   roomId<<<extension<<<^[\\w_]*restriction[\\w_]?$    эквивалентно выражению:   roomId<<<extension<<<*restriction?, при wordRegexpEnabled = false",
+      "dst": {
+        "fileName": "rooms.json",
+        "word": "id<<<ROOT"
+      },
       "src": [
         {
-          "overrideFilePath": "*",
+          "wordRegexpEnabled": true,
+          "fileName": "*.json",
+          "word": "roomId<<<extension<<<^[\\w_]*restriction[\\w_]?$"
+        }
+      ]
+    },
+    {
+      "dst": {
+        "fileName": "equipments.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "equipmentId"
+        }
+      ]
+    },
+    {
+      "dst": {
+        "fileName": "offers.json",
+        "word": "id<<<offers"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "offerId"
+        }
+      ]
+    },
+    {
+      "dst": {
+        "fileName": "parametrizedMobs.json",
+        "word": "paramKey<<<params"
+      },
+      "src": [
+        {
+          "fileName": "parametrizedMobs.json",
+          "word": "defaultParamsKey"
+        }
+      ]
+    },
+    {
+      "description": "abilities",
+      "dst": {
+        "fileName": "abilities.json",
+        "word": "id"
+      },
+      "src": [
+        {
           "fileName": "*.json",
           "word": "abilityId"
         },
         {
           "fileName": "equipmentSets.json",
-          "word": "id<<abilities"
+          "word": "id<<<abilities"
         },
         {
           "fileName": "equipmentSets.json",
-          "word": "id<<from<<abilityMappings"
+          "word": "id<<<from<<<abilityMappings"
         },
         {
           "fileName": "equipmentSets.json",
-          "word": "id<<to<<abilityMappings"
+          "word": "id<<<to<<<abilityMappings"
         },
         {
           "fileName": "equipmentTiers.json",
-          "word": "id<<abilityRef"
+          "word": "id<<<abilityRef"
         }
-      ],
-      "dst": {
-        "fileName": "abilities.json",
-        "word": "id"
-      }
+      ]
     },
     {
+      "dst": {
+        "fileName": "battleClasses.json",
+        "word": "type"
+      },
       "src": [
         {
           "overrideFilePath": "F:/gd_data/",
           "fileName": "mobSettings.json",
           "word": "battleClass"
         }
-      ],
-      "dst": {
-        "fileName": "battleClasses.json",
-        "word": "type"
-      }
+      ]
     },
     {
-      "src": [
-        {
-          "fileName": "rewardPacks.json",
-          "word": "equipmentId"
-        }
-      ],
       "dst": {
-        "fileName": "equipments.json",
-        "word": "id<<ROOT"
-      }
-    },
-    {
+        "fileName": "defaultEquipments.json",
+        "word": "id<<<ROOT"
+      },
       "src": [
         {
           "fileName": "mobSettings.json",
           "word": "defaultEquipmentIds"
         }
-      ],
-      "dst": {
-        "fileName": "defaultEquipments.json",
-        "word": "id<<ROOT"
-      }
+      ]
     },
     {
-      "description": "*.json - предполагает, что встреченная кнструкция srcWord будет проверяться в каждом файле в папке ",
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "roomId<<extension<<restrictions"
-        }
-      ],
-      "dst": {
-        "fileName": "rooms.json",
-        "word": "id<<ROOT"
-      }
-    },
-    {
-      "description": "example: '*' в overrideFilePath позволяет сравнивать только имя файла, игнорируя путь",
-      "src": [
-        {
-          "overrideFilePath": "*",
-          "fileName": "nonexistentSrcFile.json",
-          "word": "nonexistentMappingWord"
-        }
-      ],
+      "description": "example: '*': в overrideFilePath позволяет сравнивать только имя файла, игнорируя путь",
       "dst": {
         "fileName": "nonexistentDstFile.json",
         "word": "nonexistentMappingWord"
-      }
+      },
+      "src": [
+        {
+          "overrideFilePath": "*",
+          "fileName": "*.json",
+          "word": "*nonexistentMappingWord???"
+        }
+      ]
     }
   ]
 }

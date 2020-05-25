@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace NppJsonLinksPlugin.Core
@@ -19,6 +20,13 @@ namespace NppJsonLinksPlugin.Core
 
     public static class StringSupport
     {
+        private const string ValidWordPattern = "^[\\w_]*?$";
+
+        public static bool IsValidWord(string str)
+        {
+            return Regex.IsMatch(str, ValidWordPattern);
+        }
+
         public static string NormalizePath(string path)
         {
             try

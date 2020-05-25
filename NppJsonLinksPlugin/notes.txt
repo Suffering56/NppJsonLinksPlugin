@@ -1,4 +1,5 @@
-﻿remember:
+﻿workspace:
+    - Notepad++ v7.8.6 (32-bit)
     - c# language level = 8
     - #nullable enable НЕ РАБОТАЕТ
     - у меня настроено NppPlugin.DllExport.targets ==> SdkPath="$(SDK35ToolsPath)",
@@ -28,31 +29,25 @@ necessary:
    + звуковое сопровождение утащить в настройки
    + включение/отключение логирования
    + по хорошему вот это тоже стоит уметь обрабатывать: "defaultEquipmentIds": [310,501],
-  
-   +- подумать о том, что строковое значение property может содержать последовательность \":
-        + src 
-        - dst
-   +- подумать о том, что значение propertyValue может оказаться не на одной строке с ключом propertyName. Например:   "id":\r\n\t 101,     
-        + src
-        - dst
-        
+   + подумать о том, что значение propertyValue может оказаться не на одной строке с ключом propertyName. Например:   "id":\r\n\t 101,     
    + поддержать src.filePath =  "*.json" (тут еще про префикс надо подумать)     например для  roomId<<extension<<restrictions 
    + mapping: src to repeated; dst is single;
    + MatchesWith: initialOffset + initialLine fix;
+   + *? в srcWord;
    
-   
-   - * в srcWord;
+   - описать варианты настроек в отдельном файле
+   - иногда отваливается MouseHook. fix it
+   - доставать настройки логгера из rawSettings;
+   - settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
    
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
         
-   - settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
    - перезагрузка настроек после рестарта NPP
   
   
-    
     - menu -> settings:
         - enabled/disabled
         - logs enabled

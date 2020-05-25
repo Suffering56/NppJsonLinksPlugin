@@ -45,12 +45,18 @@ namespace NppJsonLinksPlugin.Configuration
             {
                 [JsonProperty(PropertyName = "overrideFilePath")]
                 public string OverrideFilePath;
-                
+
                 [JsonProperty(PropertyName = "fileName", Required = Required.Always)]
                 public string FileName;
 
                 [JsonProperty(PropertyName = "word", Required = Required.Always)]
                 public string Word;
+
+                [JsonProperty(PropertyName = "fileNameRegexpEnabled")]
+                public bool FileNameRegexpEnabled = false;
+
+                [JsonProperty(PropertyName = "wordRegexpEnabled")]
+                public bool WordRegexpEnabled = false;
             }
         }
     }

@@ -1,16 +1,21 @@
 ﻿using System;
+using System.Text.RegularExpressions;
+using NppJsonLinksPlugin.Core;
 
 namespace NppJsonLinksPlugin.Logic
 {
     public class Word
     {
-        private const string WordSeparator = "<<";
+        private const string WordSeparator = AppConstants.WordSeparator;
         private static readonly string[] WordSeparatorForSplit = {WordSeparator};
+        private const string SeveralLettersPattern = "[\\w_]*";
+        private const string SingleLettersPattern = "[\\w_]?";
 
-        public readonly string WordString;
         public readonly Word Parent;
+        private readonly string _wordString;
+        private readonly string _wordStringPattern = null;
 
-        public static Word Parse(string fullWordStr)
+        public static Word ParseSrc(string fullWordStr, bool regexpEnabled)
         {
             string[] split = fullWordStr.Split(WordSeparatorForSplit, StringSplitOptions.None);
 
@@ -18,17 +23,48 @@ namespace NppJsonLinksPlugin.Logic
             for (int i = split.Length - 1; i >= 0; i--)
             {
                 var wordStr = split[i];
-                var word = new Word(wordStr, parent);
+                var word = new Word(wordStr, parent, regexpEnabled);
                 parent = word;
             }
 
             return parent;
         }
 
-        private Word(string wordString, Word parent)
+        public static Word ParseDst(string fullWordStr)
         {
-            WordString = wordString;
+            return ParseSrc(fullWordStr, false);
+        }
+
+        public string GetWordString()
+        {
+            return _wordString;
+        }
+
+        private Word(string wordString, Word parent, bool regexpEnabled)
+        {
+            _wordString = wordString;
             Parent = parent;
+
+            if (StringSupport.IsValidWord(wordString))
+            {
+                _wordStringPattern = null;
+            }
+            else if (regexpEnabled)
+            {
+                _wordStringPattern = wordString;
+            }
+            else if (wordString.Contains("*") || wordString.Contains("?"))
+            {
+                _wordStringPattern = ToRegexp(wordString);
+            }
+        }
+
+        private static string ToRegexp(string wordString)
+        {
+            wordString = wordString
+                .Replace("*", SeveralLettersPattern)
+                .Replace("?", SingleLettersPattern);
+            return "^" + wordString + "$";
         }
 
         public bool IsComplex()
@@ -38,7 +74,7 @@ namespace NppJsonLinksPlugin.Logic
 
         private bool Equals(Word other)
         {
-            return WordString == other.WordString && Equals(Parent, other.Parent);
+            return _wordString == other._wordString && Equals(Parent, other.Parent);
         }
 
         public override bool Equals(object obj)
@@ -52,26 +88,31 @@ namespace NppJsonLinksPlugin.Logic
         {
             unchecked
             {
-                return ((WordString != null ? WordString.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
+                return ((_wordString != null ? _wordString.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
             }
         }
 
         public override string ToString()
         {
             Word cur = this;
-            string result = "[" + cur.WordString;
+            string result = "[" + cur._wordString;
             while (cur.Parent != null)
             {
                 cur = cur.Parent;
-                result += WordSeparator + cur.WordString;
+                result += WordSeparator + cur._wordString;
             }
 
             return result + "]";
         }
 
-        public bool EqualsWith(string propertyName)
+        public bool MatchesWith(string propertyName)
         {
-            return WordString == propertyName;
+            if (_wordStringPattern != null)
+            {
+                return Regex.IsMatch(propertyName, _wordStringPattern, RegexOptions.IgnoreCase);
+            }
+
+            return _wordString == propertyName;
         }
     }
 }

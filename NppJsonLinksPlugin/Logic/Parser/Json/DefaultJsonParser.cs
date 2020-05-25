@@ -47,7 +47,7 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             {
                 foreach (var dstWord in expectedWords)
                 {
-                    var dstWordString = dstWord.WordString;
+                    var dstWordString = dstWord.GetWordString();
 
                     if (!lineText.Contains($"\"{dstWordString}\"")) continue;
 
@@ -106,7 +106,7 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             propertyName = null;
 
             // это просто property, которое не участвует в маппинге
-            if (dstWord.WordString != expectedPropertyName) return;
+            if (dstWord.GetWordString() != expectedPropertyName) return;
 
             string valueString = value.ToString();
             switch (tokenType)
@@ -132,7 +132,7 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             foreach (var stackItem in propertyStack)
             {
                 if (stackItem == null) continue;
-                if (parent.WordString != stackItem) return;
+                if (parent.GetWordString() != stackItem) return;
 
                 parent = parent.Parent;
                 if (parent != null) continue;
@@ -154,15 +154,15 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             {
                 expectedWord = null;
 
-                if (dstWord.WordString == value.ToString())
+                if (dstWord.GetWordString() == value.ToString())
                 {
-                    expectedWord = dstWord.WordString;
+                    expectedWord = dstWord.GetWordString();
                 }
 
                 return;
             }
 
-            if (expectedWord != dstWord.WordString) return;
+            if (expectedWord != dstWord.GetWordString()) return;
 
             //ожидаем value
             string valueString = value.ToString();

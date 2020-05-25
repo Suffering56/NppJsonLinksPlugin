@@ -21,15 +21,18 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PluginName = "NppJsonLinksPlugin";
-        private const string PluginVersion = "0.1.3";
-        private static Settings _settings = null;
-        private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
+        private const string PluginVersion = "0.2.0";
 
+        // private static readonly string SettingsFilePath = $"plugins/{PluginName}/settings.json";
+        private static readonly string SettingsFilePath = "D:/02_other_languages/csharp/projects/NppJsonLinksPlugin/NppJsonLinksPlugin/settings.json";    //TODO
+        private static Settings _settings = null;
+
+        private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
         private static readonly SearchEngine SearchEngine = new SearchEngine();
-        
+
         //TODO многовато флагов
         private static bool _isPluginInited = false;
-        internal static bool IsPluginEnabled = true;    //TODO: unsupported
+        internal static bool IsPluginEnabled = true; //TODO: unsupported
         private static bool _isFileLoadingActive = false;
 
         private static int _jumpPos = 0;
@@ -58,21 +61,20 @@ namespace NppJsonLinksPlugin
 
             PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
             PluginBase.SetCommand(2, "", null);
-            
+
             PluginBase.SetCommand(3, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
             PluginBase.SetCommand(4, "Navigate Backward", NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
             PluginBase.SetCommand(5, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(6, "", null);
-            
-            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
 
+            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
         }
 
         private static void ReloadPlugin()
         {
             MouseHook.Stop();
             MouseHook.CleanListeners();
-            
+
             MouseHook.Start();
             MouseHook.RegisterListener(OnLeftMouseClick);
         }
@@ -223,7 +225,7 @@ namespace NppJsonLinksPlugin
         {
             try
             {
-                return SettingsParser.Parse($"plugins/{PluginName}/settings.json");
+                return SettingsParser.Parse(SettingsFilePath);
             }
             catch (Exception e)
             {

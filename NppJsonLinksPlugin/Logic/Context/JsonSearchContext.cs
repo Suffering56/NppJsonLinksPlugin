@@ -1,7 +1,4 @@
-using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Text;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
@@ -25,6 +22,33 @@ namespace NppJsonLinksPlugin.Logic.Context
             var initialLineIndex = _gateway.GetCurrentLine();
             var indexOfSelectedWord = _gateway.GetCurrentPos().Value - _gateway.LineToPosition(initialLineIndex) - _selectedWord.Length;
             _selectedProperty = TryInitSelectedProperty(initialLineIndex, indexOfSelectedWord);
+        }
+
+        public bool MatchesWith(Word expectedWord)
+        {
+            var propertyName = _selectedProperty.Name;
+
+            if (!expectedWord.MatchesWith(propertyName)) return false;
+            if (!expectedWord.IsComplex()) return true;
+
+            var lineIndex = _selectedProperty.NameLineIndex;
+            var lineOffset = _selectedProperty.NameLineOffset;
+
+            Word parent = expectedWord;
+            while ((parent = parent.Parent) != null)
+            {
+                var propertyResult = ExtractParentPropertyName(lineIndex, lineOffset - 1);
+                if (!parent.MatchesWith(propertyResult.PropertyName))
+                {
+                    Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.GetWordString()}");
+                    return false;
+                }
+
+                lineIndex = propertyResult.StopLineIndex;
+                lineOffset = propertyResult.StopLineOffset;
+            }
+
+            return true;
         }
 
         public bool IsValid()
@@ -427,34 +451,6 @@ namespace NppJsonLinksPlugin.Logic.Context
             return PropertyNameLocation.Root;
         }
 
-        public bool MatchesWith(Word expectedWord)
-        {
-            var propertyName = _selectedProperty.Name;
-
-            if (!expectedWord.EqualsWith(propertyName)) return false;
-            if (!expectedWord.IsComplex()) return true;
-
-            var lineIndex = _selectedProperty.NameLineIndex;
-            // var lineOffset = _selectedProperty.NameLineOffset - 1;
-            var lineOffset = _selectedProperty.NameLineOffset;
-
-            Word parent = expectedWord;
-            while ((parent = parent.Parent) != null)
-            {
-                var propertyResult = ExtractParentPropertyName(lineIndex, lineOffset - 1);
-                if (!parent.EqualsWith(propertyResult.PropertyName))
-                {
-                    Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.WordString}");
-                    return false;
-                }
-
-                lineIndex = propertyResult.StopLineIndex;
-                lineOffset = propertyResult.StopLineOffset;
-            }
-
-            return true;
-        }
-
         private bool IsValidLineIndex(int lineIndex)
         {
             return 0 <= lineIndex && lineIndex < _totalLinesCount;
@@ -469,19 +465,19 @@ namespace NppJsonLinksPlugin.Logic.Context
 
         private class RightResult
         {
-            public readonly string PropertyValue;
+            internal readonly string PropertyValue;
 
-            public static RightResult GoLeft()
+            internal static RightResult GoLeft()
             {
                 return new RightResult(null);
             }
 
-            public RightResult(string propertyValue)
+            internal RightResult(string propertyValue)
             {
                 PropertyValue = propertyValue;
             }
 
-            public bool IsNeedGoLeft()
+            internal bool IsNeedGoLeft()
             {
                 return PropertyValue == null;
             }

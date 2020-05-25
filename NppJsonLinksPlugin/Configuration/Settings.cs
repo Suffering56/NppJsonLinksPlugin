@@ -42,14 +42,15 @@ namespace NppJsonLinksPlugin.Configuration
                     {
                         Src = new Settings.MappingItem.SrcLocation
                         (
-                            Word.Parse(srcLocation.Word),
+                            Word.ParseSrc(srcLocation.Word, srcLocation.WordRegexpEnabled),
                             srcLocation.FileName,
                             rawSettings.MappingDefaultFilePath,
-                            srcLocation.OverrideFilePath
+                            srcLocation.OverrideFilePath,
+                            srcLocation.FileNameRegexpEnabled
                         ),
                         Dst = new Settings.MappingItem.DstLocation
                         (
-                            Word.Parse(rawMappingItem.Dst.Word),
+                            Word.ParseDst(rawMappingItem.Dst.Word),
                             rawMappingItem.Dst.FileName,
                             rawSettings.MappingDefaultFilePath,
                             rawMappingItem.Dst.OverrideFilePath
@@ -151,7 +152,7 @@ namespace NppJsonLinksPlugin.Configuration
 
             public class SrcLocation
             {
-                public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath)
+                public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled)
                 {
                     _initialFileName = fileName;
                     Word = word;
@@ -165,15 +166,20 @@ namespace NppJsonLinksPlugin.Configuration
                         FilePath = FilePath.Substring(0, FilePath.Length - 1);
                     }
 
-                    if (!fileName.Contains('*'))
+                    if (fileNameRegexpEnabled)
                     {
-                        _fileName = fileName;
-                        _fileNamePattern = null;
+                        _fileName = null;
+                        _fileNamePattern = _fileName;
+                    }
+                    else if (fileName.Contains('*'))
+                    {
+                        _fileName = null;
+                        _fileNamePattern = ToRegexp(fileName);
                     }
                     else
                     {
-                        _fileName = null;
-                        _fileNamePattern = ToPattern(fileName);
+                        _fileName = fileName;
+                        _fileNamePattern = null;
                     }
                 }
 
@@ -187,7 +193,7 @@ namespace NppJsonLinksPlugin.Configuration
                 private const string AnyFile = "*";
                 private const string AsteriskPattern = "[^:/\\\\*?\"<>]+";
 
-                private static string ToPattern(string fileName)
+                private static string ToRegexp(string fileName)
                 {
                     var rawPattern = new StringBuilder(fileName)
                         .Replace("*.*", "*")
