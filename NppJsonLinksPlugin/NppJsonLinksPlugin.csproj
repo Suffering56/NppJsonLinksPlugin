@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppConstants.cs" />
+    <Compile Include="Configuration\IniConfig.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\MouseHook.cs" />
     <Compile Include="Core\NullableDictionary.cs" />

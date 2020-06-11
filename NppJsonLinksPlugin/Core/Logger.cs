@@ -51,7 +51,7 @@ namespace NppJsonLinksPlugin.Core
         internal static void ErrorMsgBox(string errorMsg)
         {
             if (_mode == Mode.DISABLED) return;
-            MessageBox.Show("Plugin error: " + errorMsg, Main.PluginName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(@"Plugin error: " + errorMsg, Main.PluginName, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         [Conditional("TRACE_ALL")]
@@ -62,12 +62,12 @@ namespace NppJsonLinksPlugin.Core
             Debug.WriteLine(msg);
             WriteLogInto(_infoPathPrefix, msg);
         }
-        
+
         public static void Warn(string msg)
         {
             Info($"WARN: {msg}");
         }
-        
+
         public static void Fail(string msg)
         {
             Info($"FAIL: {msg}");
@@ -116,7 +116,10 @@ namespace NppJsonLinksPlugin.Core
             catch (Exception ex)
             {
                 ErrorMsgBox($"Error while attempting to write into log file (loggerMode will set to {Mode.ONLY_ERRORS}), message:\n" + ex.Message);
-                SetMode(Mode.ONLY_ERRORS, null);
+                if (_mode != Mode.DISABLED)
+                {
+                    SetMode(Mode.ONLY_ERRORS, null);
+                }
             }
         }
     }

@@ -68,7 +68,7 @@
     
     {
       "dst": {
-                                                                      // поддержка regext (wordRegexpEnabled) доступна только для src
+                                                                      // поддержка regexp (wordRegexpEnabled) доступна только для src
         "fileName": "rooms.json",
         "word": "id<<<ROOT"
       },

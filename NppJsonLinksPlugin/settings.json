@@ -1,5 +1,4 @@
 {
-  "cacheEnabled": false,
   "soundEnabled": true,
   "jumpToLineDelay": 100,
   "mappingDefaultFilePath": "F:/gd_data",
@@ -100,7 +99,6 @@
       },
       "src": [
         {
-          "overrideFilePath": "F:/gd_data/",
           "fileName": "mobSettings.json",
           "word": "battleClass"
         }

@@ -14,15 +14,15 @@ namespace NppJsonLinksPlugin.Configuration
 {
     public static class SettingsParser
     {
-        public static Settings Parse(string settingsUri)
+        public static Settings Load(IniConfig iniConfig)
         {
-            var uri = new Uri(settingsUri);
+            var uri = new Uri(iniConfig.SettingsJsonUri);
             string settingsString = uri.IsFile
                 ? File.ReadAllText(uri.AbsolutePath)
                 : ReadRemoteSettings(uri);
 
             var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
-            Settings settings = ConvertRawSettings(rawSettings);
+            Settings settings = ConvertRawSettings(rawSettings, iniConfig);
             try
             {
                 Validate(settings);
@@ -30,7 +30,7 @@ namespace NppJsonLinksPlugin.Configuration
             catch (Exception e)
             {
                 Logger.ErrorMsgBox(e.Message);
-                Main.IsPluginEnabled = false;
+                Main.DisablePlugin();
             }
 
             return settings;
@@ -51,7 +51,7 @@ namespace NppJsonLinksPlugin.Configuration
             return reader.ReadToEnd();
         }
 
-        private static Settings ConvertRawSettings(RawSettings rawSettings)
+        private static Settings ConvertRawSettings(RawSettings rawSettings, IniConfig iniConfig)
         {
             var mappingItems = rawSettings.Mapping
                 .SelectMany(rawMappingItem =>
@@ -80,16 +80,16 @@ namespace NppJsonLinksPlugin.Configuration
             return new Settings
             {
                 CacheEnabled = rawSettings.CacheEnabled,
-                SoundEnabled = rawSettings.SoundEnabled,
-                JumpToLineDelay = rawSettings.JumpToLineDelay,
-                MappingFilePathPrefix = rawSettings.MappingDefaultFilePath,
+                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled,                                   // override by ini
+                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay,                          // override by ini
+                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath,     // override by ini
                 Mapping = mappingItems
             };
         }
 
         private static void Validate(Settings settings)
         {
-            Check(!string.IsNullOrWhiteSpace(settings.MappingFilePathPrefix), "settings.MappingFilePathPrefix cannot be null or empty");
+            Check(!string.IsNullOrWhiteSpace(settings.MappingDefaultFilePath), "settings.MappingDefaultFilePath cannot be null or empty");
 
             int index = 0;
             foreach (var mappingItem in settings.Mapping)
@@ -126,7 +126,7 @@ namespace NppJsonLinksPlugin.Configuration
 
         public int JumpToLineDelay { get; internal set; }
 
-        public string MappingFilePathPrefix { get; internal set; }
+        public string MappingDefaultFilePath { get; internal set; }
 
         public IEnumerable<MappingItem> Mapping { get; internal set; }
 
@@ -149,7 +149,7 @@ namespace NppJsonLinksPlugin.Configuration
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((MappingItem) obj);
             }
 
