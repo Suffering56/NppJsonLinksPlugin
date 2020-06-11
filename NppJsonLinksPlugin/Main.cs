@@ -21,10 +21,9 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PluginName = "NppJsonLinksPlugin";
-        private const string PluginVersion = "0.2.0";
+        private const string PluginVersion = "0.2.1";
 
-        // private static readonly string SettingsFilePath = $"plugins/{PluginName}/settings.json";
-        private static readonly string SettingsFilePath = "D:/02_other_languages/csharp/projects/NppJsonLinksPlugin/NppJsonLinksPlugin/settings.json";    //TODO
+        private static string _settingsJsonUri = null;
         private static Settings _settings = null;
 
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
@@ -39,7 +38,7 @@ namespace NppJsonLinksPlugin
         private static readonly Stack<JumpLocation> JumpStack = new Stack<JumpLocation>();
 
         private static frmMyDlg _frmMyDlg = null;
-        private static int _idMyDlg = -1;
+        private static int _idMyDlg = 1;
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
         private static Icon _tbIcon = null;
@@ -55,8 +54,8 @@ namespace NppJsonLinksPlugin
 
         internal static void CommandMenuInit()
         {
-            _idMyDlg = 1;
-
+            Logger.Info("COMMAND_MENU_INIT");
+            InitBaseConfig();
             // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
 
             PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
@@ -67,7 +66,39 @@ namespace NppJsonLinksPlugin
             PluginBase.SetCommand(5, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(6, "", null);
 
-            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
+            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
+        }
+
+        private static void InitBaseConfig()
+        {
+            string iniFilePath = Path.GetFullPath($"plugins/{PluginName}/{AppConstants.IniConfigName}");
+
+            _settingsJsonUri = ReadIniProperty("settings_uri", iniFilePath);
+            var logsDir = ReadIniProperty("logs_dir", iniFilePath);
+            var loggerMode = ExtractLoggerMode("logger_mode", iniFilePath);
+
+            Logger.SetMode(loggerMode, logsDir);
+        }
+
+        private static string ReadIniProperty(string propertyName, string iniFilePath)
+        {
+            StringBuilder sb = new StringBuilder(Win32.MAX_PATH);
+            if (Win32.GetPrivateProfileString("main", propertyName, null, sb, sb.Capacity, iniFilePath) == -1)
+            {
+                Logger.Error($"cannot read property from config.ini: {propertyName}");
+                return null;
+            }
+
+            return sb.ToString();
+        }
+
+        private static Logger.Mode ExtractLoggerMode(string propertyName, string iniFilePath)
+        {
+            Logger.Mode loggerMode;
+            var rawLoggerMode = ReadIniProperty(propertyName, iniFilePath);
+            if (rawLoggerMode == null) loggerMode = AppConstants.DefaultLoggerMode;
+            Enum.TryParse(rawLoggerMode, true, out loggerMode);
+            return loggerMode;
         }
 
         private static void ReloadPlugin()
@@ -225,7 +256,7 @@ namespace NppJsonLinksPlugin
         {
             try
             {
-                return SettingsParser.Parse(SettingsFilePath);
+                return SettingsParser.Parse(_settingsJsonUri);
             }
             catch (Exception e)
             {

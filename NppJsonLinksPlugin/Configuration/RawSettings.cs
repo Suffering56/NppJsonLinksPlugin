@@ -7,12 +7,6 @@ namespace NppJsonLinksPlugin.Configuration
     [JsonObject]
     public class RawSettings
     {
-        [JsonProperty(PropertyName = "loggerMode")]
-        public Logger.Mode LoggerMode = AppConstants.DefaultLoggerMode;
-
-        [JsonProperty(PropertyName = "logPathPrefix")]
-        public string LogPathPrefix = null;
-
         [JsonProperty(PropertyName = "cacheEnabled")]
         public bool CacheEnabled = false;
 

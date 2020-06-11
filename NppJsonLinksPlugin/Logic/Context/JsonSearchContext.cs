@@ -21,6 +21,8 @@ namespace NppJsonLinksPlugin.Logic.Context
 
             var initialLineIndex = _gateway.GetCurrentLine();
             var indexOfSelectedWord = _gateway.GetCurrentPos().Value - _gateway.LineToPosition(initialLineIndex) - _selectedWord.Length;
+
+            if (indexOfSelectedWord < 0) return;
             _selectedProperty = TryInitSelectedProperty(initialLineIndex, indexOfSelectedWord);
         }
 

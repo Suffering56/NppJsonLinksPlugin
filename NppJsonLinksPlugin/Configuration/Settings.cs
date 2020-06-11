@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -13,13 +14,15 @@ namespace NppJsonLinksPlugin.Configuration
 {
     public static class SettingsParser
     {
-        public static Settings Parse(string settingsFilePath)
+        public static Settings Parse(string settingsUri)
         {
-            var rawSettings = JsonConvert.DeserializeObject<RawSettings>(File.ReadAllText(settingsFilePath));
+            var uri = new Uri(settingsUri);
+            string settingsString = uri.IsFile
+                ? File.ReadAllText(uri.AbsolutePath)
+                : ReadRemoteSettings(uri);
+
+            var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
             Settings settings = ConvertRawSettings(rawSettings);
-
-            Logger.SetMode(settings.LoggerMode, settings.LogPathPrefix);
-
             try
             {
                 Validate(settings);
@@ -31,6 +34,21 @@ namespace NppJsonLinksPlugin.Configuration
             }
 
             return settings;
+        }
+
+        private static string ReadRemoteSettings(Uri uri)
+        {
+            WebRequest request = WebRequest.Create(uri);
+            request.Timeout = 30 * 60 * 1000;
+            request.UseDefaultCredentials = true;
+            request.Proxy.Credentials = request.Credentials;
+            WebResponse response = request.GetResponse();
+
+            using StreamReader reader = new StreamReader(
+                response.GetResponseStream()
+                ?? throw new Exception($"couldn't read settings by uri: {uri}. response stream is null")
+            );
+            return reader.ReadToEnd();
         }
 
         private static Settings ConvertRawSettings(RawSettings rawSettings)
@@ -61,8 +79,6 @@ namespace NppJsonLinksPlugin.Configuration
 
             return new Settings
             {
-                LoggerMode = rawSettings.LoggerMode,
-                LogPathPrefix = rawSettings.LogPathPrefix,
                 CacheEnabled = rawSettings.CacheEnabled,
                 SoundEnabled = rawSettings.SoundEnabled,
                 JumpToLineDelay = rawSettings.JumpToLineDelay,
@@ -104,10 +120,6 @@ namespace NppJsonLinksPlugin.Configuration
     [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public class Settings
     {
-        public Logger.Mode LoggerMode { get; internal set; }
-
-        public string LogPathPrefix { get; internal set; }
-
         public bool CacheEnabled { get; internal set; }
 
         public bool SoundEnabled { get; internal set; }

@@ -280,6 +280,9 @@ namespace NppJsonLinksPlugin.PluginInfrastructure
 
         [DllImport("kernel32")]
         public static extern int GetPrivateProfileInt(string lpAppName, string lpKeyName, int nDefault, string lpFileName);
+        
+        [DllImport("kernel32", CharSet = CharSet.Auto)]
+        public static extern int GetPrivateProfileString(string sSection, string sKey, string sDefault, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder sString, int iSize, string sFile);
 
         [DllImport("kernel32")]
         public static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);

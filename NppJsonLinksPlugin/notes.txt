@@ -34,11 +34,11 @@ necessary:
    + mapping: src to repeated; dst is single;
    + MatchesWith: initialOffset + initialLine fix;
    + *? в srcWord;
-   
-   - описать варианты настроек в отдельном файле
+   + описать варианты настроек в отдельном файле
+   + доставать настройки логгера из ini файла;
+   + settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
+
    - иногда отваливается MouseHook. fix it
-   - доставать настройки логгера из rawSettings;
-   - settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
    
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?

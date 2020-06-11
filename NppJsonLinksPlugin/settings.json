@@ -1,13 +1,12 @@
 {
-  "loggerMode": "ENABLED",
-  "logPathPrefix": "C:/NppJsonLinksPlugin/",
   "cacheEnabled": false,
   "soundEnabled": true,
   "jumpToLineDelay": 100,
   "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
+    
     {
-      "description": "TODO:roomId   roomId<<<extension<<<^[\\w_]*restriction[\\w_]?$    эквивалентно выражению:   roomId<<<extension<<<*restriction?, при wordRegexpEnabled = false",
+      "description": "rooms.json: roomId",
       "dst": {
         "fileName": "rooms.json",
         "word": "id<<<ROOT"
@@ -20,7 +19,9 @@
         }
       ]
     },
+    
     {
+      "description": "equipments.json: equipmentId",
       "dst": {
         "fileName": "equipments.json",
         "word": "id<<<ROOT"
@@ -32,7 +33,9 @@
         }
       ]
     },
+    
     {
+      "description": "offers.json: offerId",
       "dst": {
         "fileName": "offers.json",
         "word": "id<<<offers"
@@ -44,7 +47,9 @@
         }
       ]
     },
+    
     {
+      "description": "parametrizedMobs.json: defaultParamsKey",
       "dst": {
         "fileName": "parametrizedMobs.json",
         "word": "paramKey<<<params"
@@ -56,8 +61,9 @@
         }
       ]
     },
+    
     {
-      "description": "abilities",
+      "description": "abilities.json: abilityId",
       "dst": {
         "fileName": "abilities.json",
         "word": "id"
@@ -85,7 +91,9 @@
         }
       ]
     },
+    
     {
+      "description": "battleClasses.json: battleClass",
       "dst": {
         "fileName": "battleClasses.json",
         "word": "type"
@@ -98,7 +106,9 @@
         }
       ]
     },
+    
     {
+      "description": "defaultEquipments.json: defaultEquipmentId",
       "dst": {
         "fileName": "defaultEquipments.json",
         "word": "id<<<ROOT"
@@ -107,20 +117,6 @@
         {
           "fileName": "mobSettings.json",
           "word": "defaultEquipmentIds"
-        }
-      ]
-    },
-    {
-      "description": "example: '*': в overrideFilePath позволяет сравнивать только имя файла, игнорируя путь",
-      "dst": {
-        "fileName": "nonexistentDstFile.json",
-        "word": "nonexistentMappingWord"
-      },
-      "src": [
-        {
-          "overrideFilePath": "*",
-          "fileName": "*.json",
-          "word": "*nonexistentMappingWord???"
         }
       ]
     }

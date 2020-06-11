@@ -127,8 +127,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="config.ini" />
     <Content Include="notes.txt" />
     <Content Include="settings.json" />
+    <Content Include="settings_example.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
