@@ -37,8 +37,10 @@ necessary:
    + описать варианты настроек в отдельном файле
    + доставать настройки логгера из ini файла;
    + settingsURL(чтобы ссылаться на настройки на 68.15 например) хранить в .ini файле и возможность задавать в настройках
+   + иногда отваливается MouseHook. fix it
 
-   - иногда отваливается MouseHook. fix it
+   - реализовать работу navigate forward/backward аналогично intellij idea
+
    
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
@@ -55,6 +57,8 @@ necessary:
         - settings path
         - mappingFilePathPrefix
         - mapping
+        
+    - ролик-превьюшка
         
 unnecessary:
     - иногда GetCurrentWord возвращает кусок слова и соответственно ctrl + click не срабатывает. это можно пофиксить прям в IScintillaGateway
@@ -73,3 +77,4 @@ unnecessary:
         - // стоит посмотреть в сторону Main._isFileLoadingActive (мб там тоже самое)
         
     - do fix: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, и вообще как-то там плохо парсится ScNotification
+              MouseHook хорошо работал на 64 битной версии (вроде), но иногда слетал и в целом подход такой себе. Новый подход (через SetWindowLongW) так же не работает на 64-битной версии 

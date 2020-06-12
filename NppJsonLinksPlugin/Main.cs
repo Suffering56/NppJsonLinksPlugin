@@ -14,6 +14,7 @@ using NppJsonLinksPlugin.Logic;
 using NppJsonLinksPlugin.Logic.Context;
 using NppJsonLinksPlugin.PluginInfrastructure;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
+using static NppJsonLinksPlugin.Core.MouseClickHandler;
 
 namespace NppJsonLinksPlugin
 {
@@ -21,7 +22,7 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PluginName = "NppJsonLinksPlugin";
-        private const string PluginVersion = "0.2.1";
+        private const string PluginVersion = "0.2.2";
 
         private static readonly IniConfig Config = new IniConfig();
         private static Settings _settings = null;
@@ -47,17 +48,8 @@ namespace NppJsonLinksPlugin
         {
             _isPluginDisabled = true;
             Logger.SetMode(Logger.Mode.DISABLED, null);
-            MouseHook.Stop();
-            MouseHook.CleanListeners();
+            Disable();
         }
-
-        private static readonly EventHandler OnLeftMouseClick = delegate
-        {
-            if (Control.ModifierKeys == Keys.Control)
-            {
-                GoToDefinition();
-            }
-        };
 
         internal static void CommandMenuInit()
         {
@@ -84,11 +76,24 @@ namespace NppJsonLinksPlugin
 
         private static void ReloadPlugin()
         {
-            MouseHook.Stop();
-            MouseHook.CleanListeners();
+            // можно перезагрузить настройки и обновить маппинг в search engine
+        }
+        
+        private static void OnMouseClick(MouseMessage msg)
+        {
+            switch (msg)
+            {
+                case MouseMessage.WM_LBUTTONUP:
+                    if (Control.ModifierKeys == Keys.Control)
+                    {
+                        GoToDefinition();
+                        return;
+                    }
 
-            MouseHook.Start();
-            MouseHook.RegisterListener(OnLeftMouseClick);
+                    Logger.Info("simple left mouse click!");
+
+                    break;
+            }
         }
 
         public static void OnNotification(ScNotification notification)
@@ -118,20 +123,6 @@ namespace NppJsonLinksPlugin
                     SearchEngine.SwitchContext(gateway.GetFullCurrentPath());
 
                     Logger.Info($"NPPN_BUFFERACTIVATED");
-                    break;
-
-                case (uint) SciMsg.SCN_FOCUSOUT:
-                    // мы перестаем слушать клики мышкой, когда окно теряет фокус
-                    MouseHook.CleanListeners();
-
-                    Logger.Info("SCN_FOCUSOUT");
-                    break;
-
-                case (uint) SciMsg.SCN_FOCUSIN:
-                    // возобновляем слушание кликов мышкой, при получении фокуса
-                    MouseHook.RegisterListener(OnLeftMouseClick);
-
-                    Logger.Info("SCN_FOCUSIN");
                     break;
 
                 case (uint) NppMsg.NPPN_FILEBEFORELOAD:
@@ -164,7 +155,6 @@ namespace NppJsonLinksPlugin
 
                         ProcessModified(notification);
                     }
-
                     break;
             }
         }
@@ -186,8 +176,8 @@ namespace NppJsonLinksPlugin
                 SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
 
                 // инициализация обработчика кликов мышкой
-                MouseHook.Start();
-                MouseHook.RegisterListener(OnLeftMouseClick);
+                MouseClickHandler.OnMouseClick = OnMouseClick;
+                Enable();
 
                 // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
                 _isPluginInited = true;
@@ -198,7 +188,7 @@ namespace NppJsonLinksPlugin
                 throw;
             }
         }
-
+        
         private static void ProcessModified(ScNotification notification)
         {
             var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
@@ -255,8 +245,8 @@ namespace NppJsonLinksPlugin
 
         internal static void OnShutdown()
         {
-            MouseHook.CleanListeners();
-            MouseHook.Stop();
+            Disable();
+
             // Win32.WritePrivateProfileString("SomeSection", "SomeKey", someSetting ? "1" : "0", iniFilePath);
         }
 
