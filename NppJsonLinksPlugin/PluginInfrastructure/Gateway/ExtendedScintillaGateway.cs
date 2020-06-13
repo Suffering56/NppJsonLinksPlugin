@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using NppJsonLinksPlugin.Core;
+using NppJsonLinksPlugin.Logic;
 
 namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
 {
@@ -112,17 +113,22 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
 
         public void JumpToLine(int line)
         {
-            int currentPos = (int) Win32.SendMessage(scintilla, SciMsg.SCI_GETCURRENTPOS, 0, 0);
+            int currentPos = GetCurrentPos().Value;
 
             int currentLine = (int) Win32.SendMessage(scintilla, SciMsg.SCI_LINEFROMPOSITION, currentPos, 0);
-            if ((line != 1) && (line - 1 != currentLine))
+            if (line != currentLine)
             {
                 Win32.SendMessage(scintilla, SciMsg.SCI_DOCUMENTEND, 0, 0);
-                Win32.SendMessage(scintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1, 0);
-                Win32.SendMessage(scintilla, SciMsg.SCI_GOTOLINE, line - 1, 0);
+                Win32.SendMessage(scintilla, SciMsg.SCI_ENSUREVISIBLEENFORCEPOLICY, line, 0);
+                Win32.SendMessage(scintilla, SciMsg.SCI_GOTOLINE, line, 0);
             }
 
             Win32.SendMessage(scintilla, SciMsg.SCI_GRABFOCUS, 0, 0);
+        }
+
+        public JumpLocation GetCurrentLocation()
+        {
+            return new JumpLocation(GetFullCurrentPath(), GetCurrentLine());
         }
     }
 }

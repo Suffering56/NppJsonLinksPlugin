@@ -24,7 +24,7 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
                 {
                     var tokenType = reader.TokenType;
                     object value = reader.Value;
-                    int lineNumber = reader.LineNumber;
+                    int lineNumber = reader.LineNumber - 1;
 
                     if (!dstWord.IsComplex())
                     {

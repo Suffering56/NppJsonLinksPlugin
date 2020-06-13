@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
@@ -14,7 +13,6 @@ using NppJsonLinksPlugin.Logic;
 using NppJsonLinksPlugin.Logic.Context;
 using NppJsonLinksPlugin.PluginInfrastructure;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
-using static NppJsonLinksPlugin.Core.MouseClickHandler;
 
 namespace NppJsonLinksPlugin
 {
@@ -30,13 +28,12 @@ namespace NppJsonLinksPlugin
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
         private static readonly SearchEngine SearchEngine = new SearchEngine();
 
+        private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
+
         //TODO многовато флагов
         private static bool _isPluginInited = false;
         private static bool _isPluginDisabled = false; //TODO: unsupported
         private static bool _isFileLoadingActive = false;
-
-        private static int _jumpPos = 0;
-        private static readonly Stack<JumpLocation> JumpStack = new Stack<JumpLocation>();
 
         private static frmMyDlg _frmMyDlg = null;
         private static int _idMyDlg = 1;
@@ -48,7 +45,7 @@ namespace NppJsonLinksPlugin
         {
             _isPluginDisabled = true;
             Logger.SetMode(Logger.Mode.DISABLED, null);
-            Disable();
+            MouseClickHandler.Disable();
         }
 
         internal static void CommandMenuInit()
@@ -60,9 +57,9 @@ namespace NppJsonLinksPlugin
             PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
             PluginBase.SetCommand(2, "", null);
 
-            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinition, new ShortcutKey(true, false, true, Keys.Enter));
-            PluginBase.SetCommand(4, "Navigate Backward", NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
-            PluginBase.SetCommand(5, "Navigate Forward", NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
+            PluginBase.SetCommand(4, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
+            PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(6, "", null);
 
             PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
@@ -77,23 +74,38 @@ namespace NppJsonLinksPlugin
         private static void ReloadPlugin()
         {
             // можно перезагрузить настройки и обновить маппинг в search engine
+
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            NavigationHandler.Reload(gateway.GetCurrentLocation());
         }
-        
-        private static void OnMouseClick(MouseMessage msg)
+
+        private static void OnMouseClick(MouseClickHandler.MouseMessage msg)
         {
             switch (msg)
             {
-                case MouseMessage.WM_LBUTTONUP:
+                case MouseClickHandler.MouseMessage.WM_LBUTTONUP:
                     if (Control.ModifierKeys == Keys.Control)
                     {
-                        GoToDefinition();
-                        return;
+                        var success = GoToDefinition();
+                        if (success) return;
                     }
 
-                    Logger.Info("simple left mouse click!");
-
                     break;
+                case MouseClickHandler.MouseMessage.WM_RBUTTONUP:
+                    break;
+                default:
+                    return;
             }
+
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            NavigationHandler.UpdateHistory(gateway.GetCurrentLocation(), NavigateActionType.MOUSE_CLICK);
+        }
+
+        private static void OnKeyboardDown(int keyCode)
+        {
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            var currentLine = gateway.GetCurrentLine();
+            NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
         }
 
         public static void OnNotification(ScNotification notification)
@@ -155,6 +167,7 @@ namespace NppJsonLinksPlugin
 
                         ProcessModified(notification);
                     }
+
                     break;
             }
         }
@@ -177,7 +190,10 @@ namespace NppJsonLinksPlugin
 
                 // инициализация обработчика кликов мышкой
                 MouseClickHandler.OnMouseClick = OnMouseClick;
-                Enable();
+                MouseClickHandler.OnKeyboardDown = OnKeyboardDown;
+                MouseClickHandler.Enable();
+
+                NavigationHandler.Enable(gateway.GetCurrentLocation());
 
                 // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
                 _isPluginInited = true;
@@ -188,15 +204,12 @@ namespace NppJsonLinksPlugin
                 throw;
             }
         }
-        
+
         private static void ProcessModified(ScNotification notification)
         {
             var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
             var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
-            if (!isTextDeleted && !isTextInserted)
-            {
-                return;
-            }
+            if (!isTextDeleted && !isTextInserted)  return;
 
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             // количество строк, которые были добавлены/удалены (если отрицательное)
@@ -245,12 +258,17 @@ namespace NppJsonLinksPlugin
 
         internal static void OnShutdown()
         {
-            Disable();
+            MouseClickHandler.Disable();
 
             // Win32.WritePrivateProfileString("SomeSection", "SomeKey", someSetting ? "1" : "0", iniFilePath);
         }
 
-        private static void GoToDefinition()
+        private static void GoToDefinitionCmd()
+        {
+            GoToDefinition();
+        }
+
+        private static bool GoToDefinition()
         {
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             string selectedWord = gateway.GetCurrentWord();
@@ -262,7 +280,8 @@ namespace NppJsonLinksPlugin
                 if (jumpLocation != null)
                 {
                     JumpToLocation(jumpLocation);
-                    return;
+                    NavigationHandler.UpdateHistory(jumpLocation, NavigateActionType.MOUSE_CLICK);
+                    return true;
                 }
             }
 
@@ -272,12 +291,12 @@ namespace NppJsonLinksPlugin
             {
                 System.Media.SystemSounds.Asterisk.Play();
             }
+
+            return false;
         }
 
         private static void JumpToLocation(JumpLocation jumpLocation)
         {
-            PushJump(jumpLocation.FilePath, jumpLocation.Line);
-
             string file = jumpLocation.FilePath;
             int line = jumpLocation.Line;
 
@@ -289,59 +308,6 @@ namespace NppJsonLinksPlugin
             // задержка фиксит багу с выделением текста при переходе
             ThreadSupport.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
         }
-
-        private static void PushJump(string source, int line)
-        {
-            StringBuilder sbPath = new StringBuilder(Win32.MAX_PATH);
-            if ((int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, Win32.MAX_PATH, sbPath) == 1)
-            {
-                var currentFilePath = sbPath.ToString();
-
-                if ((currentFilePath != "") && File.Exists(currentFilePath))
-                {
-                    var currentLine = (int) Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTLINE, 0, 0) + 1;
-                    JumpLocation jumpOldPos = new JumpLocation(currentFilePath, currentLine);
-
-                    while (((JumpStack.Count) > _jumpPos)
-                           || (((JumpStack.Count > 0))
-                               && (JumpStack.Peek().FilePath == jumpOldPos.FilePath)
-                               && (JumpStack.Peek().Line == jumpOldPos.Line)))
-                        JumpStack.Pop();
-                    JumpStack.Push(jumpOldPos);
-                    JumpStack.Push(new JumpLocation(source, line));
-                    _jumpPos = JumpStack.Count;
-                }
-            }
-        }
-
-        static void NavigateBackward()
-        {
-            try
-            {
-                if ((_jumpPos <= 1)) throw new Exception();
-                int newPos = JumpStack.Count - (--_jumpPos);
-                JumpToLocation(JumpStack.ToArray()[newPos]);
-            }
-            catch
-            {
-                System.Media.SystemSounds.Hand.Play();
-            }
-        }
-
-        static void NavigateForward()
-        {
-            try
-            {
-                if (JumpStack.Count <= _jumpPos) throw new Exception();
-                int newPos = JumpStack.Count - (++_jumpPos);
-                JumpToLocation(JumpStack.ToArray()[newPos]);
-            }
-            catch
-            {
-                System.Media.SystemSounds.Hand.Play();
-            }
-        }
-
 
         #region " Layout Base "
 

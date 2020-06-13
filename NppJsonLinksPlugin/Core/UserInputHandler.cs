@@ -6,6 +6,7 @@ namespace NppJsonLinksPlugin.Core
     public static class MouseClickHandler
     {
         public static MouseEvent OnMouseClick = null;
+        public static KeyboardEvent OnKeyboardDown = null;
 
         private static IntPtr _oldMainWndProc = IntPtr.Zero;
         private static readonly Win32.WindowProc NewMainWndProc = MainWndProc;
@@ -13,6 +14,8 @@ namespace NppJsonLinksPlugin.Core
         private static readonly Win32.WindowProc NewSecondWndProc = SecondWndProc;
 
         public delegate void MouseEvent(MouseMessage msg);
+
+        public delegate void KeyboardEvent(int keyCode);
 
         public enum MouseMessage
         {
@@ -22,6 +25,18 @@ namespace NppJsonLinksPlugin.Core
             WM_MOUSEWHEEL = 0x020A,
             WM_RBUTTONDOWN = 0x0204,
             WM_RBUTTONUP = 0x0205
+        }
+
+        private const int WM_KEYDOWN = 0x0100;
+
+        public enum KeyCode
+        {
+            VK_END = 0x23,
+            VK_HOME = 0x24,
+            VK_LEFT = 0x25,
+            VK_UP = 0x26,
+            VK_RIGHT = 0x27,
+            VK_DOWN = 0x28
         }
 
         internal static void Enable()
@@ -62,14 +77,21 @@ namespace NppJsonLinksPlugin.Core
             return CommonWndProc(_oldSecondWndProc, hWnd, msg, wParam, lParam);
         }
 
+
         private static int CommonWndProc(IntPtr oldWndProc, IntPtr hWnd, int msg, int wParam, int lParam)
         {
-            if (OnMouseClick == null || !Enum.IsDefined(typeof(MouseMessage), msg))
-                return Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
+            var result = Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
 
-            int res = Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
-            OnMouseClick.Invoke((MouseMessage) msg);
-            return res;
+            if (msg == WM_KEYDOWN && OnKeyboardDown != null)
+            {
+                OnKeyboardDown.Invoke(lParam);
+            }
+            else if (OnMouseClick != null && Enum.IsDefined(typeof(MouseMessage), msg))
+            {
+                OnMouseClick.Invoke((MouseMessage) msg);
+            }
+
+            return result;
         }
     }
 }

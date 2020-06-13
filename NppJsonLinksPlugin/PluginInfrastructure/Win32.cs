@@ -316,9 +316,7 @@ namespace NppJsonLinksPlugin.PluginInfrastructure
         public static extern int GetScrollInfo(IntPtr hwnd, int nBar, ref ScrollInfo scrollInfo);
         
         public const int GWL_WNDPROC = -4;
-        public const int WM_LBUTTONUP = 0x0202;
-        //public const int WM_KEYDOWN = 0x0100;
-        public delegate int WindowProc(IntPtr hWnd, int Msg, int wParam, int lParam);
+        public delegate int WindowProc(IntPtr hWnd, int msg, int wParam, int lParam);
         [DllImport("user32")]
         public static extern IntPtr SetWindowLongW(IntPtr hWnd, int nIndex, WindowProc newProc);
         [DllImport("user32")]

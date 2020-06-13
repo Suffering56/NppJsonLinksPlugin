@@ -1,4 +1,6 @@
-﻿namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
+﻿using NppJsonLinksPlugin.Logic;
+
+namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
 {
     public partial interface IScintillaGateway
     {
@@ -19,5 +21,7 @@
         int GetCurrentLine();
 
         void JumpToLine(int line);
+        
+        JumpLocation GetCurrentLocation();
     }
 }

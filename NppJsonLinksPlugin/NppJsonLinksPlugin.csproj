@@ -71,7 +71,8 @@
     <Compile Include="AppConstants.cs" />
     <Compile Include="Configuration\IniConfig.cs" />
     <Compile Include="Core\Logger.cs" />
-    <Compile Include="Core\MouseClickHandler.cs" />
+    <Compile Include="Core\NavigationHandler.cs" />
+    <Compile Include="Core\UserInputHandler.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
     <Compile Include="Core\CommonUtils.cs" />
     <Compile Include="Logic\Context\ISearchContext.cs" />
