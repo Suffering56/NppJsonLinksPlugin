@@ -6,10 +6,10 @@ namespace NppJsonLinksPlugin.Logic
 {
     public class Word
     {
-        private const string WordSeparator = AppConstants.WordSeparator;
-        private static readonly string[] WordSeparatorForSplit = {WordSeparator};
-        private const string SeveralLettersPattern = "[\\w_]*";
-        private const string SingleLettersPattern = "[\\w_]?";
+        private const string WORD_SEPARATOR = AppConstants.WORD_SEPARATOR;
+        private static readonly string[] WordSeparatorForSplit = {WORD_SEPARATOR};
+        private const string SEVERAL_LETTERS_PATTERN = "[\\w_]*";
+        private const string SINGLE_LETTERS_PATTERN = "[\\w_]?";
 
         public readonly Word Parent;
         private readonly string _wordString;
@@ -62,8 +62,8 @@ namespace NppJsonLinksPlugin.Logic
         private static string ToRegexp(string wordString)
         {
             wordString = wordString
-                .Replace("*", SeveralLettersPattern)
-                .Replace("?", SingleLettersPattern);
+                .Replace("*", SEVERAL_LETTERS_PATTERN)
+                .Replace("?", SINGLE_LETTERS_PATTERN);
             return "^" + wordString + "$";
         }
 
@@ -99,7 +99,7 @@ namespace NppJsonLinksPlugin.Logic
             while (cur.Parent != null)
             {
                 cur = cur.Parent;
-                result += WordSeparator + cur._wordString;
+                result += WORD_SEPARATOR + cur._wordString;
             }
 
             return result + "]";

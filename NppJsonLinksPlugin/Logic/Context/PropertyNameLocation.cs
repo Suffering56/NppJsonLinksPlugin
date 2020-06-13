@@ -2,7 +2,7 @@
 {
     public class PropertyNameLocation
     {
-        internal static readonly PropertyNameLocation Root = new PropertyNameLocation(AppConstants.RootPropertyName, 0, 0);
+        internal static readonly PropertyNameLocation Root = new PropertyNameLocation(AppConstants.ROOT_PROPERTY_NAME, 0, 0);
 
         internal readonly string PropertyName;
         internal readonly int StopLineIndex;

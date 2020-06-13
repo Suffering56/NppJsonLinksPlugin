@@ -21,7 +21,13 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
         int GetCurrentLine();
 
         void JumpToLine(int line);
-        
+
         JumpLocation GetCurrentLocation();
+
+        void SetIndicatorStyle(int indicatorId, int indicatorStyle);
+
+        void ApplyIndicatorStyleForRange(int startPosition, int length, int indicatorId);
+
+        void ClearIndicatorStyleForRange(int indicatorId, int startPosition, int length);
     }
 }

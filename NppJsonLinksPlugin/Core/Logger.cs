@@ -16,7 +16,7 @@ namespace NppJsonLinksPlugin.Core
             DISABLED,
         }
 
-        private static Mode _mode = AppConstants.DefaultLoggerMode;
+        private static Mode _mode = AppConstants.DEFAULT_LOGGER_MODE;
         private static string _infoPathPrefix = null;
         private static string _errorPathPrefix = null;
 
@@ -51,7 +51,7 @@ namespace NppJsonLinksPlugin.Core
         internal static void ErrorMsgBox(string errorMsg)
         {
             if (_mode == Mode.DISABLED) return;
-            MessageBox.Show(@"Plugin error: " + errorMsg, Main.PluginName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(@"Plugin error: " + errorMsg, Main.PLUGIN_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         [Conditional("TRACE_ALL")]

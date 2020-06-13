@@ -26,14 +26,24 @@ namespace NppJsonLinksPlugin.Core
 
         public void Reload(JumpLocation currentLocation)
         {
-            throw new System.NotImplementedException();
+            _historyPosition = 0;
+            _navigationHistory.Clear();
+            _prevLocation = currentLocation;
         }
 
         public void UpdateHistory(JumpLocation newLocation, NavigateActionType actionType)
         {
-            if (newLocation.Line == _prevLocation.Line) return;
+            if (_prevLocation == null) return;
 
             var historySize = _navigationHistory.Count;
+            if (_historyPosition > historySize)
+            {
+                Logger.Error($"invalid navigation history position={_historyPosition}, because history size={historySize}");
+                Reload(newLocation);
+                return;
+            }
+
+            if (newLocation.Line == _prevLocation.Line) return;
 
             switch (actionType)
             {
@@ -45,7 +55,6 @@ namespace NppJsonLinksPlugin.Core
 
                 case NavigateActionType.GO_BACKWARD:
                     if (_historyPosition == 0) return;
-                    Debug.Assert(_historyPosition <= historySize, $"invalid navigation history position={_historyPosition}, because history size={historySize}");
 
                     if (_historyPosition == historySize)
                     {
@@ -66,8 +75,6 @@ namespace NppJsonLinksPlugin.Core
                         break;
                     }
 
-                    Debug.Assert(_historyPosition < historySize, $"invalid navigation history position={_historyPosition}, because history size={historySize}");
-
                     _historyPosition++;
                     _prevLocation = newLocation;
 
@@ -83,6 +90,7 @@ namespace NppJsonLinksPlugin.Core
 
         public void NavigateBackward()
         {
+            if (_prevLocation == null) return;
             if (_historyPosition > 0 && _historyPosition <= _navigationHistory.Count)
             {
                 var jumpLocation = _navigationHistory[_historyPosition - 1];
@@ -93,6 +101,7 @@ namespace NppJsonLinksPlugin.Core
 
         public void NavigateForward()
         {
+            if (_prevLocation == null) return;
             if (_historyPosition + 1 < _navigationHistory.Count)
             {
                 var jumpLocation = _navigationHistory[_historyPosition + 1];

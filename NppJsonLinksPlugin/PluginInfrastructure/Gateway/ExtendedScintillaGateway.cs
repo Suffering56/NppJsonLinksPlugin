@@ -130,5 +130,24 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
         {
             return new JumpLocation(GetFullCurrentPath(), GetCurrentLine());
         }
+
+        public void SetIndicatorStyle(int indicatorId, int indicatorStyle)
+        {
+            var defaultStyle = Win32.SendMessage(scintilla, SciMsg.SCI_INDICGETSTYLE, indicatorId, Unused);
+
+            Win32.SendMessage(scintilla, SciMsg.SCI_INDICSETSTYLE, indicatorId, indicatorStyle);
+        }
+
+        public void ApplyIndicatorStyleForRange(int indicatorId, int startPosition, int length)
+        {
+            Win32.SendMessage(scintilla, SciMsg.SCI_SETINDICATORCURRENT, indicatorId, Unused);
+            Win32.SendMessage(scintilla, SciMsg.SCI_INDICATORFILLRANGE, startPosition, length);
+        }
+
+        public void ClearIndicatorStyleForRange(int indicatorId, int startPosition, int length)
+        {
+            Win32.SendMessage(scintilla, SciMsg.SCI_SETINDICATORCURRENT, indicatorId, Unused);
+            Win32.SendMessage(scintilla, SciMsg.SCI_INDICATORCLEARRANGE, startPosition, length);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             string currentPropertyName = null;
 
             Stack<string> propertyStack = new Stack<string>();
-            propertyStack.Push(AppConstants.RootPropertyName);
+            propertyStack.Push(AppConstants.ROOT_PROPERTY_NAME);
 
             using JsonTextReader reader = new JsonTextReader(new StreamReader(filePath));
             while (reader.Read())

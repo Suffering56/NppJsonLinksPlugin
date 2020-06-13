@@ -14,7 +14,7 @@ namespace NppJsonLinksPlugin.Configuration
         public bool SoundEnabled = true;
 
         [JsonProperty(PropertyName = "jumpToLineDelay")]
-        public int JumpToLineDelay = AppConstants.DefaultJumpToLineDelay;
+        public int JumpToLineDelay = AppConstants.DEFAULT_JUMP_TO_LINE_DELAY;
 
         [JsonProperty(PropertyName = "mappingDefaultFilePath")]
         public string MappingDefaultFilePath;

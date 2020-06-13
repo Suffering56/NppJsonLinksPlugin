@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -19,8 +17,8 @@ namespace NppJsonLinksPlugin
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal static class Main
     {
-        internal const string PluginName = "NppJsonLinksPlugin";
-        private const string PluginVersion = "0.2.2";
+        internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
+        private const string PLUGIN_VERSION = "0.2.3";
 
         private static readonly IniConfig Config = new IniConfig();
         private static Settings _settings = null;
@@ -29,6 +27,7 @@ namespace NppJsonLinksPlugin
         private static readonly SearchEngine SearchEngine = new SearchEngine();
 
         private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
+        private static LinksHighlighter _linksHighlighter = null;
 
         //TODO многовато флагов
         private static bool _isPluginInited = false;
@@ -40,6 +39,7 @@ namespace NppJsonLinksPlugin
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
         private static Icon _tbIcon = null;
+
 
         public static void DisablePlugin()
         {
@@ -62,7 +62,7 @@ namespace NppJsonLinksPlugin
             PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(6, "", null);
 
-            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Version: {PluginVersion}"), new ShortcutKey(false, false, false, Keys.None));
+            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Version: {PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
         }
 
         private static void LoadIniConfig()
@@ -77,6 +77,43 @@ namespace NppJsonLinksPlugin
 
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             NavigationHandler.Reload(gateway.GetCurrentLocation());
+        }
+
+        private static void ProcessInit()
+        {
+            try
+            {
+                var gateway = PluginBase.GetGatewayFactory().Invoke();
+
+                // загружаем настройки плагина
+                _settings = LoadSettings();
+                Logger.Info($"settings loaded: mappingFilePathPrefix={_settings.MappingDefaultFilePath}");
+
+                // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
+                gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
+
+                // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
+                SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
+
+                // инициализация обработчика кликов мышкой
+                MouseClickHandler.OnMouseClick = OnMouseClick;
+                MouseClickHandler.OnKeyboardDown = OnKeyboardDown;
+                MouseClickHandler.Enable();
+
+                // инициализация поддержки кнопок navigate forward/backward
+                NavigationHandler.Enable(gateway.GetCurrentLocation());
+
+                // инициализация поддержки подсветки ссылок
+                _linksHighlighter = new LinksHighlighter(gateway, _settings);
+
+                // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
+                _isPluginInited = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private static void OnMouseClick(MouseClickHandler.MouseMessage msg)
@@ -172,44 +209,11 @@ namespace NppJsonLinksPlugin
             }
         }
 
-        private static void ProcessInit()
-        {
-            try
-            {
-                var gateway = PluginBase.GetGatewayFactory().Invoke();
-
-                // загружаем настройки плагина
-                _settings = LoadSettings();
-                Logger.Info($"settings loaded: mappingFilePathPrefix={_settings.MappingDefaultFilePath}");
-
-                // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
-                gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
-
-                // NPPN_READY вызывается перед последним вызовом NPPN_BUFFERACTIVATED, поэтому нужно инициализировать SearchEngine
-                SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
-
-                // инициализация обработчика кликов мышкой
-                MouseClickHandler.OnMouseClick = OnMouseClick;
-                MouseClickHandler.OnKeyboardDown = OnKeyboardDown;
-                MouseClickHandler.Enable();
-
-                NavigationHandler.Enable(gateway.GetCurrentLocation());
-
-                // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
-                _isPluginInited = true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
         private static void ProcessModified(ScNotification notification)
         {
             var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
             var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
-            if (!isTextDeleted && !isTextInserted)  return;
+            if (!isTextDeleted && !isTextInserted) return;
 
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             // количество строк, которые были добавлены/удалены (если отрицательное)
@@ -336,7 +340,7 @@ namespace NppJsonLinksPlugin
                 _nppTbData.dlgID = _idMyDlg;
                 _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
                 _nppTbData.hIconTab = (uint) _tbIcon.Handle;
-                _nppTbData.pszModuleName = PluginName;
+                _nppTbData.pszModuleName = PLUGIN_NAME;
                 IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
                 Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
 

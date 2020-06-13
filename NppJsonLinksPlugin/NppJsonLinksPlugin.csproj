@@ -79,6 +79,7 @@
     <Compile Include="Logic\Context\JsonSearchContext.cs" />
     <Compile Include="Logic\Context\Property.cs" />
     <Compile Include="Logic\Context\PropertyNameLocation.cs" />
+    <Compile Include="Logic\LinksHighlighter.cs" />
     <Compile Include="Logic\Parser\IDocumentParser.cs" />
     <Compile Include="Logic\Parser\Json\DefaultJsonParser.cs" />
     <Compile Include="Logic\Word.cs" />

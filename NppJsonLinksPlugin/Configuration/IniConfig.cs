@@ -10,7 +10,7 @@ namespace NppJsonLinksPlugin.Configuration
     {
         public string SettingsJsonUri = null;
         public string LogsDir = null;
-        public Logger.Mode LoggerMode = AppConstants.DefaultLoggerMode;
+        public Logger.Mode LoggerMode = AppConstants.DEFAULT_LOGGER_MODE;
 
         public bool? SoundEnabled = null;
         public int? JumpToLineDelay = null;
@@ -21,7 +21,7 @@ namespace NppJsonLinksPlugin.Configuration
 
         public void Load()
         {
-            string iniFilePath = Path.GetFullPath($"plugins/{Main.PluginName}/{AppConstants.IniConfigName}");
+            string iniFilePath = Path.GetFullPath($"plugins/{Main.PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
 
 
             SettingsJsonUri = ReadString(SectionGlobal, "settings_uri", iniFilePath, true);
@@ -65,7 +65,7 @@ namespace NppJsonLinksPlugin.Configuration
         private static Logger.Mode ReadLoggerMode(string propertyName, string iniFilePath)
         {
             var rawLoggerMode = ReadString(SectionGlobal, propertyName, iniFilePath, false);
-            if (rawLoggerMode == null) return AppConstants.DefaultLoggerMode;
+            if (rawLoggerMode == null) return AppConstants.DEFAULT_LOGGER_MODE;
 
             Enum.TryParse(rawLoggerMode, true, out Logger.Mode loggerMode);
             return loggerMode;

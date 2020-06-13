@@ -4,17 +4,10 @@ namespace NppJsonLinksPlugin
 {
     public static class AppConstants
     {
-        public const string IniConfigName = "config.ini";
-        public const string WordSeparator = "<<<";
-        public const string RootPropertyName = "ROOT";
-        public const int DefaultJumpToLineDelay = 100;
-        public const Logger.Mode DefaultLoggerMode = Logger.Mode.ONLY_ERRORS;
-
-        private const bool DebugEnabled = true;
-
-        public static bool IsDebugEnabled()
-        {
-            return DebugEnabled;
-        }
+        public const string INI_CONFIG_NAME = "config.ini";
+        public const string WORD_SEPARATOR = "<<<";
+        public const string ROOT_PROPERTY_NAME = "ROOT";
+        public const int DEFAULT_JUMP_TO_LINE_DELAY = 100;
+        public const Logger.Mode DEFAULT_LOGGER_MODE = Logger.Mode.ONLY_ERRORS;
     }
 }
