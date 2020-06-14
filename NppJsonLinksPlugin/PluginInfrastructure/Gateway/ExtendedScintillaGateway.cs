@@ -133,8 +133,6 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
 
         public void SetIndicatorStyle(int indicatorId, int indicatorStyle)
         {
-            var defaultStyle = Win32.SendMessage(scintilla, SciMsg.SCI_INDICGETSTYLE, indicatorId, Unused);
-
             Win32.SendMessage(scintilla, SciMsg.SCI_INDICSETSTYLE, indicatorId, indicatorStyle);
         }
 

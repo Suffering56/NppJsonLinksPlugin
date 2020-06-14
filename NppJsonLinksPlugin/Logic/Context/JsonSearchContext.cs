@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NppJsonLinksPlugin.Core;
@@ -13,21 +14,17 @@ namespace NppJsonLinksPlugin.Logic.Context
         private readonly IScintillaGateway _gateway;
         private readonly int _totalLinesCount;
 
-        public JsonSearchContext(string selectedWord, IScintillaGateway gateway)
+        public JsonSearchContext(string selectedWord, IScintillaGateway gateway, int initialLineIndex, int indexOfSelectedWord)
         {
             _gateway = gateway;
             _selectedWord = selectedWord;
             _totalLinesCount = _gateway.GetLineCount();
-
-            var initialLineIndex = _gateway.GetCurrentLine();
-            var indexOfSelectedWord = _gateway.GetCurrentPos().Value - _gateway.LineToPosition(initialLineIndex) - _selectedWord.Length;
-
-            if (indexOfSelectedWord < 0) return;
             _selectedProperty = TryInitSelectedProperty(initialLineIndex, indexOfSelectedWord);
         }
 
         public bool MatchesWith(Word expectedWord)
         {
+            if (_selectedProperty == null) return false;
             var propertyName = _selectedProperty.Name;
 
             if (!expectedWord.MatchesWith(propertyName)) return false;
@@ -293,7 +290,7 @@ namespace NppJsonLinksPlugin.Logic.Context
             return null;
         }
 
-        // ожидается, что данный метод дергается, если мы наткнулись на двоеточие и теперь ожидаем встретить propertyValue
+        // ожидается, что данный метод дергается, если мы наткнулись на двоеточие и теперь ожидаем встретить propertyValue или массив (для которого достанем первое значение)
         private string ExtractPropertyValue(int lineIndex, int lineOffset)
         {
             if (lineIndex >= _totalLinesCount) return null;
@@ -304,7 +301,7 @@ namespace NppJsonLinksPlugin.Logic.Context
             {
                 var ch = lineText[i];
 
-                if (ch.IsWhiteSpace()) continue;
+                if (ch.IsWhiteSpaceOr('[')) continue;
 
                 if (ch == '"' || ch.IsDigitOrMinus())
                 {

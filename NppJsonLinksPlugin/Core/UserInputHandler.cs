@@ -3,9 +3,9 @@ using NppJsonLinksPlugin.PluginInfrastructure;
 
 namespace NppJsonLinksPlugin.Core
 {
-    public static class MouseClickHandler
+    public static class MouseEventHandler
     {
-        public static MouseEvent OnMouseClick = null;
+        public static MouseEvent OnMouseAction = null;
         public static KeyboardEvent OnKeyboardDown = null;
 
         private static IntPtr _oldMainWndProc = IntPtr.Zero;
@@ -86,9 +86,9 @@ namespace NppJsonLinksPlugin.Core
             {
                 OnKeyboardDown.Invoke(lParam);
             }
-            else if (OnMouseClick != null && Enum.IsDefined(typeof(MouseMessage), msg))
+            else if (OnMouseAction != null && Enum.IsDefined(typeof(MouseMessage), msg))
             {
-                OnMouseClick.Invoke((MouseMessage) msg);
+                OnMouseAction.Invoke((MouseMessage) msg);
             }
 
             return result;

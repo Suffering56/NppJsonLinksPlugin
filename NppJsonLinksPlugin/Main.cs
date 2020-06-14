@@ -11,6 +11,7 @@ using NppJsonLinksPlugin.Logic;
 using NppJsonLinksPlugin.Logic.Context;
 using NppJsonLinksPlugin.PluginInfrastructure;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
+using MouseEventHandler = NppJsonLinksPlugin.Core.MouseEventHandler;
 
 namespace NppJsonLinksPlugin
 {
@@ -23,7 +24,13 @@ namespace NppJsonLinksPlugin
         private static readonly IniConfig Config = new IniConfig();
         private static Settings _settings = null;
 
-        private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(clickedWord, gateway);
+        private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(
+            clickedWord,
+            gateway,
+            gateway.GetCurrentLine(),
+            gateway.GetCurrentPos().Value - gateway.LineToPosition(gateway.GetCurrentLine()) - clickedWord.Length
+        );
+
         private static readonly SearchEngine SearchEngine = new SearchEngine();
 
         private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
@@ -45,7 +52,7 @@ namespace NppJsonLinksPlugin
         {
             _isPluginDisabled = true;
             Logger.SetMode(Logger.Mode.DISABLED, null);
-            MouseClickHandler.Disable();
+            MouseEventHandler.Disable();
         }
 
         internal static void CommandMenuInit()
@@ -96,14 +103,17 @@ namespace NppJsonLinksPlugin
                 SearchEngine.Init(_settings, gateway.GetFullCurrentPath());
 
                 // инициализация обработчика кликов мышкой
-                MouseClickHandler.OnMouseClick = OnMouseClick;
-                MouseClickHandler.OnKeyboardDown = OnKeyboardDown;
-                MouseClickHandler.Enable();
+                MouseEventHandler.OnMouseAction = HandleMouseEvent;
+                MouseEventHandler.OnKeyboardDown = OnKeyboardDown;
+                MouseEventHandler.Enable();
 
                 // инициализация поддержки кнопок navigate forward/backward
                 NavigationHandler.Enable(gateway.GetCurrentLocation());
 
                 // инициализация поддержки подсветки ссылок
+                // gateway.SetIndicatorStyle(32, 0);
+                // gateway.SetIndicatorStyle(32, 4);
+
                 _linksHighlighter = new LinksHighlighter(gateway, _settings);
 
                 // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
@@ -116,20 +126,28 @@ namespace NppJsonLinksPlugin
             }
         }
 
-        private static void OnMouseClick(MouseClickHandler.MouseMessage msg)
+        private static void HandleMouseEvent(MouseEventHandler.MouseMessage msg)
         {
             switch (msg)
             {
-                case MouseClickHandler.MouseMessage.WM_LBUTTONUP:
+                case MouseEventHandler.MouseMessage.WM_LBUTTONUP:
                     if (Control.ModifierKeys == Keys.Control)
                     {
                         var success = GoToDefinition();
                         if (success) return;
                     }
 
+                    var gateway2 = PluginBase.GetGatewayFactory().Invoke();
+                    var word = gateway2.GetCurrentWord();
+                    
+                    Logger.Info($"selectedWord={word}");
+                    Logger.Info($"indexOfSelectedWord={gateway2.GetCurrentPos().Value - word.Length}");
+                    
                     break;
-                case MouseClickHandler.MouseMessage.WM_RBUTTONUP:
+
+                case MouseEventHandler.MouseMessage.WM_RBUTTONUP:
                     break;
+
                 default:
                     return;
             }
@@ -206,6 +224,12 @@ namespace NppJsonLinksPlugin
                     }
 
                     break;
+
+                case (uint) SciMsg.SCN_UPDATEUI:
+                {
+                    _linksHighlighter.UpdateUi();
+                    break;
+                }
             }
         }
 
@@ -223,13 +247,13 @@ namespace NppJsonLinksPlugin
             // строка, в которую вставили текст
             int currentLine = gateway.PositionToLine(currentPosition);
             // чтобы было удобнее смотреть в NPP
-            const int viewLineOffset = 1;
+            const int VIEW_LINE_OFFSET = 1;
 
             if (isTextInserted)
             {
                 var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length, linesAdded);
                 SearchEngine.FireInsertText(currentLine, linesAdded, insertedText);
-                Logger.Info($"SCN_MODIFIED: Insert[{currentLine + viewLineOffset},{currentLine + viewLineOffset + linesAdded}], text:\r\n<{insertedText}>");
+                Logger.Info($"SCN_MODIFIED: Insert[{currentLine + VIEW_LINE_OFFSET},{currentLine + VIEW_LINE_OFFSET + linesAdded}], text:\r\n<{insertedText}>");
             }
 
             if (isTextDeleted)
@@ -237,11 +261,11 @@ namespace NppJsonLinksPlugin
                 SearchEngine.FireDeleteText(currentLine, -linesAdded);
                 if (linesAdded < 0)
                 {
-                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset + 1} to: {currentLine + viewLineOffset - linesAdded}");
+                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + VIEW_LINE_OFFSET + 1} to: {currentLine + VIEW_LINE_OFFSET - linesAdded}");
                 }
                 else
                 {
-                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + viewLineOffset}");
+                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + VIEW_LINE_OFFSET}");
                 }
             }
         }
@@ -262,7 +286,7 @@ namespace NppJsonLinksPlugin
 
         internal static void OnShutdown()
         {
-            MouseClickHandler.Disable();
+            MouseEventHandler.Disable();
 
             // Win32.WritePrivateProfileString("SomeSection", "SomeKey", someSetting ? "1" : "0", iniFilePath);
         }

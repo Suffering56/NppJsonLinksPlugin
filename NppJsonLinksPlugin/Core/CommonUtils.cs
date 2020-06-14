@@ -5,6 +5,21 @@ using System.Threading;
 
 namespace NppJsonLinksPlugin.Core
 {
+    public static class LogicSupport
+    {
+        public static void CallSafe(Action action)
+        {
+            try
+            {
+                action.Invoke();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
+        }
+    }
+
     public static class ThreadSupport
     {
         public static void ExecuteDelayed(Action runnable, int delay)
@@ -106,6 +121,11 @@ namespace NppJsonLinksPlugin.Core
         public static bool IsOneOf(this char checkedChar, char expectedChar1, char expectedChar2, char expectedChar3)
         {
             return checkedChar == expectedChar1 || checkedChar == expectedChar2 || checkedChar == expectedChar3;
+        }
+
+        public static bool IsWhiteSpaceOr(this char checkedChar, char expectedChar1)
+        {
+            return char.IsWhiteSpace(checkedChar) || checkedChar == expectedChar1;
         }
 
         public static bool IsWhiteSpaceOr(this char checkedChar, char expectedChar1, char expectedChar2)
