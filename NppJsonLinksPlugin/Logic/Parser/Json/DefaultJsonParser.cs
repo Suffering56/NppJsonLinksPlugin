@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using NppJsonLinksPlugin.Core;
 
 namespace NppJsonLinksPlugin.Logic.Parser.Json
 {
@@ -40,26 +41,29 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
 
         public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
         {
-            int lineNumber = 0;
-            string lineText;
-            using StreamReader sr = new StreamReader(filePath);
-            while ((lineText = sr.ReadLine()) != null)
+            LogicUtils.CallSafe(() =>
             {
-                foreach (var dstWord in expectedWords)
+                int lineNumber = 0;
+                string lineText;
+                using StreamReader sr = new StreamReader(filePath);
+                while ((lineText = sr.ReadLine()) != null)
                 {
-                    var dstWordString = dstWord.GetWordString();
-
-                    if (!lineText.Contains($"\"{dstWordString}\"")) continue;
-
-                    string value = ExtractTokenValueByLine(lineText, dstWordString);
-                    if (value != null)
+                    foreach (var dstWord in expectedWords)
                     {
-                        valueConsumer.Invoke(dstWord, lineNumber, value);
-                    }
-                }
+                        var dstWordString = dstWord.GetWordString();
 
-                lineNumber++;
-            }
+                        if (!lineText.Contains($"\"{dstWordString}\"")) continue;
+
+                        string value = ExtractTokenValueByLine(lineText, dstWordString);
+                        if (value != null)
+                        {
+                            valueConsumer.Invoke(dstWord, lineNumber, value);
+                        }
+                    }
+
+                    lineNumber++;
+                }
+            });
         }
 
         private static void ParseComplexWord(JsonToken tokenType, object? value, Word dstWord, ref string propertyName, Stack<string> propertyStack, Action<string> valueConsumer)
@@ -187,11 +191,11 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             expectedWord = null;
         }
 
-        private const string TokenValuePattern = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
+        private const string TOKEN_VALUE_PATTERN = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
 
         private static string ExtractTokenValueByLine(string lineText, string propertyName)
         {
-            string pattern = new StringBuilder(TokenValuePattern).Replace("[PROPERTY_NAME]", propertyName).ToString();
+            string pattern = new StringBuilder(TOKEN_VALUE_PATTERN).Replace("[PROPERTY_NAME]", propertyName).ToString();
 
             var match = new Regex(pattern).Match(lineText);
             if (!match.Success) return null;

@@ -45,7 +45,7 @@ namespace NppJsonLinksPlugin.Logic
             _wordString = wordString;
             Parent = parent;
 
-            if (StringSupport.IsValidWord(wordString))
+            if (StringUtils.IsValidWord(wordString))
             {
                 _wordStringPattern = null;
             }

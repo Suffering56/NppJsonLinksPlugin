@@ -14,11 +14,11 @@ namespace NppJsonLinksPlugin.Logic
 {
     public class SearchEngine
     {
+        private readonly IDocumentParser _parser;
         private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
 
         private string _currentFilePath = null;
         private bool _cacheEnabled;
-        private readonly IDocumentParser _parser;
 
         public SearchEngine()
         {
@@ -26,9 +26,12 @@ namespace NppJsonLinksPlugin.Logic
             _parser = new DefaultJsonParser();
         }
 
-        public void Init(Settings settings, string currentFilePath)
+        public void Reload(Settings settings, string currentFilePath)
         {
+            _mappingToDstFileContainerMap.Clear();
+            _currentFilePath = null;
             _cacheEnabled = settings.CacheEnabled;
+
             var dstFilePathToDstWordsCache = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
 
             foreach (var mappingItem in settings.Mapping)
@@ -54,7 +57,7 @@ namespace NppJsonLinksPlugin.Logic
 
         public void SwitchContext(string currentFilePath)
         {
-            currentFilePath = StringSupport.NormalizePath(currentFilePath);
+            currentFilePath = StringUtils.NormalizePath(currentFilePath);
             if (currentFilePath == _currentFilePath) return; // контекст не изменился
 
             Logger.Info($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");

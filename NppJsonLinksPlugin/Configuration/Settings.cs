@@ -80,9 +80,10 @@ namespace NppJsonLinksPlugin.Configuration
             return new Settings
             {
                 CacheEnabled = rawSettings.CacheEnabled,
-                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled,                                   // override by ini
-                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay,                          // override by ini
-                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath,     // override by ini
+                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled,            // override by ini 
+                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled,                                 // override by ini
+                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay,                        // override by ini
+                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath,   // override by ini
                 Mapping = mappingItems
             };
         }
@@ -120,6 +121,8 @@ namespace NppJsonLinksPlugin.Configuration
     [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public class Settings
     {
+        public bool HighlightingEnabled { get; internal set; }
+
         public bool CacheEnabled { get; internal set; }
 
         public bool SoundEnabled { get; internal set; }
@@ -168,7 +171,7 @@ namespace NppJsonLinksPlugin.Configuration
                 {
                     _initialFileName = fileName;
                     Word = word;
-                    FilePath = StringSupport.NormalizePath(!string.IsNullOrWhiteSpace(overrideFilePath)
+                    FilePath = StringUtils.NormalizePath(!string.IsNullOrWhiteSpace(overrideFilePath)
                         ? overrideFilePath
                         : defaultFilePath
                     );
@@ -289,7 +292,7 @@ namespace NppJsonLinksPlugin.Configuration
                         : defaultFilePath;
 
                     Word = word;
-                    FullPath = StringSupport.NormalizePath($"{pathPrefix}\\{fileName}");
+                    FullPath = StringUtils.NormalizePath($"{pathPrefix}\\{fileName}");
                 }
 
                 public override string ToString()

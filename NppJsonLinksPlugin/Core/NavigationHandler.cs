@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using NppJsonLinksPlugin.Logic;
 
 namespace NppJsonLinksPlugin.Core
@@ -19,9 +18,9 @@ namespace NppJsonLinksPlugin.Core
             _jumpHandler = jumpHandler;
         }
 
-        public void Enable(JumpLocation getCurrentLocation)
+        public void Disable()
         {
-            _prevLocation = getCurrentLocation;
+            _prevLocation = null;
         }
 
         public void Reload(JumpLocation currentLocation)
@@ -33,7 +32,7 @@ namespace NppJsonLinksPlugin.Core
 
         public void UpdateHistory(JumpLocation newLocation, NavigateActionType actionType)
         {
-            if (_prevLocation == null) return;
+            if (IsNavigationDisabled()) return;
 
             var historySize = _navigationHistory.Count;
             if (_historyPosition > historySize)
@@ -90,7 +89,8 @@ namespace NppJsonLinksPlugin.Core
 
         public void NavigateBackward()
         {
-            if (_prevLocation == null) return;
+            if (IsNavigationDisabled()) return;
+
             if (_historyPosition > 0 && _historyPosition <= _navigationHistory.Count)
             {
                 var jumpLocation = _navigationHistory[_historyPosition - 1];
@@ -101,13 +101,19 @@ namespace NppJsonLinksPlugin.Core
 
         public void NavigateForward()
         {
-            if (_prevLocation == null) return;
+            if (IsNavigationDisabled()) return;
+
             if (_historyPosition + 1 < _navigationHistory.Count)
             {
                 var jumpLocation = _navigationHistory[_historyPosition + 1];
                 _jumpHandler(jumpLocation);
                 UpdateHistory(jumpLocation, NavigateActionType.GO_FORWARD);
             }
+        }
+
+        private bool IsNavigationDisabled()
+        {
+            return _prevLocation == null;
         }
     }
 

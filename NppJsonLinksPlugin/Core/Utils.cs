@@ -5,7 +5,15 @@ using System.Threading;
 
 namespace NppJsonLinksPlugin.Core
 {
-    public static class LogicSupport
+    public static class DateUtils
+    {
+        public static int CurrentUts()
+        {
+            return (int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+        }
+    }
+
+    public static class LogicUtils
     {
         public static void CallSafe(Action action)
         {
@@ -20,7 +28,7 @@ namespace NppJsonLinksPlugin.Core
         }
     }
 
-    public static class ThreadSupport
+    public static class ThreadUtils
     {
         public static void ExecuteDelayed(Action runnable, int delay)
         {
@@ -33,13 +41,13 @@ namespace NppJsonLinksPlugin.Core
         }
     }
 
-    public static class StringSupport
+    public static class StringUtils
     {
-        private const string ValidWordPattern = "^[\\w_]*?$";
+        private const string VALID_WORD_PATTERN = "^[\\w_]*?$";
 
         public static bool IsValidWord(string str)
         {
-            return Regex.IsMatch(str, ValidWordPattern);
+            return Regex.IsMatch(str, VALID_WORD_PATTERN);
         }
 
         public static string NormalizePath(string path)
@@ -86,7 +94,7 @@ namespace NppJsonLinksPlugin.Core
         }
     }
 
-    public static class CharSupport
+    public static class CharUtils
     {
         public static bool IsWhiteSpace(this char checkedChar)
         {

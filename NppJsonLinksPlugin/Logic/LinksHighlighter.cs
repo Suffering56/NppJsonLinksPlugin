@@ -18,42 +18,63 @@ namespace NppJsonLinksPlugin.Logic
         private const int STYLE_HOVER = 0;
 
         private readonly IScintillaGateway _gateway;
-        private readonly Settings _settings;
+        private readonly IEnumerable<Settings.MappingItem> _settingsMapping; // if null -> then hightlighting disabled
+
         private List<Word> _expectedWords;
 
-        private int _startVisibleLine = 0;
-        private int _endVisibleLine = 0;
-        private int _startVisiblePosition = 0;
-        private int _endVisiblePosition = 0;
         private string _currentPath = null;
+        private int _startVisibleLine = 0;
+        private int _endVisiblePosition = 0;
 
         private readonly Func<string, int, int, ISearchContext> _searchContextProvider;
 
         public LinksHighlighter(IScintillaGateway gateway, Settings settings)
         {
+            if (!settings.HighlightingEnabled)
+            {
+                gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
+                Logger.Warn("Highlighting is disabled by settings");
+                return;
+            }
+
+            _settingsMapping = settings.HighlightingEnabled
+                ? settings.Mapping
+                : null;
             _gateway = gateway;
-            _settings = settings;
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
 
-            Update();
-            HighlightVisibleText();
+            UpdateUi();
+        }
+
+        private bool IsHighlightingDisabled()
+        {
+            return _settingsMapping == null;
+        }
+
+        public void UpdateUi()
+        {
+            if (IsHighlightingDisabled()) return;
+
+            if (Update())
+            {
+                HighlightVisibleText();
+            }
         }
 
         private bool Update()
         {
-            var startVisibleLine = _gateway.GetFirstVisibleLine();
-            var endVisibleLine = startVisibleLine + _gateway.LinesOnScreen() - 1;
+            var currentPath = StringUtils.NormalizePath(_gateway.GetFullCurrentPath());
 
-            var currentPath = StringSupport.NormalizePath(_gateway.GetFullCurrentPath());
-            var startVisiblePosition = _gateway.LineToPosition(startVisibleLine);
+            var startVisibleLine = _gateway.GetFirstVisibleLine();
+            var endVisibleLine = GetLastVisibleLine(startVisibleLine);
             var endVisiblePosition = _gateway.GetLineEndPosition(endVisibleLine).Value;
 
             bool changed = currentPath != _currentPath;
             if (changed)
             {
-                _expectedWords = _settings.Mapping
+                _expectedWords = _settingsMapping
                     .Select(item => item.Src)
                     .Where(src => src.MatchesWithPath(currentPath))
                     .Select(src => src.Word)
@@ -62,40 +83,40 @@ namespace NppJsonLinksPlugin.Logic
 
             changed = changed
                       || startVisibleLine != _startVisibleLine
-                      || endVisibleLine != _endVisibleLine
-                      || startVisiblePosition != _startVisiblePosition
                       || endVisiblePosition != _endVisiblePosition;
 
             _currentPath = currentPath;
             _startVisibleLine = startVisibleLine;
-            _endVisibleLine = endVisibleLine;
-            _startVisiblePosition = startVisiblePosition;
             _endVisiblePosition = endVisiblePosition;
 
             return changed;
         }
 
 
-        public void UpdateUi()
-        {
-            if (Update())
-            {
-                HighlightVisibleText();
-            }
-        }
-
         private void HighlightVisibleText()
         {
-            try
+            LogicUtils.CallSafe(() =>
             {
                 CleanCurrentFileHighlighting();
                 if (_expectedWords.Count == 0) return;
 
-                for (int lineIndex = _startVisibleLine; lineIndex <= _endVisibleLine; lineIndex++)
+                var linesOnScreen = _gateway.LinesOnScreen();
+                var totalLinesCount = _gateway.GetLineCount();
+
+                int visibleLinesCounter = 0;
+                int lineIndex = _startVisibleLine - 1;
+
+                while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
                 {
+                    lineIndex++;
+
+                    if (!_gateway.GetLineVisible(lineIndex)) continue;
+                    if (lineIndex >= totalLinesCount) return;
+
+                    visibleLinesCounter++;
+
                     var isEscape = false;
                     StringBuilder currentWord = null;
-
                     var lineText = _gateway.GetLineText(lineIndex);
 
                     for (int i = 0; i < lineText.Length; i++)
@@ -132,11 +153,7 @@ namespace NppJsonLinksPlugin.Logic
                         isEscape = !isEscape && ch == '\\';
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
+            });
         }
 
         private bool IsNeedToHighlightWord(string word, int lineIndex, int indexOfWord)
@@ -146,7 +163,7 @@ namespace NppJsonLinksPlugin.Logic
 
             if (contextProperty == null) return false;
 
-            // нас интересует только подсветка property name, value - игнорируем
+            // нас интересует только подсветка property name, поэтому value - игнорируем
             if (contextProperty.Name != word) return false;
 
             foreach (var srcWord in _expectedWords)
@@ -168,6 +185,27 @@ namespace NppJsonLinksPlugin.Logic
         private void CleanCurrentFileHighlighting()
         {
             _gateway.ClearIndicatorStyleForRange(HIGHLIGHT_INDICATOR_ID, 0, _gateway.GetTextLength());
+        }
+
+        private int GetLastVisibleLine(int startVisibleLine)
+        {
+            var linesOnScreen = _gateway.LinesOnScreen();
+            var totalLinesCount = _gateway.GetLineCount();
+
+            int visibleLinesCounter = 0;
+            int lineIndex = startVisibleLine - 1;
+
+            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
+            {
+                lineIndex++;
+
+                if (_gateway.GetLineVisible(lineIndex))
+                {
+                    visibleLinesCounter++;
+                }
+            }
+
+            return lineIndex;
         }
     }
 }

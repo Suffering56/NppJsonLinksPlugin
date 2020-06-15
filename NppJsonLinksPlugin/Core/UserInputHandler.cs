@@ -3,10 +3,13 @@ using NppJsonLinksPlugin.PluginInfrastructure;
 
 namespace NppJsonLinksPlugin.Core
 {
-    public static class MouseEventHandler
+    /**
+     * Работает только для 32-битной версии
+     */
+    public static class UserInputHandler
     {
-        public static MouseEvent OnMouseAction = null;
-        public static KeyboardEvent OnKeyboardDown = null;
+        private static MouseEvent _onMouseAction = null;
+        private static KeyboardEvent _onKeyboardDown = null;
 
         private static IntPtr _oldMainWndProc = IntPtr.Zero;
         private static readonly Win32.WindowProc NewMainWndProc = MainWndProc;
@@ -37,6 +40,14 @@ namespace NppJsonLinksPlugin.Core
             VK_UP = 0x26,
             VK_RIGHT = 0x27,
             VK_DOWN = 0x28
+        }
+
+        internal static void Reload(MouseEvent onMouseAction, KeyboardEvent onKeyboardDown)
+        {
+            Disable();
+            _onMouseAction = onMouseAction;
+            _onKeyboardDown = onKeyboardDown;
+            Enable();
         }
 
         internal static void Enable()
@@ -77,21 +88,28 @@ namespace NppJsonLinksPlugin.Core
             return CommonWndProc(_oldSecondWndProc, hWnd, msg, wParam, lParam);
         }
 
-
         private static int CommonWndProc(IntPtr oldWndProc, IntPtr hWnd, int msg, int wParam, int lParam)
         {
-            var result = Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
-
-            if (msg == WM_KEYDOWN && OnKeyboardDown != null)
+            try
             {
-                OnKeyboardDown.Invoke(lParam);
-            }
-            else if (OnMouseAction != null && Enum.IsDefined(typeof(MouseMessage), msg))
-            {
-                OnMouseAction.Invoke((MouseMessage) msg);
-            }
+                var result = Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
 
-            return result;
+                if (msg == WM_KEYDOWN && _onKeyboardDown != null)
+                {
+                    _onKeyboardDown.Invoke(lParam);
+                }
+                else if (_onMouseAction != null && Enum.IsDefined(typeof(MouseMessage), msg))
+                {
+                    _onMouseAction.Invoke((MouseMessage) msg);
+                }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+                return 0;
+            }
         }
     }
 }

@@ -74,7 +74,7 @@
     <Compile Include="Core\NavigationHandler.cs" />
     <Compile Include="Core\UserInputHandler.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
-    <Compile Include="Core\CommonUtils.cs" />
+    <Compile Include="Core\Utils.cs" />
     <Compile Include="Logic\Context\ISearchContext.cs" />
     <Compile Include="Logic\Context\JsonSearchContext.cs" />
     <Compile Include="Logic\Context\Property.cs" />

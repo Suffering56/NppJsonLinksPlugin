@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using NppJsonLinksPlugin.Core;
 
 namespace NppJsonLinksPlugin.Configuration
 {
     [JsonObject]
     public class RawSettings
     {
+        [JsonProperty(PropertyName = "highlightingEnabled")]
+        public bool HighlightingEnabled = true;
+
         [JsonProperty(PropertyName = "cacheEnabled")]
         public bool CacheEnabled = false;
 

@@ -78,16 +78,24 @@ namespace NppJsonLinksPlugin.Logic.Context
 
         private Property TryInitSelectedProperty(int initialLineIndex, int indexOfSelectedWord)
         {
-            string lineText = GetLineText(initialLineIndex);
-            var direction = ChooseDirection(_selectedWord, indexOfSelectedWord, lineText);
-
-            if (direction == null)
+            try
             {
-                Logger.Fail($"direction is null for selectedWord: {_selectedWord}");
+                string lineText = GetLineText(initialLineIndex);
+                var direction = ChooseDirection(_selectedWord, indexOfSelectedWord, lineText);
+
+                if (direction == null)
+                {
+                    Logger.Fail($"direction is null for selectedWord: {_selectedWord}");
+                    return null;
+                }
+
+                return FindPropertyByDirection(initialLineIndex, indexOfSelectedWord, direction);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
                 return null;
             }
-
-            return FindPropertyByDirection(initialLineIndex, indexOfSelectedWord, direction);
         }
 
         private Property FindPropertyByDirection(int initialLineIndex, int indexOfSelectedWord, Direction? direction)

@@ -40,16 +40,17 @@ necessary:
    + иногда отваливается MouseHook. fix it
    + реализовать работу navigate forward/backward аналогично intellij idea
         + нужно ли для этого отлавливать события клавиатуры и right click?
+   + подсвечивать бы src words
+        + пофиксить баг подсветки, если есть заколлапшенные строки
+        + settings.highlightingEnabled
+   + отключать плагин, при слишком частых ошибках
         
-   - подсвечивать бы src words
-   
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
         
    - перезагрузка настроек после рестарта NPP
-  
   
     - menu -> settings:
         - enabled/disabled
@@ -58,6 +59,9 @@ necessary:
         - settings path
         - mappingFilePathPrefix
         - mapping
+        
+    - обработка ошибок. в идеале нужно чтобы ничто не смогло закрашить NPP
+        - был краш в UserInputHandler:83 -> при вызове CallWindowProcW
         
     - ролик-превьюшка
         

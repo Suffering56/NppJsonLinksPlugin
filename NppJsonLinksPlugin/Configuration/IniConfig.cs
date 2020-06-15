@@ -12,62 +12,77 @@ namespace NppJsonLinksPlugin.Configuration
         public string LogsDir = null;
         public Logger.Mode LoggerMode = AppConstants.DEFAULT_LOGGER_MODE;
 
+        public bool? HighlightingEnabled = null;
         public bool? SoundEnabled = null;
         public int? JumpToLineDelay = null;
         public string MappingDefaultFilePath = null;
 
-        private const string SectionGlobal = "global";
-        private const string SectionOverride = "override_settings";
+        private const string SECTION_GLOBAL = "global";
+        private const string SECTION_LOGGER = "logger";
+        private const string SECTION_OVERRIDE = "override_settings";
 
-        public void Load()
+        public bool Reload()
         {
             string iniFilePath = Path.GetFullPath($"plugins/{Main.PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
 
-
-            SettingsJsonUri = ReadString(SectionGlobal, "settings_uri", iniFilePath, true);
-            LogsDir = ReadString(SectionGlobal, "logs_dir", iniFilePath, false);
-            LoggerMode = ReadLoggerMode("logger_mode", iniFilePath);
-
-            //TODO: можно сделать красиво, но мне лень
-            var soundEnabledStr = ReadString(SectionOverride, "sound_enabled", iniFilePath, false);
-            if (bool.TryParse(soundEnabledStr, out bool boolResult))
+            SettingsJsonUri = ReadString(SECTION_GLOBAL, "settings_uri", iniFilePath, true);
+            if (SettingsJsonUri == null)
             {
-                SoundEnabled = boolResult;
+                Logger.Error($"cannot read property from config.ini: \"settings_uri\". Plugin will be disabled");
+                return false;
             }
 
-            var jumpToLineDelayStr = ReadString(SectionOverride, "jump_to_line_delay", iniFilePath, false);
-            if (int.TryParse(jumpToLineDelayStr, out int intResult))
-            {
-                JumpToLineDelay = intResult;
-            }
+            LogsDir = ReadString(SECTION_LOGGER, "logs_dir", iniFilePath, false);
+            LoggerMode = ReadLoggerMode(SECTION_LOGGER, "logger_mode", iniFilePath, AppConstants.DEFAULT_LOGGER_MODE);
 
-            MappingDefaultFilePath = ReadString(SectionOverride, "mapping_default_file_path", iniFilePath, false);
+            HighlightingEnabled = ReadBool(SECTION_OVERRIDE, "highlighting_enabled", iniFilePath, false);
+            SoundEnabled = ReadBool(SECTION_OVERRIDE, "sound_enabled", iniFilePath, false);
+            JumpToLineDelay = ReadInt(SECTION_OVERRIDE, "jump_to_line_delay", iniFilePath, false);
+            MappingDefaultFilePath = ReadString(SECTION_OVERRIDE, "mapping_default_file_path", iniFilePath, false);
+            return true;
         }
 
         private static string ReadString(string section, string propertyName, string iniFilePath, bool required)
         {
             StringBuilder sb = new StringBuilder(Win32.MAX_PATH);
             var result = Win32.GetPrivateProfileString(section, propertyName, null, sb, sb.Capacity, iniFilePath);
-            if (result <= 0)
-            {
-                if (required)
-                {
-                    Logger.Error($"cannot read property from config.ini: {propertyName}");
-                    Main.DisablePlugin();
-                }
-
-                return null;
-            }
-
-            return sb.ToString();
+            return result > 0
+                ? sb.ToString()
+                : null;
         }
 
-        private static Logger.Mode ReadLoggerMode(string propertyName, string iniFilePath)
+        private static bool? ReadBool(string section, string propertyName, string iniFilePath, bool required)
         {
-            var rawLoggerMode = ReadString(SectionGlobal, propertyName, iniFilePath, false);
-            if (rawLoggerMode == null) return AppConstants.DEFAULT_LOGGER_MODE;
+            var str = ReadString(section, propertyName, iniFilePath, required);
+            if (bool.TryParse(str, out bool result))
+            {
+                return result;
+            }
 
-            Enum.TryParse(rawLoggerMode, true, out Logger.Mode loggerMode);
+            return null;
+        }
+
+        private static int? ReadInt(string section, string propertyName, string iniFilePath, bool required)
+        {
+            var str = ReadString(section, propertyName, iniFilePath, required);
+            if (int.TryParse(str, out int result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        private static Logger.Mode ReadLoggerMode(string section, string propertyName, string iniFilePath, Logger.Mode defaultValue)
+        {
+            var rawLoggerMode = ReadString(section, propertyName, iniFilePath, false);
+
+            if (rawLoggerMode == null || !Enum.TryParse(rawLoggerMode, true, out Logger.Mode loggerMode))
+            {
+                Logger.Error($"cannot read {section}.{propertyName} from config=\"{iniFilePath}\". Logger mode will set to: {defaultValue}");
+                return defaultValue;
+            }
+
             return loggerMode;
         }
     }
