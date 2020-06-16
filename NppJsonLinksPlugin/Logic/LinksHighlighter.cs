@@ -19,6 +19,7 @@ namespace NppJsonLinksPlugin.Logic
 
         private readonly IScintillaGateway _gateway;
         private readonly IEnumerable<Settings.MappingItem> _settingsMapping; // if null -> then hightlighting disabled
+        private readonly int _processingHighlightedLinesLimit;
 
         private List<Word> _expectedWords;
 
@@ -32,15 +33,15 @@ namespace NppJsonLinksPlugin.Logic
         {
             if (!settings.HighlightingEnabled)
             {
+                _settingsMapping = null;
                 gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
                 Logger.Warn("Highlighting is disabled by settings");
                 return;
             }
 
-            _settingsMapping = settings.HighlightingEnabled
-                ? settings.Mapping
-                : null;
+            _settingsMapping = settings.Mapping;
             _gateway = gateway;
+            _processingHighlightedLinesLimit = settings.ProcessingHighlightedLinesLimit;
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
@@ -75,7 +76,7 @@ namespace NppJsonLinksPlugin.Logic
             var currentPath = StringUtils.NormalizePath(_gateway.GetFullCurrentPath());
 
             var startVisibleLine = _gateway.GetFirstVisibleLine();
-            var endVisibleLine = GetLastVisibleLine(startVisibleLine);
+            var endVisibleLine = GetLastVisibleLine(startVisibleLine, _processingHighlightedLinesLimit);
             var endVisiblePosition = _gateway.GetLineEndPosition(endVisibleLine).Value;
 
             bool changed = currentPath != _currentPath;
@@ -109,13 +110,13 @@ namespace NppJsonLinksPlugin.Logic
 
             int visibleLinesCounter = 0;
             int lineIndex = _startVisibleLine - 1;
+            int linesLimit = _processingHighlightedLinesLimit;
 
-            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
+            while (lineIndex++ < totalLinesCount && visibleLinesCounter < linesOnScreen
+                                                 && lineIndex < totalLinesCount
+                                                 && linesLimit-- > 0)
             {
-                lineIndex++;
-
                 if (!_gateway.GetLineVisible(lineIndex)) continue;
-                if (lineIndex >= totalLinesCount) return;
 
                 visibleLinesCounter++;
 
@@ -190,7 +191,7 @@ namespace NppJsonLinksPlugin.Logic
             _gateway.ClearIndicatorStyleForRange(HIGHLIGHT_INDICATOR_ID, 0, _gateway.GetTextLength());
         }
 
-        private int GetLastVisibleLine(int startVisibleLine)
+        private int GetLastVisibleLine(int startVisibleLine, int linesLimit)
         {
             var linesOnScreen = _gateway.LinesOnScreen();
             var totalLinesCount = _gateway.GetLineCount();
@@ -198,7 +199,7 @@ namespace NppJsonLinksPlugin.Logic
             int visibleLinesCounter = 0;
             int lineIndex = startVisibleLine - 1;
 
-            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
+            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount && linesLimit-- > 0)
             {
                 lineIndex++;
 

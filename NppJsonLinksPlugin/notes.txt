@@ -44,7 +44,12 @@ necessary:
         + пофиксить баг подсветки, если есть заколлапшенные строки
         + settings.highlightingEnabled
    + отключать плагин, при слишком частых ошибках
-        
+   + обработка ошибок. в идеале нужно чтобы ничто не смогло закрашить NPP
+        + был краш в UserInputHandler:83 -> при вызове CallWindowProcW
+   + Reload plugin
+   + LinksHighlighter.COLLAPSED_LINES_LIMIT: если сколлапсить json-объект длиной в много тыщ строк, этот сколлапшенный кусок будет где-то в видимой части экрана, то NPP начинает дико тормозить. 
+        + move to settings.processingHighlightedLinesLimit
+       
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
@@ -58,8 +63,7 @@ necessary:
        jump_to_line_delay=100
        mapping_default_file_path=F:/gd_data
         
-    - обработка ошибок. в идеале нужно чтобы ничто не смогло закрашить NPP
-        - был краш в UserInputHandler:83 -> при вызове CallWindowProcW
+    
         
     - ролик-превьюшка
         
@@ -73,9 +77,9 @@ unnecessary:
     
     - GetParentPropertyName: TODO: было бы неплохо возвращать null если json невалиден
 
-    - фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять
+    - settings.cacheEnabled: фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять. PS: не забыть про collapsed lines
     
-    - ParseInvalidDocument
+    - ParseInvalidDocument: 
     
     - gateway.getTextFromPosition плохо работает с русскими символами (если вставить текст "12345\r\nы\r\nы") то getTextFromPosition вернет  "2345\r\nы\r\nы"
         - выглядит так словно бага проявляется если последний введенный/вставленный символ - кириллический.
