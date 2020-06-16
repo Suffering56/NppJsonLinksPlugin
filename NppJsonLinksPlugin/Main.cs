@@ -25,6 +25,12 @@ namespace NppJsonLinksPlugin
         private static IniConfig _iniConfig = null;
         private static Settings _settings = null;
 
+        private static bool _isPluginInited = false;
+        internal static bool IsPluginDisabled = false;
+
+        private static readonly SearchEngine SearchEngine = new SearchEngine();
+        private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
+        private static LinksHighlighter _linksHighlighter = null;
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(
             clickedWord,
             gateway,
@@ -32,15 +38,6 @@ namespace NppJsonLinksPlugin
             gateway.GetCurrentPos().Value - gateway.LineToPosition(gateway.GetCurrentLine()) - clickedWord.Length
         );
 
-        private static readonly SearchEngine SearchEngine = new SearchEngine();
-
-        private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
-        private static LinksHighlighter _linksHighlighter = null;
-
-        //TODO многовато флагов
-        private static bool _isPluginInited = false;
-        internal static bool IsPluginDisabled = false;
-        private static bool _isFileLoadingActive = false;
 
         private static frmMyDlg _frmMyDlg = null;
         private static int _idMyDlg = 1;
@@ -152,10 +149,7 @@ namespace NppJsonLinksPlugin
 
         public static void OnNotification(ScNotification notification)
         {
-            if (IsPluginDisabled)
-            {
-                return;
-            }
+            if (IsPluginDisabled) return;
 
             var notificationType = notification.Header.Code;
 
@@ -183,45 +177,26 @@ namespace NppJsonLinksPlugin
                     Logger.Info($"NPPN_BUFFERACTIVATED");
                     break;
 
-                case (uint) NppMsg.NPPN_FILEBEFORELOAD:
-                    // при загрузке файла происходит вызов SCN_MODIFIED, который мы должны игнорировать
-                    _isFileLoadingActive = true;
-
-                    Logger.Info("NPPN_FILEBEFORELOAD");
-                    break;
-
-                case (uint) NppMsg.NPPN_FILEBEFOREOPEN: // or NppMsg.NPPN_FILEOPENED
-                case (uint) NppMsg.NPPN_FILELOADFAILED:
-                    // файл загружен (возможно с ошибкой) и мы больше не должны игнорировать события SCN_MODIFIED
-                    _isFileLoadingActive = false;
-
-                    Logger.Info("NPPN_FILEBEFOREOPEN");
-                    break;
-
                 case (uint) SciMsg.SCN_SAVEPOINTREACHED:
                     // пользователь сохранил изменения в текущем файле (ctrl + s)
                     SearchEngine.FireSaveFile();
                     Logger.Info("SCN_SAVEPOINTREACHED");
                     break;
 
-                case (uint) SciMsg.SCN_MODIFIED:
-                    //TODO: почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, поэтому пока все работает хорошо только на 32-битной
-                    if (!_isFileLoadingActive)
-                    {
-                        // при отключенном кэше SearchEngine - нам не нужно отслеживать вставленный/удаленный текст
-                        if (!_settings.CacheEnabled) return;
-
-                        ProcessModified(notification);
-                    }
-
-                    break;
-
                 case (uint) SciMsg.SCN_UPDATEUI:
                 {
+                    // SCROLL/INPUT/COLLAPSE and other events
                     _linksHighlighter.UpdateUi();
                     break;
                 }
             }
+        }
+
+        private static void OnKeyboardDown(int keyCode)
+        {
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            var currentLine = gateway.GetCurrentLine();
+            NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
         }
 
         private static void HandleMouseEvent(UserInputHandler.MouseMessage msg)
@@ -246,55 +221,6 @@ namespace NppJsonLinksPlugin
 
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             NavigationHandler.UpdateHistory(gateway.GetCurrentLocation(), NavigateActionType.MOUSE_CLICK);
-        }
-
-        private static void OnKeyboardDown(int keyCode)
-        {
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
-            var currentLine = gateway.GetCurrentLine();
-            NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
-        }
-
-        private static void ProcessModified(ScNotification notification)
-        {
-            var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
-            var isTextInserted = (notification.ModificationType & ((int) SciMsg.SC_MOD_INSERTTEXT)) > 0;
-            if (!isTextDeleted && !isTextInserted) return;
-
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
-            // количество строк, которые были добавлены/удалены (если отрицательное)
-            int linesAdded = notification.LinesAdded;
-            // глобальная позиция каретки, ДО вставки текста
-            int currentPosition = notification.Position.Value;
-            // строка, в которую вставили текст
-            int currentLine = gateway.PositionToLine(currentPosition);
-            // чтобы было удобнее смотреть в NPP
-            const int VIEW_LINE_OFFSET = 1;
-
-            if (isTextInserted)
-            {
-                var insertedText = gateway.GetTextFromPositionSafe(currentPosition, notification.Length, linesAdded);
-                SearchEngine.FireInsertText(currentLine, linesAdded, insertedText);
-                Logger.Info($"SCN_MODIFIED: Insert[{currentLine + VIEW_LINE_OFFSET},{currentLine + VIEW_LINE_OFFSET + linesAdded}], text:\r\n<{insertedText}>");
-            }
-
-            if (isTextDeleted)
-            {
-                SearchEngine.FireDeleteText(currentLine, -linesAdded);
-                if (linesAdded < 0)
-                {
-                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + VIEW_LINE_OFFSET + 1} to: {currentLine + VIEW_LINE_OFFSET - linesAdded}");
-                }
-                else
-                {
-                    Logger.Info($"SCN_MODIFIED:Delete: from: {currentLine + VIEW_LINE_OFFSET}");
-                }
-            }
-        }
-
-        internal static void OnShutdown()
-        {
-            UserInputHandler.Disable();
         }
 
         private static void GoToDefinitionCmd()
@@ -342,6 +268,11 @@ namespace NppJsonLinksPlugin
 
             // задержка фиксит багу с выделением текста при переходе
             ThreadUtils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
+        }
+
+        internal static void OnShutdown()
+        {
+            UserInputHandler.Disable();
         }
 
         #region " Layout Base "

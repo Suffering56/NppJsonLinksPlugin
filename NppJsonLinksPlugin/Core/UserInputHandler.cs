@@ -90,6 +90,8 @@ namespace NppJsonLinksPlugin.Core
 
         private static int CommonWndProc(IntPtr oldWndProc, IntPtr hWnd, int msg, int wParam, int lParam)
         {
+            if (Main.IsPluginDisabled) return 0;
+
             try
             {
                 var result = Win32.CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);

@@ -9,9 +9,6 @@ namespace NppJsonLinksPlugin.Configuration
         [JsonProperty(PropertyName = "highlightingEnabled")]
         public bool HighlightingEnabled = true;
 
-        [JsonProperty(PropertyName = "cacheEnabled")]
-        public bool CacheEnabled = false;
-
         [JsonProperty(PropertyName = "soundEnabled")]
         public bool SoundEnabled = true;
 

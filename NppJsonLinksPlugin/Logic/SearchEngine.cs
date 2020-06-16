@@ -18,7 +18,6 @@ namespace NppJsonLinksPlugin.Logic
         private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
 
         private string _currentFilePath = null;
-        private bool _cacheEnabled;
 
         public SearchEngine()
         {
@@ -30,7 +29,6 @@ namespace NppJsonLinksPlugin.Logic
         {
             _mappingToDstFileContainerMap.Clear();
             _currentFilePath = null;
-            _cacheEnabled = settings.CacheEnabled;
 
             var dstFilePathToDstWordsCache = new ExtendedDictionary<string, ISet<Word>>(); // dstFilePath -> ISet<dstWord>
 
@@ -99,7 +97,7 @@ namespace NppJsonLinksPlugin.Logic
             }
 
             var dstFileContainer = _mappingToDstFileContainerMap[mappingItem];
-            dstFileContainer.InitIfNeeded(_cacheEnabled);
+            dstFileContainer.InitIfNeeded();
 
             var tokenValue = property.Value;
             var jumpLocation = dstFileContainer.FindDestinationLocation(mappingItem.Dst.Word, tokenValue);
@@ -173,12 +171,9 @@ namespace NppJsonLinksPlugin.Logic
                 _dstWordToValuesLocationContainer[dstWord].PutOrReplace(value, lineNumber);
             }
 
-            public void InitIfNeeded(bool cacheEnabled)
+            public void InitIfNeeded()
             {
-                if (!cacheEnabled)
-                {
-                    ClearIfChanged();
-                }
+                ClearIfChanged();
 
                 if (_inited) return;
 
