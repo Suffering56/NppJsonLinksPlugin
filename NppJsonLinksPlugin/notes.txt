@@ -53,12 +53,10 @@ necessary:
    - перезагрузка настроек после рестарта NPP
   
     - menu -> settings:
-        - enabled/disabled
-        - logs enabled
-        - log file path
-        - settings path
-        - mappingFilePathPrefix
-        - mapping
+       highlighting_enabled=true
+       sound_enabled=true
+       jump_to_line_delay=100
+       mapping_default_file_path=F:/gd_data
         
     - обработка ошибок. в идеале нужно чтобы ничто не смогло закрашить NPP
         - был краш в UserInputHandler:83 -> при вызове CallWindowProcW
@@ -77,7 +75,7 @@ unnecessary:
 
     - фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять
     
-    - невалидный json + isComplex
+    - ParseInvalidDocument
     
     - gateway.getTextFromPosition плохо работает с русскими символами (если вставить текст "12345\r\nы\r\nы") то getTextFromPosition вернет  "2345\r\nы\r\nы"
         - выглядит так словно бага проявляется если последний введенный/вставленный символ - кириллический.

@@ -7,7 +7,5 @@ namespace NppJsonLinksPlugin.Logic.Parser
     public interface IDocumentParser
     {
         void ParseValidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer);
-
-        void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer);
     }
 }

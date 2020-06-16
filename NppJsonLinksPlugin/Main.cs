@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using NppJsonLinksPlugin.Configuration;
@@ -18,9 +19,10 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
-        private const string PLUGIN_VERSION = "0.2.3";
+        private const string PLUGIN_VERSION = "0.2.4";
 
-        private static readonly IniConfig Config = new IniConfig();
+        private static readonly string IniFilePath = Path.GetFullPath($"plugins/{PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
+        private static IniConfig _iniConfig = null;
         private static Settings _settings = null;
 
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(
@@ -46,10 +48,10 @@ namespace NppJsonLinksPlugin
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
         private static Icon _tbIcon = null;
 
-
-        public static void DisablePlugin()
+        internal static void DisablePlugin()
         {
-            Logger.Warn("Disable plugin");
+            Logger.Error($"Plugin \"{PLUGIN_NAME}\" will be disabled", null, true);
+
             IsPluginDisabled = true;
             Logger.SetMode(Logger.Mode.DISABLED, null);
             UserInputHandler.Disable();
@@ -58,56 +60,47 @@ namespace NppJsonLinksPlugin
 
         private static void ReloadPlugin()
         {
-            Logger.Warn("Reload plugin");
+            Logger.Info("Try reload plugin...");
 
             _isPluginInited = false;
-            ReloadIniConfig();
-            ProcessInit();
-        }
+            IsPluginDisabled = false;
 
-        internal static void CommandMenuInit()
-        {
-            Logger.Info("COMMAND_MENU_INIT");
-            ReloadIniConfig();
-            // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
-
-            PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
-            PluginBase.SetCommand(2, "", null);
-
-            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
-            PluginBase.SetCommand(4, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
-            PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
-            PluginBase.SetCommand(6, "", null);
-
-            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Version: {PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
+            if (!ReloadIniConfig() || !ProcessInit())
+            {
+                DisablePlugin();
+            }
+            else
+            {
+                Logger.Error("Plugin reload: success!", null, true);
+            }
         }
 
         private static bool ReloadIniConfig()
         {
             try
             {
-                var success = Config.Reload();
-                if (!success)
-                {
-                    DisablePlugin();
-                }
+                _iniConfig = IniConfigParser.Parse(IniFilePath);
+                Logger.SetMode(_iniConfig.LoggerMode, _iniConfig.LogsDir);
 
-                return success;
+                return true;
             }
-            finally
+            catch (Exception e)
             {
-                Logger.SetMode(Config.LoggerMode, Config.LogsDir);
+                Logger.SetMode(AppConstants.DEFAULT_LOGGER_MODE, null);
+                Logger.Error(e.Message, e, true);
+
+                return false;
             }
         }
 
-        private static void ProcessInit()
+        private static bool ProcessInit()
         {
-            LogicUtils.CallSafe(() =>
+            try
             {
                 var gateway = PluginBase.GetGatewayFactory().Invoke();
 
                 // загружаем настройки плагина
-                _settings = LoadSettings();
+                _settings = SettingsParser.Load(_iniConfig);
                 Logger.Info($"settings reloaded: mappingFilePathPrefix={_settings.MappingDefaultFilePath}");
 
                 // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
@@ -127,45 +120,40 @@ namespace NppJsonLinksPlugin
 
                 // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
                 _isPluginInited = true;
-            });
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.Message, e, true);
+                return false;
+            }
         }
 
-        private static void HandleMouseEvent(UserInputHandler.MouseMessage msg)
+        internal static void CommandMenuInit()
         {
-            switch (msg)
+            Logger.Info("COMMAND_MENU_INIT");
+            if (!ReloadIniConfig())
             {
-                case UserInputHandler.MouseMessage.WM_LBUTTONUP:
-                    if (Control.ModifierKeys == Keys.Control)
-                    {
-                        var success = GoToDefinition();
-                        if (success) return;
-                    }
-
-                    break;
-
-                case UserInputHandler.MouseMessage.WM_RBUTTONUP:
-                    break;
-
-                default:
-                    return;
+                DisablePlugin();
             }
 
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
-            NavigationHandler.UpdateHistory(gateway.GetCurrentLocation(), NavigateActionType.MOUSE_CLICK);
-        }
+            // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
 
-        private static void OnKeyboardDown(int keyCode)
-        {
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
-            var currentLine = gateway.GetCurrentLine();
-            NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
+            PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
+            PluginBase.SetCommand(2, "", null);
+
+            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
+            PluginBase.SetCommand(4, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
+            PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(6, "", null);
+
+            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
         }
 
         public static void OnNotification(ScNotification notification)
         {
             if (IsPluginDisabled)
             {
-                //TODO: подумать о том, что человек захочет включить плагин ручками и это нужно отловить
                 return;
             }
 
@@ -173,8 +161,13 @@ namespace NppJsonLinksPlugin
 
             if (notificationType == (uint) NppMsg.NPPN_READY)
             {
-                ProcessInit();
                 Logger.Info("NPPN_READY");
+
+                if (!ProcessInit())
+                {
+                    DisablePlugin();
+                }
+
                 return;
             }
 
@@ -231,6 +224,37 @@ namespace NppJsonLinksPlugin
             }
         }
 
+        private static void HandleMouseEvent(UserInputHandler.MouseMessage msg)
+        {
+            switch (msg)
+            {
+                case UserInputHandler.MouseMessage.WM_LBUTTONUP:
+                    if (Control.ModifierKeys == Keys.Control)
+                    {
+                        var success = GoToDefinition();
+                        if (success) return;
+                    }
+
+                    break;
+
+                case UserInputHandler.MouseMessage.WM_RBUTTONUP:
+                    break;
+
+                default:
+                    return;
+            }
+
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            NavigationHandler.UpdateHistory(gateway.GetCurrentLocation(), NavigateActionType.MOUSE_CLICK);
+        }
+
+        private static void OnKeyboardDown(int keyCode)
+        {
+            var gateway = PluginBase.GetGatewayFactory().Invoke();
+            var currentLine = gateway.GetCurrentLine();
+            NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
+        }
+
         private static void ProcessModified(ScNotification notification)
         {
             var isTextDeleted = (notification.ModificationType & ((int) SciMsg.SC_MOD_DELETETEXT)) > 0;
@@ -268,29 +292,14 @@ namespace NppJsonLinksPlugin
             }
         }
 
-        private static Settings LoadSettings()
-        {
-            try
-            {
-                return SettingsParser.Load(Config);
-            }
-            catch (Exception e)
-            {
-                Logger.Error("LoadSettings exception: " + e.GetType());
-                Logger.Error(e);
-                throw;
-            }
-        }
-
         internal static void OnShutdown()
         {
             UserInputHandler.Disable();
-
-            // Win32.WritePrivateProfileString("SomeSection", "SomeKey", someSetting ? "1" : "0", iniFilePath);
         }
 
         private static void GoToDefinitionCmd()
         {
+            if (IsPluginDisabled) return;
             GoToDefinition();
         }
 

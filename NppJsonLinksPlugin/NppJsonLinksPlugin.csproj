@@ -69,7 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppConstants.cs" />
-    <Compile Include="Configuration\IniConfig.cs" />
+    <Compile Include="Configuration\IniConfigParser.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\NavigationHandler.cs" />
     <Compile Include="Core\UserInputHandler.cs" />

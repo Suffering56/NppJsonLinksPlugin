@@ -107,7 +107,7 @@ namespace NppJsonLinksPlugin.Core
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                Logger.Error(e.Message, e);
                 return 0;
             }
         }

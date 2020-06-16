@@ -13,21 +13,6 @@ namespace NppJsonLinksPlugin.Core
         }
     }
 
-    public static class LogicUtils
-    {
-        public static void CallSafe(Action action)
-        {
-            try
-            {
-                action.Invoke();
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
-        }
-    }
-
     public static class ThreadUtils
     {
         public static void ExecuteDelayed(Action runnable, int delay)
@@ -69,7 +54,7 @@ namespace NppJsonLinksPlugin.Core
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                Logger.Error("error path:", e, true);
                 return null;
             }
         }

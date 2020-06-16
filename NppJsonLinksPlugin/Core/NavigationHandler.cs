@@ -37,7 +37,7 @@ namespace NppJsonLinksPlugin.Core
             var historySize = _navigationHistory.Count;
             if (_historyPosition > historySize)
             {
-                Logger.Error($"invalid navigation history position={_historyPosition}, because history size={historySize}");
+                Logger.Error($"invalid navigation history position={_historyPosition}, because history size={historySize}, navigation history will reset");
                 Reload(newLocation);
                 return;
             }

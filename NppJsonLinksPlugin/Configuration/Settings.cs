@@ -23,15 +23,8 @@ namespace NppJsonLinksPlugin.Configuration
 
             var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
             Settings settings = ConvertRawSettings(rawSettings, iniConfig);
-            try
-            {
-                Validate(settings);
-            }
-            catch (Exception e)
-            {
-                Logger.ErrorMsgBox(e.Message);
-                Main.DisablePlugin();
-            }
+            
+            Validate(settings);
 
             return settings;
         }
@@ -80,10 +73,10 @@ namespace NppJsonLinksPlugin.Configuration
             return new Settings
             {
                 CacheEnabled = rawSettings.CacheEnabled,
-                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled,            // override by ini 
-                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled,                                 // override by ini
-                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay,                        // override by ini
-                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath,   // override by ini
+                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled, // override by ini 
+                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled, // override by ini
+                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay, // override by ini
+                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath, // override by ini
                 Mapping = mappingItems
             };
         }
@@ -114,6 +107,7 @@ namespace NppJsonLinksPlugin.Configuration
         {
             public ValidationException(string message) : base(message)
             {
+                // do nothing
             }
         }
     }

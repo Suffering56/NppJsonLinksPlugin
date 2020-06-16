@@ -93,7 +93,7 @@ namespace NppJsonLinksPlugin.Logic.Context
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                Logger.Error(e.Message, e);
                 return null;
             }
         }

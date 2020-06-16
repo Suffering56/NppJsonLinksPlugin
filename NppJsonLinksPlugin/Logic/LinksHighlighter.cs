@@ -57,9 +57,16 @@ namespace NppJsonLinksPlugin.Logic
         {
             if (IsHighlightingDisabled()) return;
 
-            if (Update())
+            try
             {
-                HighlightVisibleText();
+                if (Update())
+                {
+                    HighlightVisibleText();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.Message, e);
             }
         }
 
@@ -92,68 +99,64 @@ namespace NppJsonLinksPlugin.Logic
             return changed;
         }
 
-
         private void HighlightVisibleText()
         {
-            LogicUtils.CallSafe(() =>
+            CleanCurrentFileHighlighting();
+            if (_expectedWords.Count == 0) return;
+
+            var linesOnScreen = _gateway.LinesOnScreen();
+            var totalLinesCount = _gateway.GetLineCount();
+
+            int visibleLinesCounter = 0;
+            int lineIndex = _startVisibleLine - 1;
+
+            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
             {
-                CleanCurrentFileHighlighting();
-                if (_expectedWords.Count == 0) return;
+                lineIndex++;
 
-                var linesOnScreen = _gateway.LinesOnScreen();
-                var totalLinesCount = _gateway.GetLineCount();
+                if (!_gateway.GetLineVisible(lineIndex)) continue;
+                if (lineIndex >= totalLinesCount) return;
 
-                int visibleLinesCounter = 0;
-                int lineIndex = _startVisibleLine - 1;
+                visibleLinesCounter++;
 
-                while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount)
+                var isEscape = false;
+                StringBuilder currentWord = null;
+                var lineText = _gateway.GetLineText(lineIndex);
+
+                for (int i = 0; i < lineText.Length; i++)
                 {
-                    lineIndex++;
+                    var ch = lineText[i];
 
-                    if (!_gateway.GetLineVisible(lineIndex)) continue;
-                    if (lineIndex >= totalLinesCount) return;
-
-                    visibleLinesCounter++;
-
-                    var isEscape = false;
-                    StringBuilder currentWord = null;
-                    var lineText = _gateway.GetLineText(lineIndex);
-
-                    for (int i = 0; i < lineText.Length; i++)
+                    if (!isEscape && ch == '"')
                     {
-                        var ch = lineText[i];
-
-                        if (!isEscape && ch == '"')
+                        if (currentWord == null)
                         {
-                            if (currentWord == null)
-                            {
-                                currentWord = new StringBuilder();
-                            }
-                            else
-                            {
-                                string word = currentWord.ToString();
-                                var wordLength = word.Length;
-                                if (IsNeedToHighlightWord(word, lineIndex, i - wordLength))
-                                {
-                                    int position = _gateway.LineToPosition(lineIndex) + i - wordLength;
-                                    HighlightWord(position, wordLength);
-                                }
-
-                                currentWord = null;
-                            }
+                            currentWord = new StringBuilder();
                         }
-                        else if (currentWord != null)
+                        else
                         {
-                            if (ch.IsPartOfWord())
-                                currentWord.Append(ch);
-                            else
-                                currentWord = null;
-                        }
+                            string word = currentWord.ToString();
+                            var wordLength = word.Length;
+                            if (IsNeedToHighlightWord(word, lineIndex, i - wordLength))
+                            {
+                                int position = _gateway.LineToPosition(lineIndex) + i - wordLength;
+                                HighlightWord(position, wordLength);
+                            }
 
-                        isEscape = !isEscape && ch == '\\';
+                            currentWord = null;
+                        }
                     }
+                    else if (currentWord != null)
+                    {
+                        if (ch.IsPartOfWord())
+                            currentWord.Append(ch);
+                        else
+                            currentWord = null;
+                    }
+
+                    isEscape = !isEscape && ch == '\\';
                 }
-            });
+            }
         }
 
         private bool IsNeedToHighlightWord(string word, int lineIndex, int indexOfWord)

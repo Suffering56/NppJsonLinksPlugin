@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using NppJsonLinksPlugin.Core;
 
 namespace NppJsonLinksPlugin.Logic.Parser.Json
 {
@@ -37,33 +34,6 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
                     }
                 }
             }
-        }
-
-        public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
-        {
-            LogicUtils.CallSafe(() =>
-            {
-                int lineNumber = 0;
-                string lineText;
-                using StreamReader sr = new StreamReader(filePath);
-                while ((lineText = sr.ReadLine()) != null)
-                {
-                    foreach (var dstWord in expectedWords)
-                    {
-                        var dstWordString = dstWord.GetWordString();
-
-                        if (!lineText.Contains($"\"{dstWordString}\"")) continue;
-
-                        string value = ExtractTokenValueByLine(lineText, dstWordString);
-                        if (value != null)
-                        {
-                            valueConsumer.Invoke(dstWord, lineNumber, value);
-                        }
-                    }
-
-                    lineNumber++;
-                }
-            });
         }
 
         private static void ParseComplexWord(JsonToken tokenType, object? value, Word dstWord, ref string propertyName, Stack<string> propertyStack, Action<string> valueConsumer)
@@ -190,20 +160,45 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             valueConsumer.Invoke(valueString);
             expectedWord = null;
         }
-
-        private const string TOKEN_VALUE_PATTERN = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
-
-        private static string ExtractTokenValueByLine(string lineText, string propertyName)
-        {
-            string pattern = new StringBuilder(TOKEN_VALUE_PATTERN).Replace("[PROPERTY_NAME]", propertyName).ToString();
-
-            var match = new Regex(pattern).Match(lineText);
-            if (!match.Success) return null;
-
-            var matchGroup = match.Groups[1];
-            return matchGroup.Success
-                ? matchGroup.Value
-                : null;
-        }
+        
+        // TODO: fix and use it
+        // public void ParseInvalidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
+        // {
+        //     int lineNumber = 0;
+        //     string lineText;
+        //     using StreamReader sr = new StreamReader(filePath);
+        //     while ((lineText = sr.ReadLine()) != null)
+        //     {
+        //         foreach (var dstWord in expectedWords)
+        //         {
+        //             var dstWordString = dstWord.GetWordString();
+        //
+        //             if (!lineText.Contains($"\"{dstWordString}\"")) continue;
+        //
+        //             string value = ExtractTokenValueByLine(lineText, dstWordString);
+        //             if (value != null)
+        //             {
+        //                 valueConsumer.Invoke(dstWord, lineNumber, value);
+        //             }
+        //         }
+        //
+        //         lineNumber++;
+        //     }
+        // }
+        //
+        // private const string TOKEN_VALUE_PATTERN = "^.*\"[PROPERTY_NAME]\"\\s*:\\s*\"?([\\w|\\.]+)\"?\\s*";
+        //
+        // private static string ExtractTokenValueByLine(string lineText, string propertyName)
+        // {
+        //     string pattern = new StringBuilder(TOKEN_VALUE_PATTERN).Replace("[PROPERTY_NAME]", propertyName).ToString();
+        //
+        //     var match = new Regex(pattern).Match(lineText);
+        //     if (!match.Success) return null;
+        //
+        //     var matchGroup = match.Groups[1];
+        //     return matchGroup.Success
+        //         ? matchGroup.Value
+        //         : null;
+        // }
     }
 }

@@ -186,25 +186,19 @@ namespace NppJsonLinksPlugin.Logic
 
                 if (!File.Exists(DstFilePath))
                 {
-                    Logger.Error($"dstFile={DstFilePath} not exist");
+                    Logger.Error($"dstFile={DstFilePath} not exist", null, true);
                     return;
                 }
 
                 try
                 {
                     _parser.ParseValidDocument(DstFilePath, _dstWordToValuesLocationContainer.Keys, OnDstValueFound);
+                    _inited = true;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    if (_hasComplexWords)
-                    {
-                        Logger.Error($"cannot parse invalid json file: {DstFilePath}");
-                    }
-
-                    _parser.ParseInvalidDocument(DstFilePath, _dstWordToValuesLocationContainer.Keys, OnDstValueFound);
+                    Logger.Error($"cannot parse invalid json file: {DstFilePath}", e, true);
                 }
-
-                _inited = true;
             }
 
             private void ClearIfChanged()
