@@ -31,6 +31,7 @@ namespace NppJsonLinksPlugin
         private static readonly SearchEngine SearchEngine = new SearchEngine();
         private static readonly NavigationHandler NavigationHandler = new NavigationHandler(JumpToLocation);
         private static LinksHighlighter _linksHighlighter = null;
+
         private static readonly Func<string, IScintillaGateway, ISearchContext> SearchContextFactory = (clickedWord, gateway) => new JsonSearchContext(
             clickedWord,
             gateway,
@@ -39,7 +40,7 @@ namespace NppJsonLinksPlugin
         );
 
 
-        private static frmMyDlg _frmMyDlg = null;
+        private static SettingsForm _settingsForm = null;
         private static int _idMyDlg = 1;
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
@@ -134,17 +135,16 @@ namespace NppJsonLinksPlugin
                 DisablePlugin();
             }
 
-            // PluginBase.SetCommand(1, "MyDockableDialog", myDockableDialog);
-
-            PluginBase.SetCommand(1, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5));
-            PluginBase.SetCommand(2, "", null);
+            PluginBase.SetCommand(1, "Settings", ShowSettingsForm, new ShortcutKey(true, false, false, Keys.F1));
+            PluginBase.SetCommand(2, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5)); //TODO move to settingsForm
+            // PluginBase.SetCommand(2, "", null);
 
             PluginBase.SetCommand(3, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
             PluginBase.SetCommand(4, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
             PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(6, "", null);
 
-            PluginBase.SetCommand(7, "Version", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
+            PluginBase.SetCommand(7, "About", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
         }
 
         public static void OnNotification(ScNotification notification)
@@ -277,11 +277,11 @@ namespace NppJsonLinksPlugin
 
         #region " Layout Base "
 
-        internal static void myDockableDialog()
+        private static void ShowSettingsForm()
         {
-            if (_frmMyDlg == null)
+            if (_settingsForm == null)
             {
-                _frmMyDlg = new frmMyDlg();
+                _settingsForm = new SettingsForm();
 
                 using (Bitmap newBmp = new Bitmap(16, 16))
                 {
@@ -296,23 +296,21 @@ namespace NppJsonLinksPlugin
                     _tbIcon = Icon.FromHandle(newBmp.GetHicon());
                 }
 
-                NppTbData _nppTbData = new NppTbData();
-                _nppTbData.hClient = _frmMyDlg.Handle;
-                _nppTbData.pszName = "My dockable dialog";
-                _nppTbData.dlgID = _idMyDlg;
-                _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
-                _nppTbData.hIconTab = (uint) _tbIcon.Handle;
-                _nppTbData.pszModuleName = PLUGIN_NAME;
-                IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
-                Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
+                // NppTbData _nppTbData = new NppTbData();
+                // _nppTbData.hClient = _settingsForm.Handle;
+                // _nppTbData.pszName = "My dockable dialog";
+                // _nppTbData.dlgID = _idMyDlg;
+                // _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
+                // _nppTbData.hIconTab = (uint) _tbIcon.Handle;
+                // _nppTbData.pszModuleName = PLUGIN_NAME;
+                // IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
+                // Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
 
-                Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
+                // Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
+                // Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _settingsForm.Handle);
             }
 
-            else
-            {
-                Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _frmMyDlg.Handle);
-            }
+            _settingsForm.ShowDialog();
         }
 
         internal static void SetToolBarIcon()

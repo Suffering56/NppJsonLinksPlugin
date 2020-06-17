@@ -75,6 +75,12 @@
     <Compile Include="Core\UserInputHandler.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
     <Compile Include="Core\Utils.cs" />
+    <Compile Include="Forms\SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SettingsForm.Designer.cs">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Logic\Context\ISearchContext.cs" />
     <Compile Include="Logic\Context\JsonSearchContext.cs" />
     <Compile Include="Logic\Context\Property.cs" />
@@ -87,12 +93,6 @@
     <Compile Include="Logic\SearchEngine.cs" />
     <Compile Include="PluginInfrastructure\ClikeStringArray.cs" />
     <Compile Include="PluginInfrastructure\DllExport\DllExportAttribute.cs" />
-    <Compile Include="Forms\frmMyDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\frmMyDlg.Designer.cs">
-      <DependentUpon>frmMyDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="PluginInfrastructure\Gateway\ExtendedScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\Gateway\IExtendedScintillaGateway.cs" />
     <Compile Include="PluginInfrastructure\Gateway\IScintillaGateway.cs" />
@@ -120,8 +120,8 @@
     <Compile Include="Configuration\Settings.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Forms\frmMyDlg.resx">
-      <DependentUpon>frmMyDlg.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\SettingsForm.resx">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

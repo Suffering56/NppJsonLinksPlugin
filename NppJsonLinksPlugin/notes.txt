@@ -50,22 +50,15 @@ necessary:
    + LinksHighlighter.COLLAPSED_LINES_LIMIT: если сколлапсить json-объект длиной в много тыщ строк, этот сколлапшенный кусок будет где-то в видимой части экрана, то NPP начинает дико тормозить. 
         + move to settings.processingHighlightedLinesLimit
        
+   - menu -> settingsForm
+    
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
-        
-   - перезагрузка настроек после рестарта NPP
-  
-    - menu -> settings:
-       highlighting_enabled=true
-       sound_enabled=true
-       jump_to_line_delay=100
-       mapping_default_file_path=F:/gd_data
-        
-    
-        
-    - ролик-превьюшка
+   
+   - подумать над дефолтными настройками (особенно над логированием)     
+   - ролик-превьюшка
         
 unnecessary:
     - изменить работу forward/backward:
@@ -76,18 +69,18 @@ unnecessary:
     - иногда GetCurrentWord возвращает кусок слова и соответственно ctrl + click не срабатывает. это можно пофиксить прям в IScintillaGateway
     
     - GetParentPropertyName: TODO: было бы неплохо возвращать null если json невалиден
-
+    
+    - ParseInvalidDocument: если dst-json невалиден мы просто дропаем ошибку хотя могли бы распарсить файл своими усилиями
+    
+    
+    
     - settings.cacheEnabled: фиксировать добавление удаление строк: строки просто в истории какой-то хранить, а ссылки удалять. PS: не забыть про collapsed lines
+        - gateway.getTextFromPosition плохо работает с русскими символами (если вставить текст "12345\r\nы\r\nы") то getTextFromPosition вернет  "2345\r\nы\r\nы"
+                - выглядит так словно бага проявляется если последний введенный/вставленный символ - кириллический.
+                - шанс на багу оч мал, поэтому пока можно забить, хотя неприятно
+        - многократный вызов NPPN_BUFFERACTIVATED при релоаде файла (если файл изменили за пределами NPP)   
+                - стоит посмотреть в сторону Main._isFileLoadingActive (мб там тоже самое)        
     
-    - ParseInvalidDocument: 
-    
-    - gateway.getTextFromPosition плохо работает с русскими символами (если вставить текст "12345\r\nы\r\nы") то getTextFromPosition вернет  "2345\r\nы\r\nы"
-        - выглядит так словно бага проявляется если последний введенный/вставленный символ - кириллический.
-        - шанс на багу оч мал, поэтому пока можно забить, хотя неприятно
-        
-    - многократный вызов NPPN_BUFFERACTIVATED при релоаде файла (если файл изменили за пределами NPP)   
-        - // стоит посмотреть в сторону Main._isFileLoadingActive (мб там тоже самое)
-        
     - поддержка 64-битной версии:
         - почему-то на 64-битной версии NPP notification.ModificationType всегда = 0, и вообще как-то там плохо парсится ScNotification
         - MouseHook хорошо работал на 64 битной версии (вроде), но иногда слетал и в целом подход такой себе. Новый подход (через SetWindowLongW) так же не работает на 64-битной версии 
