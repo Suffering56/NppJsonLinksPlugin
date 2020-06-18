@@ -17,17 +17,36 @@ namespace NppJsonLinksPlugin.Configuration
     {
         public static Settings Load(IniConfig iniConfig)
         {
-            var uri = new Uri(iniConfig.SettingsJsonUri);
+            var rawSettings = Parse(iniConfig.SettingsJsonUri);
+            Settings settings = ConvertRawSettings(rawSettings, iniConfig);
+
+            Validate(settings);
+
+            return settings;
+        }
+
+        public static RawSettings Parse(string settingsUri)
+        {
+            var uri = ToUri(settingsUri);
             string settingsString = uri.IsFile
                 ? File.ReadAllText(uri.AbsolutePath)
                 : ReadRemoteSettings(uri);
 
             var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
-            Settings settings = ConvertRawSettings(rawSettings, iniConfig);
-            
-            Validate(settings);
+            return rawSettings;
+        }
 
-            return settings;
+        private static Uri ToUri(string uri)
+        {
+            try
+            {
+                return new Uri(uri);
+            }
+            catch (Exception)
+            {
+                Logger.Error($"URI is not valid: \"{uri}\"", null, true);
+                throw;
+            }
         }
 
         private static string ReadRemoteSettings(Uri uri)
@@ -71,13 +90,18 @@ namespace NppJsonLinksPlugin.Configuration
                 })
                 .ToList();
 
+            return MergeWithConfig(rawSettings, iniConfig, mappingItems);
+        }
+
+        private static Settings MergeWithConfig(RawSettings rawSettings, IniConfig iniConfig, List<Settings.MappingItem> mappingItems)
+        {
             return new Settings
             {
-                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled,                                              // override by ini
-                ProcessingHighlightedLinesLimit = iniConfig.ProcessingHighlightedLinesLimit ?? rawSettings.ProcessingHighlightedLinesLimit,          // override by ini 
-                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled,                                                                   // override by ini
-                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay,                                                          // override by ini
-                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath,                                     // override by ini
+                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled, // override by ini
+                ProcessingHighlightedLinesLimit = iniConfig.ProcessingHighlightedLinesLimit ?? rawSettings.ProcessingHighlightedLinesLimit, // override by ini 
+                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled, // override by ini
+                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay, // override by ini
+                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath, // override by ini
                 Mapping = mappingItems
             };
         }

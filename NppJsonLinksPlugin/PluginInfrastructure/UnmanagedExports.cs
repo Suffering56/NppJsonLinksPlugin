@@ -51,7 +51,6 @@ namespace NppJsonLinksPlugin.PluginInfrastructure
             if (notification.Header.Code == (uint) NppMsg.NPPN_TBMODIFICATION)
             {
                 PluginBase._funcItems.RefreshItems();
-                Main.SetToolBarIcon();
             }
             else if (notification.Header.Code == (uint) NppMsg.NPPN_SHUTDOWN)
             {

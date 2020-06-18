@@ -275,58 +275,18 @@ namespace NppJsonLinksPlugin
             UserInputHandler.Disable();
         }
 
-        #region " Layout Base "
-
         private static void ShowSettingsForm()
         {
-            if (_settingsForm == null)
+            _settingsForm ??= new SettingsForm();
+            var modifiedConfig = _iniConfig.Clone();
+            
+            if (_settingsForm.ShowDialog(modifiedConfig, _settings) == DialogResult.OK)
             {
-                _settingsForm = new SettingsForm();
-
-                using (Bitmap newBmp = new Bitmap(16, 16))
+                if (modifiedConfig.Save())
                 {
-                    Graphics g = Graphics.FromImage(newBmp);
-                    ColorMap[] colorMap = new ColorMap[1];
-                    colorMap[0] = new ColorMap();
-                    colorMap[0].OldColor = Color.Fuchsia;
-                    colorMap[0].NewColor = Color.FromKnownColor(KnownColor.ButtonFace);
-                    ImageAttributes attr = new ImageAttributes();
-                    attr.SetRemapTable(colorMap);
-                    g.DrawImage(TbBmpTbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
-                    _tbIcon = Icon.FromHandle(newBmp.GetHicon());
+                    ReloadPlugin();
                 }
-
-                // NppTbData _nppTbData = new NppTbData();
-                // _nppTbData.hClient = _settingsForm.Handle;
-                // _nppTbData.pszName = "My dockable dialog";
-                // _nppTbData.dlgID = _idMyDlg;
-                // _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
-                // _nppTbData.hIconTab = (uint) _tbIcon.Handle;
-                // _nppTbData.pszModuleName = PLUGIN_NAME;
-                // IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
-                // Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
-
-                // Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
-                // Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _settingsForm.Handle);
-            }
-
-
-            if (_settingsForm.ShowDialog(_iniConfig.Clone(), _settings) == DialogResult.OK)
-            {
-                ReloadPlugin();
             }
         }
-
-        internal static void SetToolBarIcon()
-        {
-            toolbarIcons tbIcons = new toolbarIcons();
-            tbIcons.hToolbarBmp = TbBmp.GetHbitmap();
-            IntPtr pTbIcons = Marshal.AllocHGlobal(Marshal.SizeOf(tbIcons));
-            Marshal.StructureToPtr(tbIcons, pTbIcons, false);
-            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_ADDTOOLBARICON, PluginBase._funcItems.Items[_idMyDlg]._cmdID, pTbIcons);
-            Marshal.FreeHGlobal(pTbIcons);
-        }
-
-        #endregion " Layout Base "
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using NppJsonLinksPlugin.Core;
 
 namespace NppJsonLinksPlugin.Forms
 {
@@ -19,7 +20,6 @@ namespace NppJsonLinksPlugin.Forms
 
             textBox.GotFocus += TryHidePlaceholder;
             textBox.LostFocus += TryShowPlaceholder;
-            // textBox.TextChanged += OnTextChanged;
         }
 
         public void SetInitialText(string text)
@@ -29,12 +29,19 @@ namespace NppJsonLinksPlugin.Forms
             DisablePlaceholder();
         }
 
-        private void OnTextChanged(object sender, EventArgs e)
+        public string GetText()
         {
             if (_placeholderActive)
             {
-                DisablePlaceholder();
+                return "";
             }
+
+            return _textBox.Text;
+        }
+
+        public int? GetInt()
+        {
+            return ConvertUtils.ToInt(GetText());
         }
 
         private void TryHidePlaceholder(object sender, EventArgs e)

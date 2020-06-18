@@ -53,9 +53,9 @@ namespace NppJsonLinksPlugin.Configuration
             };
         }
 
-        public void Save()
+        public bool Save()
         {
-            IniConfigParser.Save(this);
+            return IniConfigParser.Save(this);
         }
     }
 
@@ -89,18 +89,29 @@ namespace NppJsonLinksPlugin.Configuration
             };
         }
 
-        internal static void Save(IniConfig config)
+        internal static bool Save(IniConfig config)
         {
-            WriteString(SECTION_GLOBAL, "settings_uri", config.SettingsJsonUri);
+            try
+            {
+                Logger.Info("Saving config.ini...");
 
-            WriteString(SECTION_LOGGER, "logs_dir", config.LogsDir);
-            WriteString(SECTION_LOGGER, "logger_mode", config.LoggerMode);
+                WriteString(SECTION_GLOBAL, "settings_uri", config.SettingsJsonUri);
 
-            WriteString(SECTION_OVERRIDE, "highlighting_enabled", config.HighlightingEnabled);
-            WriteString(SECTION_OVERRIDE, "processing_highlighted_lines_limit", config.ProcessingHighlightedLinesLimit);
-            WriteString(SECTION_OVERRIDE, "sound_enabled", config.SoundEnabled);
-            WriteString(SECTION_OVERRIDE, "jump_to_line_delay", config.JumpToLineDelay);
-            WriteString(SECTION_OVERRIDE, "mapping_default_file_path", config.MappingDefaultFilePath);
+                WriteString(SECTION_LOGGER, "logs_dir", config.LogsDir);
+                WriteString(SECTION_LOGGER, "logger_mode", config.LoggerMode);
+
+                WriteString(SECTION_OVERRIDE, "highlighting_enabled", config.HighlightingEnabled);
+                WriteString(SECTION_OVERRIDE, "processing_highlighted_lines_limit", config.ProcessingHighlightedLinesLimit);
+                WriteString(SECTION_OVERRIDE, "sound_enabled", config.SoundEnabled);
+                WriteString(SECTION_OVERRIDE, "jump_to_line_delay", config.JumpToLineDelay);
+                WriteString(SECTION_OVERRIDE, "mapping_default_file_path", config.MappingDefaultFilePath);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error("couldn't save config.ini", e, true);
+                return false;
+            }
         }
 
         private static void WriteString(string section, string propertyName, object value)
@@ -108,7 +119,6 @@ namespace NppJsonLinksPlugin.Configuration
             if (value == null) return;
             Win32.WritePrivateProfileString(section, propertyName, value.ToString(), _iniFilePath);
         }
-
 
         private static string ReadString(string section, string propertyName)
         {
@@ -122,36 +132,23 @@ namespace NppJsonLinksPlugin.Configuration
         private static bool? ReadBool(string section, string propertyName)
         {
             var str = ReadString(section, propertyName);
-            if (bool.TryParse(str, out bool result))
-            {
-                return result;
-            }
-
-            return null;
+            return ConvertUtils.ToBool(str);
         }
 
         private static int? ReadInt(string section, string propertyName)
         {
             var str = ReadString(section, propertyName);
-            if (int.TryParse(str, out int result))
-            {
-                return result;
-            }
-
-            return null;
+            return ConvertUtils.ToInt(str);
         }
 
         private static Logger.Mode ReadLoggerMode(string section, string propertyName, string iniFilePath, Logger.Mode defaultValue)
         {
-            var rawLoggerMode = ReadString(section, propertyName);
+            var loggerMode = ConvertUtils.ToLoggerMode(
+                ReadString(section, propertyName),
+                () => $"cannot read {section}.{propertyName} from config=\"{iniFilePath}\". Logger mode will set to: {defaultValue}"
+            );
 
-            if (rawLoggerMode == null || !Enum.TryParse(rawLoggerMode, true, out Logger.Mode loggerMode))
-            {
-                Logger.Error($"cannot read {section}.{propertyName} from config=\"{iniFilePath}\". Logger mode will set to: {defaultValue}", null, true);
-                return defaultValue;
-            }
-
-            return loggerMode;
+            return loggerMode ?? defaultValue;
         }
     }
 }

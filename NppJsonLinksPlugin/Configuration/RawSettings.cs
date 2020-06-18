@@ -8,7 +8,7 @@ namespace NppJsonLinksPlugin.Configuration
     {
         [JsonProperty(PropertyName = "highlightingEnabled")]
         public bool HighlightingEnabled = true;
-        
+
         [JsonProperty(PropertyName = "processingHighlightedLinesLimit")]
         public int ProcessingHighlightedLinesLimit = AppConstants.DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT;
         
@@ -19,11 +19,11 @@ namespace NppJsonLinksPlugin.Configuration
         public int JumpToLineDelay = AppConstants.DEFAULT_JUMP_TO_LINE_DELAY;
 
         [JsonProperty(PropertyName = "mappingDefaultFilePath")]
-        public string MappingDefaultFilePath;
+        public string MappingDefaultFilePath = null;
 
         [JsonProperty(PropertyName = "mapping")]
         public IList<RawMappingItem> Mapping;
-
+        
         [JsonObject]
         public class RawMappingItem
         {

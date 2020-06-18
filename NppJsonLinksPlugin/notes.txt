@@ -49,15 +49,19 @@ necessary:
    + Reload plugin
    + LinksHighlighter.COLLAPSED_LINES_LIMIT: если сколлапсить json-объект длиной в много тыщ строк, этот сколлапшенный кусок будет где-то в видимой части экрана, то NPP начинает дико тормозить. 
         + move to settings.processingHighlightedLinesLimit
-       
-   - menu -> settingsForm
-    
+   + menu -> settingsForm
+        + textBox placeholder
+        + save/cancel
+        - tabIndex
+        - label hints
+        +- resetButton
+        - подумать над значениями дефолтных настроек (особенно над логированием) 
+
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
    
-   - подумать над дефолтными настройками (особенно над логированием)     
    - ролик-превьюшка
         
 unnecessary:

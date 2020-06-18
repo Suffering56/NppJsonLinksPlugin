@@ -13,6 +13,69 @@ namespace NppJsonLinksPlugin.Core
         }
     }
 
+    public static class ConvertUtils
+    {
+        public static int? ToInt(string str)
+        {
+            return ToInt(str, () => "cannot parse value=\"{str}\" to int");
+        }
+
+        public static int? ToInt(string str, Func<string> errorMsgSupplier)
+        {
+            if (str == null) return null;
+
+            if (int.TryParse(str, out int result))
+            {
+                return result;
+            }
+
+            TryShowError(errorMsgSupplier);
+            return null;
+        }
+
+        public static bool? ToBool(string str)
+        {
+            return ToBool(str, () => $"cannot parse value=\"{str}\" to bool");
+        }
+
+        public static bool? ToBool(string str, Func<string> errorMsgSupplier)
+        {
+            if (str == null) return null;
+
+            if (bool.TryParse(str, out bool result))
+            {
+                return result;
+            }
+
+            TryShowError(errorMsgSupplier);
+            return null;
+        }
+
+        public static Logger.Mode? ToLoggerMode(string str)
+        {
+            return ToLoggerMode(str, () => $"cannot parse value=\"{str}\" to Logger.Mode");
+        }
+
+        public static Logger.Mode? ToLoggerMode(string str, Func<string> errorMsgSupplier)
+        {
+            if (str == null) return null;
+
+            if (Enum.TryParse(str, out Logger.Mode result))
+            {
+                return result;
+            }
+
+            TryShowError(errorMsgSupplier);
+            return null;
+        }
+
+        private static void TryShowError(Func<string> errorMsgSupplier)
+        {
+            if (errorMsgSupplier == null) return;
+            Logger.Error(errorMsgSupplier.Invoke(), null, true);
+        }
+    }
+
     public static class ThreadUtils
     {
         public static void ExecuteDelayed(Action runnable, int delay)

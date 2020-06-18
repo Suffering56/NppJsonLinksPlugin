@@ -50,10 +50,12 @@ namespace NppJsonLinksPlugin.Forms
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.jumpToLineDelayTextbox = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.TableLayoutPanel();
             this.cancelButton = new System.Windows.Forms.Button();
             this.saveButton = new System.Windows.Forms.Button();
-            this.sss = new System.Windows.Forms.Button();
+            this.resetDefaultsButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -64,10 +66,8 @@ namespace NppJsonLinksPlugin.Forms
             this.defaultMappingPathTextbox.Location = new System.Drawing.Point(230, 138);
             this.defaultMappingPathTextbox.Margin = new System.Windows.Forms.Padding(0);
             this.defaultMappingPathTextbox.Name = "defaultMappingPathTextbox";
-            this.defaultMappingPathTextbox.Size = new System.Drawing.Size(411, 22);
+            this.defaultMappingPathTextbox.Size = new System.Drawing.Size(417, 22);
             this.defaultMappingPathTextbox.TabIndex = 12;
-            defaultMappingPathTextboxWrapper = addPlaceholder(defaultMappingPathTextbox, AppConstants.DEFAULT_MAPPING_PATH_PLACEHOLDER);
-
             // 
             // soundEnabledComboBox
             // 
@@ -78,7 +78,7 @@ namespace NppJsonLinksPlugin.Forms
             this.soundEnabledComboBox.Location = new System.Drawing.Point(230, 231);
             this.soundEnabledComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.soundEnabledComboBox.Name = "soundEnabledComboBox";
-            this.soundEnabledComboBox.Size = new System.Drawing.Size(411, 24);
+            this.soundEnabledComboBox.Size = new System.Drawing.Size(417, 24);
             this.soundEnabledComboBox.TabIndex = 11;
             // 
             // highlightingLinesLimitTextbox
@@ -87,10 +87,8 @@ namespace NppJsonLinksPlugin.Forms
             this.highlightingLinesLimitTextbox.Location = new System.Drawing.Point(230, 202);
             this.highlightingLinesLimitTextbox.Margin = new System.Windows.Forms.Padding(0);
             this.highlightingLinesLimitTextbox.Name = "highlightingLinesLimitTextbox";
-            this.highlightingLinesLimitTextbox.Size = new System.Drawing.Size(411, 22);
+            this.highlightingLinesLimitTextbox.Size = new System.Drawing.Size(417, 22);
             this.highlightingLinesLimitTextbox.TabIndex = 9;
-            highlightingLinesLimitTextboxWrapper = addPlaceholder(highlightingLinesLimitTextbox, AppConstants.DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT.ToString());
-
             // 
             // highlightingEnabledComboBox
             // 
@@ -101,7 +99,7 @@ namespace NppJsonLinksPlugin.Forms
             this.highlightingEnabledComboBox.Location = new System.Drawing.Point(230, 167);
             this.highlightingEnabledComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.highlightingEnabledComboBox.Name = "highlightingEnabledComboBox";
-            this.highlightingEnabledComboBox.Size = new System.Drawing.Size(411, 24);
+            this.highlightingEnabledComboBox.Size = new System.Drawing.Size(417, 24);
             this.highlightingEnabledComboBox.TabIndex = 7;
             // 
             // loggerModeComboBox
@@ -113,7 +111,7 @@ namespace NppJsonLinksPlugin.Forms
             this.loggerModeComboBox.Location = new System.Drawing.Point(230, 87);
             this.loggerModeComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.loggerModeComboBox.Name = "loggerModeComboBox";
-            this.loggerModeComboBox.Size = new System.Drawing.Size(411, 24);
+            this.loggerModeComboBox.Size = new System.Drawing.Size(417, 24);
             this.loggerModeComboBox.TabIndex = 5;
             // 
             // loggerPathTextbox
@@ -122,10 +120,8 @@ namespace NppJsonLinksPlugin.Forms
             this.loggerPathTextbox.Location = new System.Drawing.Point(230, 58);
             this.loggerPathTextbox.Margin = new System.Windows.Forms.Padding(0);
             this.loggerPathTextbox.Name = "loggerPathTextbox";
-            this.loggerPathTextbox.Size = new System.Drawing.Size(411, 22);
+            this.loggerPathTextbox.Size = new System.Drawing.Size(417, 22);
             this.loggerPathTextbox.TabIndex = 3;
-            loggerPathTextboxWrapper = addPlaceholder(loggerPathTextbox, AppConstants.LOGGER_PATH_PLACEHOLDER);
-
             // 
             // settingsJsonUriTextbox
             // 
@@ -133,9 +129,8 @@ namespace NppJsonLinksPlugin.Forms
             this.settingsJsonUriTextbox.Location = new System.Drawing.Point(230, 10);
             this.settingsJsonUriTextbox.Margin = new System.Windows.Forms.Padding(0);
             this.settingsJsonUriTextbox.Name = "settingsJsonUriTextbox";
-            this.settingsJsonUriTextbox.Size = new System.Drawing.Size(411, 22);
+            this.settingsJsonUriTextbox.Size = new System.Drawing.Size(417, 22);
             this.settingsJsonUriTextbox.TabIndex = 1;
-            settingsJsonUriTextboxWrapper = addPlaceholder(settingsJsonUriTextbox, AppConstants.SETTINGS_JSON_URI_PLACEHOLDER);
             // 
             // label1
             // 
@@ -226,8 +221,10 @@ namespace NppJsonLinksPlugin.Forms
             this.tableLayoutPanel1.BackColor = System.Drawing.SystemColors.Control;
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 230F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 411F));
-            this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 10);
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 417F));
+            this.tableLayoutPanel1.Controls.Add(this.jumpToLineDelayTextbox, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.label8, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 11);
             this.tableLayoutPanel1.Controls.Add(this.label6, 0, 8);
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 6);
@@ -247,20 +244,42 @@ namespace NppJsonLinksPlugin.Forms
             this.tableLayoutPanel1.Location = new System.Drawing.Point(20, 16);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 11;
+            this.tableLayoutPanel1.RowCount = 12;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 16F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 16F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 16F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(641, 356);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(647, 375);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // jumpToLineDelayTextbox
+            // 
+            this.jumpToLineDelayTextbox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.jumpToLineDelayTextbox.Location = new System.Drawing.Point(230, 266);
+            this.jumpToLineDelayTextbox.Margin = new System.Windows.Forms.Padding(0);
+            this.jumpToLineDelayTextbox.Name = "jumpToLineDelayTextbox";
+            this.jumpToLineDelayTextbox.Size = new System.Drawing.Size(417, 22);
+            this.jumpToLineDelayTextbox.TabIndex = 15;
+            // 
+            // label8
+            // 
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.label8.BackColor = System.Drawing.SystemColors.Control;
+            this.label8.Location = new System.Drawing.Point(0, 256);
+            this.label8.Margin = new System.Windows.Forms.Padding(0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(230, 32);
+            this.label8.TabIndex = 14;
+            this.label8.Text = "Jump to line delay:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // panel1
             // 
@@ -274,59 +293,62 @@ namespace NppJsonLinksPlugin.Forms
             this.panel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.panel1.Controls.Add(this.cancelButton, 1, 2);
             this.panel1.Controls.Add(this.saveButton, 3, 2);
-            this.panel1.Controls.Add(this.sss, 3, 0);
+            this.panel1.Controls.Add(this.resetDefaultsButton, 3, 0);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(3, 275);
+            this.panel1.Location = new System.Drawing.Point(3, 307);
             this.panel1.Name = "panel1";
             this.panel1.RowCount = 4;
             this.panel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
             this.panel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 16F));
             this.panel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
             this.panel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.panel1.Size = new System.Drawing.Size(635, 104);
+            this.panel1.Size = new System.Drawing.Size(641, 104);
             this.panel1.TabIndex = 0;
             // 
             // cancelButton
             // 
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancelButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cancelButton.Location = new System.Drawing.Point(95, 40);
+            this.cancelButton.Location = new System.Drawing.Point(96, 40);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(0);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(190, 24);
+            this.cancelButton.Size = new System.Drawing.Size(192, 24);
             this.cancelButton.TabIndex = 0;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // saveButton
             // 
             this.saveButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.saveButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.saveButton.Location = new System.Drawing.Point(348, 40);
+            this.saveButton.Location = new System.Drawing.Point(352, 40);
             this.saveButton.Margin = new System.Windows.Forms.Padding(0);
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(190, 24);
+            this.saveButton.Size = new System.Drawing.Size(192, 24);
             this.saveButton.TabIndex = 1;
             this.saveButton.Text = "Save";
             this.saveButton.UseVisualStyleBackColor = true;
+            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
             // 
-            // sss
+            // restoreButton
             // 
-            this.panel1.SetColumnSpan(this.sss, 2);
-            this.sss.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sss.Location = new System.Drawing.Point(348, 0);
-            this.sss.Margin = new System.Windows.Forms.Padding(0);
-            this.sss.Name = "sss";
-            this.sss.Size = new System.Drawing.Size(287, 24);
-            this.sss.TabIndex = 2;
-            this.sss.Text = "Restore settings from json";
-            this.sss.UseVisualStyleBackColor = true;
+            this.panel1.SetColumnSpan(this.resetDefaultsButton, 2);
+            this.resetDefaultsButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.resetDefaultsButton.Location = new System.Drawing.Point(352, 0);
+            this.resetDefaultsButton.Margin = new System.Windows.Forms.Padding(0);
+            this.resetDefaultsButton.Name = "resetDefaultsButton";
+            this.resetDefaultsButton.Size = new System.Drawing.Size(289, 24);
+            this.resetDefaultsButton.TabIndex = 2;
+            this.resetDefaultsButton.Text = "Reset to default";
+            this.resetDefaultsButton.UseVisualStyleBackColor = true;
+            this.resetDefaultsButton.Click += new System.EventHandler(this.restoreButton_Click);
             // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(681, 388);
+            this.ClientSize = new System.Drawing.Size(687, 407);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "SettingsForm";
             this.Padding = new System.Windows.Forms.Padding(20, 16, 20, 16);
@@ -343,6 +365,7 @@ namespace NppJsonLinksPlugin.Forms
         private System.Windows.Forms.TextBox defaultMappingPathTextbox;
         private System.Windows.Forms.ComboBox highlightingEnabledComboBox;
         private System.Windows.Forms.TextBox highlightingLinesLimitTextbox;
+        private System.Windows.Forms.TextBox jumpToLineDelayTextbox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
@@ -350,13 +373,14 @@ namespace NppJsonLinksPlugin.Forms
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox loggerModeComboBox;
         private System.Windows.Forms.TextBox loggerPathTextbox;
         private System.Windows.Forms.TableLayoutPanel panel1;
+        private System.Windows.Forms.Button resetDefaultsButton;
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.TextBox settingsJsonUriTextbox;
         private System.Windows.Forms.ComboBox soundEnabledComboBox;
-        private System.Windows.Forms.Button sss;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
 
         #endregion
