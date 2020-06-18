@@ -75,6 +75,7 @@
     <Compile Include="Core\UserInputHandler.cs" />
     <Compile Include="Core\NullableDictionary.cs" />
     <Compile Include="Core\Utils.cs" />
+    <Compile Include="Forms\TextboxWrapper.cs" />
     <Compile Include="Forms\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>

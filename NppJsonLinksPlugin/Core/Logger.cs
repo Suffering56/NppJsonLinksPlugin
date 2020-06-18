@@ -12,9 +12,9 @@ namespace NppJsonLinksPlugin.Core
     {
         public enum Mode
         {
-            ENABLED,
-            ONLY_ERRORS,
-            DISABLED,
+            ENABLED = 0,
+            ONLY_ERRORS = 1,
+            DISABLED = 2,
         }
 
         private static Mode _mode = AppConstants.DEFAULT_LOGGER_MODE;

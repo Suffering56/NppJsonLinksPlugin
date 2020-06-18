@@ -310,7 +310,11 @@ namespace NppJsonLinksPlugin
                 // Win32.SendMessage(PluginBase.nppData._nppHandle, (uint) NppMsg.NPPM_DMMSHOW, 0, _settingsForm.Handle);
             }
 
-            _settingsForm.ShowDialog();
+
+            if (_settingsForm.ShowDialog(_iniConfig.Clone(), _settings) == DialogResult.OK)
+            {
+                ReloadPlugin();
+            }
         }
 
         internal static void SetToolBarIcon()
