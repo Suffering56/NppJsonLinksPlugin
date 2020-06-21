@@ -52,10 +52,9 @@ necessary:
    + menu -> settingsForm
         + textBox placeholder
         + save/cancel
-        - tabIndex
-        - label hints
-        +- resetButton
-        - подумать над значениями дефолтных настроек (особенно над логированием) 
+        + tabIndex
+        + resetButton
+        + подумать над значениями дефолтных настроек (особенно над логированием) 
 
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
@@ -65,6 +64,9 @@ necessary:
    - ролик-превьюшка
         
 unnecessary:
+    - settings.validation
+    - подключить нормальный логгер
+    
     - изменить работу forward/backward:
         - при работе с клавиатурой есть различия между поведением этих кнопок в плагине и в intellij idea
         - повторы. если 100500 раз тыкать на 10, 11, 10, 11, 10, 11, 10 линию, то в норм средах эти повторы игнорируются, а у меня нет

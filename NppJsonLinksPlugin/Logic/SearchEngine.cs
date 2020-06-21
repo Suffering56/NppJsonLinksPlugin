@@ -45,8 +45,6 @@ namespace NppJsonLinksPlugin.Logic
             {
                 var dstFilePath = mappingItem.Dst.FullPath;
                 var supportedWords = dstFilePathToDstWordsCache[dstFilePath];
-
-                Debug.Assert(!_mappingToDstFileContainerMap.ContainsKey(mappingItem), $"outer container already contains mappingItem={mappingItem}");
                 _mappingToDstFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
             }
 
@@ -155,7 +153,6 @@ namespace NppJsonLinksPlugin.Logic
                         _hasComplexWords = true;
                     }
 
-                    Debug.Assert(!_dstWordToValuesLocationContainer.ContainsKey(dstWord), $"inner container already contains this dstWord={dstWord}, dstFilePath={dstFilePath}");
                     _dstWordToValuesLocationContainer[dstWord] = new ValuesLocationContainer(dstFilePath);
                 }
             }

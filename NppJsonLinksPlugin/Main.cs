@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
@@ -19,7 +17,7 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
-        private const string PLUGIN_VERSION = "0.2.4";
+        private const string PLUGIN_VERSION = "0.3.1";
 
         private static readonly string IniFilePath = Path.GetFullPath($"plugins/{PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
         private static IniConfig _iniConfig = null;
@@ -39,12 +37,9 @@ namespace NppJsonLinksPlugin
             gateway.GetCurrentPos().Value - gateway.LineToPosition(gateway.GetCurrentLine()) - clickedWord.Length
         );
 
-
         private static SettingsForm _settingsForm = null;
-        private static int _idMyDlg = 1;
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
-        private static Icon _tbIcon = null;
 
         internal static void DisablePlugin()
         {
@@ -69,7 +64,7 @@ namespace NppJsonLinksPlugin
             }
             else
             {
-                Logger.Error("Plugin reload: success!", null, true);
+                Logger.InfoBox("Plugin reload: success!");
             }
         }
 
@@ -84,7 +79,7 @@ namespace NppJsonLinksPlugin
             }
             catch (Exception e)
             {
-                Logger.SetMode(AppConstants.DEFAULT_LOGGER_MODE, null);
+                Logger.SetMode(Logger.Mode.ONLY_ERRORS, null);
                 Logger.Error(e.Message, e, true);
 
                 return false;
@@ -135,16 +130,16 @@ namespace NppJsonLinksPlugin
                 DisablePlugin();
             }
 
-            PluginBase.SetCommand(1, "Settings", ShowSettingsForm, new ShortcutKey(true, false, false, Keys.F1));
-            PluginBase.SetCommand(2, "Reload plugin", ReloadPlugin, new ShortcutKey(true, false, false, Keys.F5)); //TODO move to settingsForm
-            // PluginBase.SetCommand(2, "", null);
+            PluginBase.SetCommand(1, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
+            PluginBase.SetCommand(2, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
+            PluginBase.SetCommand(3, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(4, "", null);
 
-            PluginBase.SetCommand(3, "GoToDefinition", GoToDefinitionCmd, new ShortcutKey(true, true, false, Keys.Enter));
-            PluginBase.SetCommand(4, "Navigate Backward", NavigationHandler.NavigateBackward, new ShortcutKey(true, true, false, Keys.Left));
-            PluginBase.SetCommand(5, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
+            PluginBase.SetCommand(5, "Reload plugin", ReloadPluginCmd, new ShortcutKey());
             PluginBase.SetCommand(6, "", null);
-
-            PluginBase.SetCommand(7, "About", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey(false, false, false, Keys.None));
+            PluginBase.SetCommand(7, "Settings", ShowSettingsForm, new ShortcutKey());
+            PluginBase.SetCommand(8, "", null);
+            PluginBase.SetCommand(9, "About", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey());
         }
 
         public static void OnNotification(ScNotification notification)
@@ -275,11 +270,21 @@ namespace NppJsonLinksPlugin
             UserInputHandler.Disable();
         }
 
+
+        private static void ReloadPluginCmd()
+        {
+            var result = MessageBox.Show($@"Do you really want to reload plugin: {PLUGIN_NAME}?", @"Reload plugin?", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (result == DialogResult.OK)
+            {
+                ReloadPlugin();
+            }
+        }
+
         private static void ShowSettingsForm()
         {
             _settingsForm ??= new SettingsForm();
             var modifiedConfig = _iniConfig.Clone();
-            
+
             if (_settingsForm.ShowDialog(modifiedConfig, _settings) == DialogResult.OK)
             {
                 if (modifiedConfig.Save())

@@ -9,30 +9,13 @@ namespace NppJsonLinksPlugin.Configuration
     {
         public string SettingsJsonUri = null;
         public string LogsDir = null;
-        public Logger.Mode LoggerMode = AppConstants.DEFAULT_LOGGER_MODE;
+        public Logger.Mode LoggerMode = Logger.Mode.ONLY_ERRORS;
 
         public bool? HighlightingEnabled = null;
         public int? ProcessingHighlightedLinesLimit = null;
         public bool? SoundEnabled = null;
         public int? JumpToLineDelay = null;
         public string MappingDefaultFilePath = null;
-
-        public IniConfig BySettings(string settingsUri, string logsDir, Logger.Mode loggerMode, Settings settings)
-        {
-            return new IniConfig
-            {
-                SettingsJsonUri = settingsUri,
-
-                LogsDir = logsDir,
-                LoggerMode = loggerMode,
-
-                HighlightingEnabled = settings.HighlightingEnabled,
-                ProcessingHighlightedLinesLimit = settings.ProcessingHighlightedLinesLimit,
-                SoundEnabled = settings.SoundEnabled,
-                JumpToLineDelay = settings.JumpToLineDelay,
-                MappingDefaultFilePath = settings.MappingDefaultFilePath
-            };
-        }
 
         public IniConfig Clone()
         {
@@ -79,7 +62,7 @@ namespace NppJsonLinksPlugin.Configuration
                 SettingsJsonUri = settingsJsonUri,
 
                 LogsDir = ReadString(SECTION_LOGGER, "logs_dir"),
-                LoggerMode = ReadLoggerMode(SECTION_LOGGER, "logger_mode", _iniFilePath, AppConstants.DEFAULT_LOGGER_MODE),
+                LoggerMode = ReadLoggerMode(SECTION_LOGGER, "logger_mode", _iniFilePath, Logger.Mode.ONLY_ERRORS),
 
                 HighlightingEnabled = ReadBool(SECTION_OVERRIDE, "highlighting_enabled"),
                 ProcessingHighlightedLinesLimit = ReadInt(SECTION_OVERRIDE, "processing_highlighted_lines_limit"),

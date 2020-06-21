@@ -28,12 +28,20 @@ namespace NppJsonLinksPlugin.Configuration
         public static RawSettings Parse(string settingsUri)
         {
             var uri = ToUri(settingsUri);
-            string settingsString = uri.IsFile
-                ? File.ReadAllText(uri.AbsolutePath)
-                : ReadRemoteSettings(uri);
+            try
+            {
+                string settingsString = uri.IsFile
+                    ? File.ReadAllText(uri.LocalPath)
+                    : ReadRemoteSettings(uri);
 
-            var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
-            return rawSettings;
+                var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
+                return rawSettings;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"cannot parse settings by uri: {settingsUri}", e, true);
+                throw;
+            }
         }
 
         private static Uri ToUri(string uri)

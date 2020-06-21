@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -17,7 +16,7 @@ namespace NppJsonLinksPlugin.Core
             DISABLED = 2,
         }
 
-        private static Mode _mode = AppConstants.DEFAULT_LOGGER_MODE;
+        private static Mode _mode = Mode.ONLY_ERRORS;
         private static string _infoPathPrefix = null;
         private static string _errorPathPrefix = null;
 
@@ -42,13 +41,20 @@ namespace NppJsonLinksPlugin.Core
             {
                 if (!Directory.Exists(prefix))
                 {
-                    ShowErrorDialog($"Cannot enable logger, because directory={prefix} not exist. Logger mode will set to {Mode.ONLY_ERRORS})");
-                    _mode = Mode.ONLY_ERRORS;
-                    return;
+                    try
+                    {
+                        Directory.CreateDirectory(prefix);
+                    }
+                    catch (Exception)
+                    {
+                        ShowErrorDialog($"Cannot enable logger. Can't create not existing logs directory={prefix}. Logger mode will set to {Mode.ONLY_ERRORS})");
+                        _mode = Mode.ONLY_ERRORS;
+                        return;
+                    }
                 }
 
-                _infoPathPrefix = prefix + "out.log";
-                _errorPathPrefix = prefix + "error.log";
+                _infoPathPrefix = Path.Combine(prefix, $"{DateUtils.CurrentDateStr()}_out.log");
+                _errorPathPrefix = Path.Combine(prefix, $"{DateUtils.CurrentDateStr()}_err.log");
             }
 
             _mode = mode;
@@ -109,8 +115,7 @@ namespace NppJsonLinksPlugin.Core
 
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append("\n");
-            stringBuilder.Append($"{DateTime.Now.Year}-{DateTime.Now.Month:00}-{DateTime.Now.Day:00}");
-            stringBuilder.Append($"{DateTime.Now.Hour:00}-{DateTime.Now.Minute:00}-{DateTime.Now.Second:00}");
+            stringBuilder.Append(DateUtils.CurrentDateTimeStr());
             stringBuilder.Append(e.StackTrace);
             var errorMsg = stringBuilder.ToString();
 
@@ -124,10 +129,7 @@ namespace NppJsonLinksPlugin.Core
             try
             {
                 using TextWriter w = new StreamWriter(logFilePath, true);
-                StackTrace stackTrace = new StackTrace();
-                MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-                w.WriteLine($"{DateTime.Now.ToLongTimeString()}:{DateTime.Now.Millisecond:000} <{TracePId}>");
-                w.Write($"{new String(' ', (stackTrace.FrameCount - 1) * 3)}[{methodBase.Name}] {msg}");
+                w.WriteLine($"{DateUtils.CurrentDateTimeStr()}:<{TracePId}>: {msg}");
             }
             catch (Exception ex)
             {
@@ -169,6 +171,11 @@ namespace NppJsonLinksPlugin.Core
 
                 LastErrorTimesList.Add(currentUts);
             }
+        }
+
+        public static void InfoBox(string msg)
+        {
+            MsgBox(msg, MessageBoxIcon.Information);
         }
     }
 }

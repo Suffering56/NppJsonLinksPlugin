@@ -20,7 +20,7 @@ namespace NppJsonLinksPlugin.Forms
         {
             InitializeComponent();
 
-            _settingsJsonUriTextboxWrapper = WrapWithPlaceholder(settingsJsonUriTextbox, AppConstants.SETTINGS_JSON_URI_PLACEHOLDER);
+            _settingsJsonUriTextboxWrapper = WrapWithPlaceholder(settingsJsonUriTextbox, AppConstants.DEFAULT_SETTINGS_URI);
             _defaultMappingPathTextboxWrapper = WrapWithPlaceholder(defaultMappingPathTextbox, AppConstants.MAPPING_PATH_PLACEHOLDER);
             _highlightingLinesLimitTextboxWrapper = WrapWithPlaceholder(highlightingLinesLimitTextbox, AppConstants.DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT.ToString());
             _loggerPathTextboxWrapper = WrapWithPlaceholder(loggerPathTextbox, AppConstants.DEFAULT_LOGGER_PATH);
@@ -87,10 +87,21 @@ namespace NppJsonLinksPlugin.Forms
             _config.JumpToLineDelay = intValue.Value;
         }
 
-        private void restoreButton_Click(object sender, EventArgs e)
+        private void resetButton_Click(object sender, EventArgs e)
         {
             var settingsUri = _settingsJsonUriTextboxWrapper.GetText();
-            RawSettings rawSettings = SettingsParser.Parse(settingsUri);
+            RawSettings rawSettings;
+            try
+            {
+                rawSettings = SettingsParser.Parse(settingsUri);
+            }
+            catch (Exception)
+            {
+                Logger.Error($"cannot load default settings by invalid settings uri: \"{settingsUri}\". try reload by default settings uri path.", null, true);
+                settingsUri = AppConstants.DEFAULT_SETTINGS_URI;
+                _settingsJsonUriTextboxWrapper.SetInitialText(settingsUri);
+                rawSettings = SettingsParser.Parse(settingsUri);
+            }
 
             _loggerPathTextboxWrapper.SetInitialText(AppConstants.DEFAULT_LOGGER_PATH);
             loggerModeComboBox.SelectedIndex = (int) AppConstants.DEFAULT_LOGGER_MODE;
