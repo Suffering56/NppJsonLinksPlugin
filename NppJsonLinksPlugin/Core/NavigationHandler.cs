@@ -65,20 +65,14 @@ namespace NppJsonLinksPlugin.Core
                     break;
 
                 case NavigateActionType.MOUSE_CLICK:
-                    if (_historyPosition == historySize)
-                    {
-                        _historyPosition++;
-                        _navigationHistory.Add(_prevLocation);
-                        _prevLocation = newLocation;
-
-                        break;
-                    }
-
-                    _historyPosition++;
-                    _prevLocation = newLocation;
 
                     // мы находимся не в самом конце истории. поэтому при изменении - вся остальная часть истории забывается
                     if (_historyPosition < historySize) _navigationHistory.RemoveRange(_historyPosition, historySize - _historyPosition);
+                    
+                    _navigationHistory.Add(_prevLocation);
+                    _historyPosition = _navigationHistory.Count;
+                    _prevLocation = newLocation;
+
                     break;
 
                 case NavigateActionType.KEYBOARD_DOWN:

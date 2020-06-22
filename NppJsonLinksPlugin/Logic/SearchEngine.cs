@@ -116,7 +116,7 @@ namespace NppJsonLinksPlugin.Logic
             {
                 if (!mappingItem.Src.MatchesWithPath(_currentFilePath)) continue;
 
-                if (searchContext.MatchesWith(mappingItem.Src.Word)) return mappingItem;
+                if (searchContext.MatchesWith(mappingItem.Src.Word, true)) return mappingItem;
             }
 
             return null;

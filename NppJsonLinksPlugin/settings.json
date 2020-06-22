@@ -75,7 +75,7 @@
           "word": "abilityId"
         },
         {
-          "fileName": "equipmentSets.json",
+          "fileName": "*.json",
           "word": "id<<<abilities"
         },
         {
@@ -87,11 +87,11 @@
           "word": "id<<<to<<<abilityMappings"
         },
         {
-          "fileName": "equipmentTiers.json",
+          "fileName": "*.json",
           "word": "id<<<abilityRef"
         },
         {
-          "fileName": "battleModifiers.json",
+          "fileName": "*.json",
           "word": "id<<<ability"
         }
       ]

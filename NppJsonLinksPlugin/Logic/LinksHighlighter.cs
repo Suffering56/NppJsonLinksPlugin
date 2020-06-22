@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.Logic.Context;
@@ -9,7 +10,7 @@ using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
 
 namespace NppJsonLinksPlugin.Logic
 {
-    public class LinksHighlighter
+    public class LinksHighlighter : IDisposable
     {
         private const int HIGHLIGHT_INDICATOR_ID = 32;
 
@@ -27,7 +28,10 @@ namespace NppJsonLinksPlugin.Logic
         private int _startVisibleLine = 0;
         private int _endVisiblePosition = 0;
 
+        private readonly Timer _updateUiTimer = null;
+
         private readonly Func<string, int, int, ISearchContext> _searchContextProvider;
+        private bool _uiUpdated = true;
 
         public LinksHighlighter(IScintillaGateway gateway, Settings settings)
         {
@@ -45,8 +49,36 @@ namespace NppJsonLinksPlugin.Logic
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
+            _updateUiTimer = CreateTimer(1000);
+        }
 
-            UpdateUi();
+        public void Dispose()
+        {
+            _updateUiTimer.Stop();
+            _updateUiTimer.Dispose();
+        }
+
+        private Timer CreateTimer(int interval)
+        {
+            var timer = new Timer(interval);
+            timer.Elapsed += UpdateUi;
+            timer.AutoReset = true;
+            timer.Start();
+            return timer;
+        }
+
+        public void MarkUpdated()
+        {
+            _uiUpdated = true;
+        }
+
+        private void UpdateUi(object sender, ElapsedEventArgs e)
+        {
+            if (_uiUpdated)
+            {
+                UpdateUi();
+                _uiUpdated = false;
+            }
         }
 
         private bool IsHighlightingDisabled()
@@ -54,10 +86,9 @@ namespace NppJsonLinksPlugin.Logic
             return _settingsMapping == null;
         }
 
-        public void UpdateUi()
+        private void UpdateUi()
         {
             if (IsHighlightingDisabled()) return;
-
             try
             {
                 if (Update())
@@ -172,7 +203,7 @@ namespace NppJsonLinksPlugin.Logic
 
             foreach (var srcWord in _expectedWords)
             {
-                if (searchContext.MatchesWith(srcWord))
+                if (searchContext.MatchesWith(srcWord, false))
                 {
                     return true;
                 }

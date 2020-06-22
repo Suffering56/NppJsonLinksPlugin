@@ -22,7 +22,7 @@ namespace NppJsonLinksPlugin.Logic.Context
             _selectedProperty = TryInitSelectedProperty(initialLineIndex, indexOfSelectedWord);
         }
 
-        public bool MatchesWith(Word expectedWord)
+        public bool MatchesWith(Word expectedWord, bool logFailEnabled)
         {
             if (_selectedProperty == null) return false;
             var propertyName = _selectedProperty.Name;
@@ -39,7 +39,10 @@ namespace NppJsonLinksPlugin.Logic.Context
                 var propertyResult = ExtractParentPropertyName(lineIndex, lineOffset - 1);
                 if (!parent.MatchesWith(propertyResult.PropertyName))
                 {
-                    Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.GetWordString()}");
+                    if (logFailEnabled)
+                    {
+                        Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.GetWordString()}");
+                    }
                     return false;
                 }
 

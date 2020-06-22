@@ -8,6 +8,6 @@ namespace NppJsonLinksPlugin.Logic.Context
 
         Property GetSelectedProperty();
 
-        bool MatchesWith(Word expectedWord);
+        bool MatchesWith(Word expectedWord, bool logFailEnabled);
     }
 }

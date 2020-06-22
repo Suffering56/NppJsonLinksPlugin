@@ -12,11 +12,16 @@ namespace NppJsonLinksPlugin.Core
             return (int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
+        public static long CurrentUtcMillis()
+        {
+            return (long) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalMilliseconds;
+        }
+
         public static string CurrentDateStr()
         {
             return DateTime.Now.ToString("yyyy_MM_dd");
         }
-        
+
         public static string CurrentDateTimeStr()
         {
             return DateTime.Now.ToString("yyyy_MM_dd hh:mm:ss");

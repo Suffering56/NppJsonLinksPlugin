@@ -17,7 +17,7 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
-        private const string PLUGIN_VERSION = "0.3.1";
+        private const string PLUGIN_VERSION = "0.3.2";
 
         private static readonly string IniFilePath = Path.GetFullPath($"plugins/{PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
         private static IniConfig _iniConfig = null;
@@ -109,6 +109,7 @@ namespace NppJsonLinksPlugin
                 NavigationHandler.Reload(gateway.GetCurrentLocation());
 
                 // инициализация поддержки подсветки ссылок
+                _linksHighlighter?.Dispose();
                 _linksHighlighter = new LinksHighlighter(gateway, _settings);
 
                 // при запуске NPP вызывается миллиард событий, в том числе и интересующие нас NPPN_BUFFERACTIVATED, SCN_MODIFIED, etc. Но их не нужно обрабатывать до инициализации. 
@@ -181,7 +182,7 @@ namespace NppJsonLinksPlugin
                 case (uint) SciMsg.SCN_UPDATEUI:
                 {
                     // SCROLL/INPUT/COLLAPSE and other events
-                    _linksHighlighter.UpdateUi();
+                    _linksHighlighter.MarkUpdated();
                     break;
                 }
             }
