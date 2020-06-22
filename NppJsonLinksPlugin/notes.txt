@@ -55,13 +55,29 @@ necessary:
         + tabIndex
         + resetButton
         + подумать над значениями дефолтных настроек (особенно над логированием) 
+        
+   - кажется нужна опция игнора файлов (чтобы исключить большие)
 
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
+        
+        // constellationId<<<extension<<<*restriction?
+        // constellationItemId<<<extension<<<*restriction?
+        // relicId<<<extension<<<*restriction?
+        //craftPieceId
+        //specificMobIds
+        
+    - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
+        - невозможно обработать, потому что айдишники пересекаются для разных групп кастомизации
    
-   - ролик-превьюшка
+   - ролик-превьюшка:
+        - надоело проверять что 11 комната это тронный зал?
+        - надоело вводить делать поиск по "id": xxx?
+        - устал вспоминать в каком файле ты только что был?
+        - тогда NppJsonLinksPlugin это то, что тебе нужно!
+        - установи NppJsonLinksPlugin прямо сейчас и в подарок ты получишь опцию подсветки кликабельных ссылок!
         
 unnecessary:
     - settings.validation

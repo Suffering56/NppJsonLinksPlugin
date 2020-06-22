@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace NppJsonLinksPlugin.Logic.Parser.Json
@@ -10,77 +11,45 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
         public void ParseValidDocument(string filePath, ICollection<Word> expectedWords, ValueConsumer valueConsumer)
         {
             string expectedWord = null;
-            string currentPropertyName = null;
+            string propertyName = null;
 
             Stack<string> propertyStack = new Stack<string>();
             propertyStack.Push(AppConstants.ROOT_PROPERTY_NAME);
 
+            var hasComplexWords = expectedWords.Any(word => word.IsComplex());
+
             using JsonTextReader reader = new JsonTextReader(new StreamReader(filePath));
             while (reader.Read())
             {
+                var tokenType = reader.TokenType;
+                object value = reader.Value;
+                int lineNumber = reader.LineNumber - 1;
+
+                string foundPropertyName = null;
+                if (hasComplexWords)
+                {
+                    foundPropertyName = ExtractPropertyName(tokenType, propertyStack, value, ref propertyName);
+                }
+
                 foreach (var dstWord in expectedWords)
                 {
-                    var tokenType = reader.TokenType;
-                    object value = reader.Value;
-                    int lineNumber = reader.LineNumber - 1;
-
                     if (!dstWord.IsComplex())
                     {
                         ParseSimpleWord(tokenType, value, dstWord, ref expectedWord, val => valueConsumer.Invoke(dstWord, lineNumber, val));
                     }
                     else
                     {
-                        ParseComplexWord(tokenType, value, dstWord, ref currentPropertyName, propertyStack, val => valueConsumer.Invoke(dstWord, lineNumber, val));
+                        if (foundPropertyName == null) continue;
+                        ParseComplexWord(tokenType, value, dstWord, foundPropertyName, propertyStack, val => valueConsumer.Invoke(dstWord, lineNumber, val));
                     }
                 }
             }
         }
 
-        private static void ParseComplexWord(JsonToken tokenType, object? value, Word dstWord, ref string propertyName, Stack<string> propertyStack, Action<string> valueConsumer)
+        private static void ParseComplexWord(JsonToken tokenType, object value, Word dstWord, string foundPropertyName, Stack<string> propertyStack, Action<string> valueConsumer)
         {
-            switch (tokenType)
-            {
-                case JsonToken.StartObject:
-                case JsonToken.StartArray:
-
-                    if (propertyName != null)
-                    {
-                        propertyStack.Push(propertyName);
-                        propertyName = null;
-                    }
-                    else
-                    {
-                        propertyStack.Push(null);
-                    }
-
-                    return;
-
-                case JsonToken.EndObject:
-                case JsonToken.EndArray:
-                    if (propertyStack.Count > 0)
-                    {
-                        propertyStack.Pop();
-                    }
-
-                    return;
-            }
-
-            if (value == null) return;
-
-            if (tokenType == JsonToken.PropertyName)
-            {
-                propertyName = value.ToString();
-                return;
-            }
-
-            // value не принадлежит никакой property - выходим, ибо я не знаю как обработать это, да и в общем-то воспроизвести тоже
-            if (propertyName == null) return;
-
-            string expectedPropertyName = propertyName;
-            propertyName = null;
-
             // это просто property, которое не участвует в маппинге
-            if (dstWord.GetWordString() != expectedPropertyName) return;
+            if (dstWord.GetWordString() != foundPropertyName) return;
 
             string valueString = value.ToString();
             switch (tokenType)
@@ -117,6 +86,51 @@ namespace NppJsonLinksPlugin.Logic.Parser.Json
             }
 
             // стек закончился, а нам dstWord нет. значит это не тот токен
+        }
+
+        private static string ExtractPropertyName(JsonToken tokenType, Stack<string> propertyStack, object value, ref string propertyName)
+        {
+            switch (tokenType)
+            {
+                case JsonToken.StartObject:
+                case JsonToken.StartArray:
+
+                    if (propertyName != null)
+                    {
+                        propertyStack.Push(propertyName);
+                        propertyName = null;
+                    }
+                    else
+                    {
+                        propertyStack.Push(null);
+                    }
+
+                    return null;
+
+                case JsonToken.EndObject:
+                case JsonToken.EndArray:
+                    if (propertyStack.Count > 0)
+                    {
+                        propertyStack.Pop();
+                    }
+
+                    return null;
+            }
+
+            if (value == null) return null;
+
+            if (tokenType == JsonToken.PropertyName)
+            {
+                propertyName = value.ToString();
+                return null;
+            }
+
+            // value не принадлежит никакой property - выходим, ибо я не знаю как обработать это, да и в общем-то воспроизвести тоже
+            if (propertyName == null) return null;
+
+            string foundPropertyName = propertyName;
+            propertyName = null;
+            return foundPropertyName;
         }
 
         private static void ParseSimpleWord(JsonToken tokenType, object? value, Word dstWord, ref string expectedWord, Action<string> valueConsumer)

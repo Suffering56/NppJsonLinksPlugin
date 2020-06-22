@@ -368,7 +368,7 @@ namespace NppJsonLinksPlugin.Logic.Context
                     return valueBuilder.ToString();
                 }
 
-                if (isInteger && ch.IsWhiteSpaceOr(',', '}')) // конец массива быть не может:  <anything : integerValue]>
+                if (isInteger && ch.IsWhiteSpaceOr(',', '}', ']'))
                 {
                     // конец integerValue
                     return valueBuilder.ToString();

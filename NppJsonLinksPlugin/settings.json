@@ -89,6 +89,10 @@
         {
           "fileName": "equipmentTiers.json",
           "word": "id<<<abilityRef"
+        },
+        {
+          "fileName": "battleModifiers.json",
+          "word": "id<<<ability"
         }
       ]
     },
@@ -101,8 +105,16 @@
       },
       "src": [
         {
-          "fileName": "mobSettings.json",
-          "word": "battleClass"
+          "fileName": "*.json",
+          "word": "*battleClass"
+        },
+        {
+          "fileName": "*.json",
+          "word": "weaponType<<<mobMatchRules"
+        },
+        {
+          "fileName": "*.json",
+          "word": "armorType<<<mobMatchRules"
         }
       ]
     },
@@ -119,6 +131,83 @@
           "word": "defaultEquipmentIds"
         }
       ]
+    },
+    
+    {
+      "description": "chests.json: chestId",
+      "dst": {
+        "fileName": "chests.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*chestId"
+        },
+        {
+          "fileName": "*.json",
+          "word": "chestIdForTorches"
+        }
+      ]
+    },
+
+    {
+      "description": "rewardPacks.json: rewardPackId",
+      "dst": {
+        "fileName": "rewardPacks.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*rewardPackId?"
+        },
+        {
+          "fileName": "rewardPacks.json",
+            "word": "packId"
+        }
+      ]
+    },
+
+    {
+      "description": "equipmentViews.json: equipmentViewId",
+      "dst": {
+        "fileName": "equipmentViews.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*rewardPackId?"
+        },
+        {
+          "fileName": "*.json",
+          "word": "viewId"
+        },
+        {
+          "fileName": "*.json",
+          "word": "equipmentViewId"
+        }
+      ]
+    },
+
+    {
+      "description": "parametrizedMobs.json: templateId",
+      "dst": {
+        "fileName": "parametrizedMobs.json",
+        "word": "id<<<templates"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "specificMobIds<<<mobRule"
+        },
+        {
+          "fileName": "crusadeBattleShop.json",
+          "word": "specificMobId"
+        }
+      ]
     }
+    
   ]
 }
