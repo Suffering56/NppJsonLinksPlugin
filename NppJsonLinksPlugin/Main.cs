@@ -41,12 +41,16 @@ namespace NppJsonLinksPlugin
         private static readonly Bitmap TbBmp = Properties.Resources.star;
         private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
 
-        internal static void DisablePlugin()
+        internal static void DisablePlugin(bool showErrorBox = true)
         {
-            Logger.Error($"Plugin \"{PLUGIN_NAME}\" will be disabled", null, true);
+            if (showErrorBox)
+            {
+                Logger.Error($"Plugin \"{PLUGIN_NAME}\" will be disabled", null, true);
+            }
 
             IsPluginDisabled = true;
             Logger.SetMode(Logger.Mode.DISABLED, null);
+            _linksHighlighter?.Dispose();
             UserInputHandler.Disable();
             NavigationHandler.Disable();
         }
@@ -136,11 +140,12 @@ namespace NppJsonLinksPlugin
             PluginBase.SetCommand(3, "Navigate Forward", NavigationHandler.NavigateForward, new ShortcutKey(true, true, false, Keys.Right));
             PluginBase.SetCommand(4, "", null);
 
-            PluginBase.SetCommand(5, "Reload plugin", ReloadPluginCmd, new ShortcutKey());
-            PluginBase.SetCommand(6, "", null);
-            PluginBase.SetCommand(7, "Settings", ShowSettingsForm, new ShortcutKey());
-            PluginBase.SetCommand(8, "", null);
-            PluginBase.SetCommand(9, "About", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey());
+            PluginBase.SetCommand(5, "Disable plugin", DisablePluginCmd, new ShortcutKey());
+            PluginBase.SetCommand(6, "Reload/enable plugin", ReloadPluginCmd, new ShortcutKey());
+            PluginBase.SetCommand(7, "", null);
+            PluginBase.SetCommand(8, "Settings", ShowSettingsForm, new ShortcutKey());
+            PluginBase.SetCommand(9, "", null);
+            PluginBase.SetCommand(10, "About", () => MessageBox.Show($@"Plugin: {PLUGIN_NAME}_v{PLUGIN_VERSION}"), new ShortcutKey());
         }
 
         public static void OnNotification(ScNotification notification)
@@ -278,6 +283,15 @@ namespace NppJsonLinksPlugin
             if (result == DialogResult.OK)
             {
                 ReloadPlugin();
+            }
+        }
+
+        private static void DisablePluginCmd()
+        {
+            var result = MessageBox.Show($@"Do you really want to disable plugin: {PLUGIN_NAME}?", @"Disable plugin?", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (result == DialogResult.OK)
+            {
+                DisablePlugin(false);
             }
         }
 

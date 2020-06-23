@@ -12,7 +12,6 @@ namespace NppJsonLinksPlugin.Forms
 
         private readonly TextboxWrapper _settingsJsonUriTextboxWrapper;
         private readonly TextboxWrapper _defaultMappingPathTextboxWrapper;
-        private readonly TextboxWrapper _highlightingLinesLimitTextboxWrapper;
         private readonly TextboxWrapper _loggerPathTextboxWrapper;
         private readonly TextboxWrapper _jumpToLineDelayTextboxWrapper;
 
@@ -22,7 +21,6 @@ namespace NppJsonLinksPlugin.Forms
 
             _settingsJsonUriTextboxWrapper = WrapWithPlaceholder(settingsJsonUriTextbox, AppConstants.DEFAULT_SETTINGS_URI);
             _defaultMappingPathTextboxWrapper = WrapWithPlaceholder(defaultMappingPathTextbox, AppConstants.MAPPING_PATH_PLACEHOLDER);
-            _highlightingLinesLimitTextboxWrapper = WrapWithPlaceholder(highlightingLinesLimitTextbox, AppConstants.DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT.ToString());
             _loggerPathTextboxWrapper = WrapWithPlaceholder(loggerPathTextbox, AppConstants.DEFAULT_LOGGER_PATH);
             _jumpToLineDelayTextboxWrapper = WrapWithPlaceholder(jumpToLineDelayTextbox, AppConstants.DEFAULT_JUMP_TO_LINE_DELAY.ToString());
         }
@@ -46,7 +44,6 @@ namespace NppJsonLinksPlugin.Forms
             _loggerPathTextboxWrapper.SetInitialText(_config.LogsDir);
             loggerModeComboBox.SelectedIndex = (int) _config.LoggerMode;
 
-            _highlightingLinesLimitTextboxWrapper.SetInitialText(_settings.ProcessingHighlightedLinesLimit.ToString());
             highlightingEnabledComboBox.SelectedIndex = Convert.ToInt32(_settings.HighlightingEnabled);
             soundEnabledComboBox.SelectedIndex = Convert.ToInt32(_settings.SoundEnabled);
             _defaultMappingPathTextboxWrapper.SetInitialText(_settings.MappingDefaultFilePath);
@@ -78,11 +75,7 @@ namespace NppJsonLinksPlugin.Forms
             if (!booleanValue.HasValue) return;
             _config.SoundEnabled = booleanValue.Value;
 
-            var intValue = _highlightingLinesLimitTextboxWrapper.GetInt();
-            if (!intValue.HasValue) return;
-            _config.ProcessingHighlightedLinesLimit = intValue.Value;
-
-            intValue = _jumpToLineDelayTextboxWrapper.GetInt();
+            var intValue = _jumpToLineDelayTextboxWrapper.GetInt();
             if (!intValue.HasValue) return;
             _config.JumpToLineDelay = intValue.Value;
         }
@@ -108,7 +101,6 @@ namespace NppJsonLinksPlugin.Forms
 
             _defaultMappingPathTextboxWrapper.SetInitialText("");
             highlightingEnabledComboBox.SelectedIndex = Convert.ToInt32(rawSettings.HighlightingEnabled);
-            _highlightingLinesLimitTextboxWrapper.SetInitialText(rawSettings.ProcessingHighlightedLinesLimit.ToString());
             soundEnabledComboBox.SelectedIndex = Convert.ToInt32(rawSettings.SoundEnabled);
             _jumpToLineDelayTextboxWrapper.SetInitialText(rawSettings.JumpToLineDelay.ToString());
         }

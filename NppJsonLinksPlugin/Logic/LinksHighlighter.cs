@@ -20,13 +20,12 @@ namespace NppJsonLinksPlugin.Logic
 
         private readonly IScintillaGateway _gateway;
         private readonly IEnumerable<Settings.MappingItem> _settingsMapping; // if null -> then hightlighting disabled
-        private readonly int _processingHighlightedLinesLimit;
 
         private List<Word> _expectedWords;
 
         private string _currentPath = null;
-        private int _startVisibleLine = 0;
-        private int _endVisiblePosition = 0;
+        private int _startLineIndex = 0;
+        private int _endPosition = 0;
 
         private readonly Timer _updateUiTimer = null;
 
@@ -45,7 +44,6 @@ namespace NppJsonLinksPlugin.Logic
 
             _settingsMapping = settings.Mapping;
             _gateway = gateway;
-            _processingHighlightedLinesLimit = settings.ProcessingHighlightedLinesLimit;
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
@@ -56,6 +54,7 @@ namespace NppJsonLinksPlugin.Logic
         {
             _updateUiTimer.Stop();
             _updateUiTimer.Dispose();
+            _gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
         }
 
         private Timer CreateTimer(int interval)
@@ -106,9 +105,12 @@ namespace NppJsonLinksPlugin.Logic
         {
             var currentPath = StringUtils.NormalizePath(_gateway.GetFullCurrentPath());
 
-            var startVisibleLine = _gateway.GetFirstVisibleLine();
-            var endVisibleLine = GetLastVisibleLine(startVisibleLine, _processingHighlightedLinesLimit);
-            var endVisiblePosition = _gateway.GetLineEndPosition(endVisibleLine).Value;
+            var firstVisibleLine = _gateway.GetFirstVisibleLine(); // здесь не учитваются заколлапшенные строки
+
+            var startLineIndex = _gateway.DocLineFromVisible(firstVisibleLine);
+            var linesOnScreen = _gateway.LinesOnScreen();
+            var endLineIndex = _gateway.DocLineFromVisible(firstVisibleLine + linesOnScreen);
+            var endPosition = _gateway.GetLineEndPosition(endLineIndex).Value;
 
             bool changed = currentPath != _currentPath;
             if (changed)
@@ -121,12 +123,12 @@ namespace NppJsonLinksPlugin.Logic
             }
 
             changed = changed
-                      || startVisibleLine != _startVisibleLine
-                      || endVisiblePosition != _endVisiblePosition;
+                      || startLineIndex != _startLineIndex
+                      || endPosition != _endPosition;
 
             _currentPath = currentPath;
-            _startVisibleLine = startVisibleLine;
-            _endVisiblePosition = endVisiblePosition;
+            _startLineIndex = startLineIndex;
+            _endPosition = endPosition;
 
             return changed;
         }
@@ -138,18 +140,19 @@ namespace NppJsonLinksPlugin.Logic
 
             var linesOnScreen = _gateway.LinesOnScreen();
             var totalLinesCount = _gateway.GetLineCount();
+            int lineIndex = _startLineIndex - 1;
 
-            int visibleLinesCounter = 0;
-            int lineIndex = _startVisibleLine - 1;
-            int linesLimit = _processingHighlightedLinesLimit;
-
-            while (lineIndex++ < totalLinesCount && visibleLinesCounter < linesOnScreen
-                                                 && lineIndex < totalLinesCount
-                                                 && linesLimit-- > 0)
+            while (linesOnScreen-- > 0)
             {
-                if (!_gateway.GetLineVisible(lineIndex)) continue;
+                lineIndex++;
+                if (lineIndex >= totalLinesCount) return;
 
-                visibleLinesCounter++;
+                if (!_gateway.GetLineVisible(lineIndex))
+                {
+                    // перепрыгиваем hidden/collapsed lines
+                    int invisibleNoDocLine = _gateway.VisibleFromDocLine(lineIndex);
+                    lineIndex = _gateway.DocLineFromVisible(invisibleNoDocLine);
+                }
 
                 var isEscape = false;
                 StringBuilder currentWord = null;
@@ -220,27 +223,6 @@ namespace NppJsonLinksPlugin.Logic
         private void CleanCurrentFileHighlighting()
         {
             _gateway.ClearIndicatorStyleForRange(HIGHLIGHT_INDICATOR_ID, 0, _gateway.GetTextLength());
-        }
-
-        private int GetLastVisibleLine(int startVisibleLine, int linesLimit)
-        {
-            var linesOnScreen = _gateway.LinesOnScreen();
-            var totalLinesCount = _gateway.GetLineCount();
-
-            int visibleLinesCounter = 0;
-            int lineIndex = startVisibleLine - 1;
-
-            while (visibleLinesCounter < linesOnScreen && lineIndex < totalLinesCount && linesLimit-- > 0)
-            {
-                lineIndex++;
-
-                if (_gateway.GetLineVisible(lineIndex))
-                {
-                    visibleLinesCounter++;
-                }
-            }
-
-            return lineIndex;
         }
     }
 }

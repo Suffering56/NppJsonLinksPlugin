@@ -16,7 +16,6 @@ namespace NppJsonLinksPlugin
         public const Logger.Mode DEFAULT_LOGGER_MODE = Logger.Mode.ENABLED;
 
         public const string MAPPING_PATH_PLACEHOLDER = "D:/projects/shelter/gd_data";
-        public const int DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT = 10000;
         public const int DEFAULT_JUMP_TO_LINE_DELAY = 100;
 
         private static string GetPluginPath()

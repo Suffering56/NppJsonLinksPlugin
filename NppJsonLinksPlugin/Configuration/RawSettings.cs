@@ -8,9 +8,6 @@ namespace NppJsonLinksPlugin.Configuration
     {
         [JsonProperty(PropertyName = "highlightingEnabled")]
         public bool HighlightingEnabled = true;
-
-        [JsonProperty(PropertyName = "processingHighlightedLinesLimit")]
-        public int ProcessingHighlightedLinesLimit = AppConstants.DEFAULT_PROCESSING_HIGHLIGHTING_LINES_LIMIT;
         
         [JsonProperty(PropertyName = "soundEnabled")]
         public bool SoundEnabled = true;

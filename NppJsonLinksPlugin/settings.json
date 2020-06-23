@@ -1,6 +1,5 @@
 {
   "highlightingEnabled": true,
-  "processingHighlightedLinesLimit": 10000,
   "soundEnabled": true,
   "jumpToLineDelay": 100,
   "mappingDefaultFilePath": "F:/gd_data",

@@ -12,7 +12,6 @@ namespace NppJsonLinksPlugin.Configuration
         public Logger.Mode LoggerMode = Logger.Mode.ONLY_ERRORS;
 
         public bool? HighlightingEnabled = null;
-        public int? ProcessingHighlightedLinesLimit = null;
         public bool? SoundEnabled = null;
         public int? JumpToLineDelay = null;
         public string MappingDefaultFilePath = null;
@@ -29,7 +28,6 @@ namespace NppJsonLinksPlugin.Configuration
                 LoggerMode = origin.LoggerMode,
 
                 HighlightingEnabled = origin.HighlightingEnabled,
-                ProcessingHighlightedLinesLimit = origin.ProcessingHighlightedLinesLimit,
                 SoundEnabled = origin.SoundEnabled,
                 JumpToLineDelay = origin.JumpToLineDelay,
                 MappingDefaultFilePath = origin.MappingDefaultFilePath
@@ -65,7 +63,6 @@ namespace NppJsonLinksPlugin.Configuration
                 LoggerMode = ReadLoggerMode(SECTION_LOGGER, "logger_mode", _iniFilePath, Logger.Mode.ONLY_ERRORS),
 
                 HighlightingEnabled = ReadBool(SECTION_OVERRIDE, "highlighting_enabled"),
-                ProcessingHighlightedLinesLimit = ReadInt(SECTION_OVERRIDE, "processing_highlighted_lines_limit"),
                 SoundEnabled = ReadBool(SECTION_OVERRIDE, "sound_enabled"),
                 JumpToLineDelay = ReadInt(SECTION_OVERRIDE, "jump_to_line_delay"),
                 MappingDefaultFilePath = ReadString(SECTION_OVERRIDE, "mapping_default_file_path")
@@ -84,7 +81,6 @@ namespace NppJsonLinksPlugin.Configuration
                 WriteString(SECTION_LOGGER, "logger_mode", config.LoggerMode);
 
                 WriteString(SECTION_OVERRIDE, "highlighting_enabled", config.HighlightingEnabled);
-                WriteString(SECTION_OVERRIDE, "processing_highlighted_lines_limit", config.ProcessingHighlightedLinesLimit);
                 WriteString(SECTION_OVERRIDE, "sound_enabled", config.SoundEnabled);
                 WriteString(SECTION_OVERRIDE, "jump_to_line_delay", config.JumpToLineDelay);
                 WriteString(SECTION_OVERRIDE, "mapping_default_file_path", config.MappingDefaultFilePath);

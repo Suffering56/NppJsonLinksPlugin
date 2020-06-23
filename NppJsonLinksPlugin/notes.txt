@@ -55,8 +55,18 @@ necessary:
         + tabIndex
         + resetButton
         + подумать над значениями дефолтных настроек (особенно над логированием) 
+     
+   + оптимизировать highlighter 
+        + вызывать по таймеру раз в секунду а не на каждый ui update
+        + не спамить FAIL в логи
+        + не забыть про dispose
+        + долой highlighting lines limit!
         
-   - кажется нужна опция игнора файлов (чтобы исключить большие)
+   - disable plugin button  + Reload/Enable plugin
+   
+   - мне все еще не нравится как работает навигация.
+   - кажется нужна опция игнора файлов (чтобы исключить анализ больших файлов)
+   - while защита
 
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?

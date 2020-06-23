@@ -106,7 +106,6 @@ namespace NppJsonLinksPlugin.Configuration
             return new Settings
             {
                 HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled, // override by ini
-                ProcessingHighlightedLinesLimit = iniConfig.ProcessingHighlightedLinesLimit ?? rawSettings.ProcessingHighlightedLinesLimit, // override by ini 
                 SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled, // override by ini
                 JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay, // override by ini
                 MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath, // override by ini
@@ -149,8 +148,6 @@ namespace NppJsonLinksPlugin.Configuration
     public class Settings
     {
         public bool HighlightingEnabled { get; internal set; }
-
-        public int ProcessingHighlightedLinesLimit { get; internal set; }
 
         public bool SoundEnabled { get; internal set; }
 
