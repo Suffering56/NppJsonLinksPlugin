@@ -33,6 +33,7 @@ namespace NppJsonLinksPlugin.Core
         public void UpdateHistory(JumpLocation newLocation, NavigateActionType actionType)
         {
             if (IsNavigationDisabled()) return;
+            if (newLocation.Line == _prevLocation.Line) return;
 
             var historySize = _navigationHistory.Count;
             if (_historyPosition > historySize)
@@ -41,8 +42,6 @@ namespace NppJsonLinksPlugin.Core
                 Reload(newLocation);
                 return;
             }
-
-            if (newLocation.Line == _prevLocation.Line) return;
 
             switch (actionType)
             {

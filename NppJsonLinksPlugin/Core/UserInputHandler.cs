@@ -50,7 +50,6 @@ namespace NppJsonLinksPlugin.Core
             VK_SNAPSHOT = 0x2C, // PRINT SCREEN
             VK_ESCAPE = 0x1B,
 
-
             VK_F1 = 0x70,
             VK_F2 = 0x71,
             VK_F3 = 0x72,
@@ -63,7 +62,6 @@ namespace NppJsonLinksPlugin.Core
             VK_F10 = 0x79,
             VK_F11 = 0x7A,
             VK_F12 = 0x7B,
-            VK_F13 = 0x7C,
         }
 
         internal static void Reload(MouseEvent onMouseAction, KeyboardEvent onKeyboardDown)
@@ -122,7 +120,7 @@ namespace NppJsonLinksPlugin.Core
 
                 if (msg == WM_KEYDOWN && _onKeyboardDown != null)
                 {
-                    _onKeyboardDown.Invoke(lParam);
+                    _onKeyboardDown.Invoke(wParam);
                 }
                 else if (_onMouseAction != null && Enum.IsDefined(typeof(MouseMessage), msg))
                 {

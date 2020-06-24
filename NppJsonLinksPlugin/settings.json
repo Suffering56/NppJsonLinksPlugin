@@ -1,7 +1,7 @@
 {
   "highlightingEnabled": true,
   "soundEnabled": true,
-  "jumpToLineDelay": 100,
+  "jumpToLineDelay": 0,
   "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
     {

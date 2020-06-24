@@ -174,8 +174,6 @@ namespace NppJsonLinksPlugin
                     // NPPN_BUFFERACTIVATED = switching tabs/open file/reload file/etc
                     var gateway = PluginBase.GetGatewayFactory().Invoke();
                     SearchEngine.SwitchContext(gateway.GetFullCurrentPath());
-
-                    Logger.Info($"NPPN_BUFFERACTIVATED");
                     break;
 
                 case (uint) SciMsg.SCN_SAVEPOINTREACHED:
@@ -194,8 +192,37 @@ namespace NppJsonLinksPlugin
 
         private static void OnKeyboardDown(int keyCode)
         {
+            // игнорируем нажатие кнопок, которые нас не перемещают в пространстве
+            // мы не можем выбрать только те кнопки, которые нас могут перемещать (UP, DOWN... CTRL + X/V/Z/Y, ENTER и тд),
+            //     потому что у игрока может быть выделенный фрагмент текста и любая кнопка его удалит
+            switch ((UserInputHandler.KeyCode) keyCode)
+            {
+                case UserInputHandler.KeyCode.VK_CONTROL:
+                case UserInputHandler.KeyCode.VK_LSHIFT:
+                case UserInputHandler.KeyCode.VK_RSHIFT:
+                case UserInputHandler.KeyCode.VK_MENU:
+                case UserInputHandler.KeyCode.VK_PAUSE:
+                case UserInputHandler.KeyCode.VK_CAPITAL:
+                case UserInputHandler.KeyCode.VK_SNAPSHOT:
+                case UserInputHandler.KeyCode.VK_ESCAPE:
+                case UserInputHandler.KeyCode.VK_F1:
+                case UserInputHandler.KeyCode.VK_F2:
+                case UserInputHandler.KeyCode.VK_F3:
+                case UserInputHandler.KeyCode.VK_F4:
+                case UserInputHandler.KeyCode.VK_F5:
+                case UserInputHandler.KeyCode.VK_F6:
+                case UserInputHandler.KeyCode.VK_F7:
+                case UserInputHandler.KeyCode.VK_F8:
+                case UserInputHandler.KeyCode.VK_F9:
+                case UserInputHandler.KeyCode.VK_F10:
+                case UserInputHandler.KeyCode.VK_F11:
+                case UserInputHandler.KeyCode.VK_F12:
+                    return;
+            }
+
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             var currentLine = gateway.GetCurrentLine();
+
             NavigationHandler.UpdateHistory(new JumpLocation(gateway.GetFullCurrentPath(), currentLine), NavigateActionType.KEYBOARD_DOWN);
         }
 
@@ -206,8 +233,13 @@ namespace NppJsonLinksPlugin
                 case UserInputHandler.MouseMessage.WM_LBUTTONUP:
                     if (Control.ModifierKeys == Keys.Control)
                     {
-                        var success = GoToDefinition();
-                        if (success) return;
+                        NavigationHandler.UpdateHistory(
+                            PluginBase.GetGatewayFactory().Invoke().GetCurrentLocation(),
+                            NavigateActionType.MOUSE_CLICK
+                        );
+
+                        GoToDefinition();
+                        return;
                     }
 
                     break;
@@ -266,8 +298,15 @@ namespace NppJsonLinksPlugin
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             gateway.OpenFile(file);
 
-            // задержка фиксит багу с выделением текста при переходе
-            ThreadUtils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
+            if (_settings.JumpToLineDelay > 0)
+            {
+                // задержка фиксит багу с выделением текста при переходе
+                ThreadUtils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
+            }
+            else
+            {
+                gateway.JumpToLine(line);
+            }
         }
 
         internal static void OnShutdown()
