@@ -67,8 +67,7 @@ necessary:
    + нужна возможность для одной ссылки указать несколько источников с непересекающимися id;
        + "order": 1,    // чем меньше order, тем приоритетнее будет элемент mapping-а, по умолчанию order = int.MaxValue - 10000
    + мне все еще не нравится как работает навигация.
-
-   - while защита
+   + while защита
 
    - настроить маппинг для самых основных ссылок:
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
@@ -80,9 +79,6 @@ necessary:
         // relicId<<<extension<<<*restriction?
         //craftPieceId
         //specificMobIds
-        
-    - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
-        - невозможно обработать, потому что айдишники пересекаются для разных групп кастомизации
    
    - ролик-превьюшка:
         - надоело проверять что 11 комната это тронный зал?
@@ -92,6 +88,8 @@ necessary:
         - установи NppJsonLinksPlugin прямо сейчас и в подарок ты получишь опцию подсветки кликабельных ссылок!
         
 unnecessary:
+    - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
+        - невозможно обработать, потому что айдишники пересекаются для разных групп кастомизации
     - settings.validation
     - подключить нормальный логгер
     

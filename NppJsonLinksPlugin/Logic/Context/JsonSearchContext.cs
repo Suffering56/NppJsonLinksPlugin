@@ -43,6 +43,7 @@ namespace NppJsonLinksPlugin.Logic.Context
                     {
                         Logger.Fail($"expectedWord: [{expectedWord}] does not match with selectedProperty: [{_selectedProperty}], because {propertyResult.PropertyName} != {parent.GetWordString()}");
                     }
+
                     return false;
                 }
 
@@ -141,9 +142,7 @@ namespace NppJsonLinksPlugin.Logic.Context
             string lineText = GetLineText(lineIndex);
 
             int lineLength = lineText.Length;
-            for (int i = lineOffset;
-                i < lineLength;
-                i++)
+            for (int i = lineOffset; i < lineLength; i++)
             {
                 var ch = lineText[i];
 

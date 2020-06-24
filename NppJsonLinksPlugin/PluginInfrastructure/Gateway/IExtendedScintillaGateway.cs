@@ -12,10 +12,6 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
 
         int LineToPosition(int line);
 
-        string GetTextFromPosition(int startPosition, int length, int linesAdded);
-
-        string GetTextFromPositionSafe(int currentPosition, int length, int linesAdded);
-
         string GetCurrentWord();
 
         int GetCurrentLine();
