@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NppJsonLinksPlugin.Configuration;
@@ -9,13 +8,14 @@ using NppJsonLinksPlugin.Logic.Context;
 using NppJsonLinksPlugin.Logic.Parser;
 using NppJsonLinksPlugin.Logic.Parser.Json;
 using static NppJsonLinksPlugin.Configuration.Settings;
+using static NppJsonLinksPlugin.Configuration.Settings.MappingItem;
 
 namespace NppJsonLinksPlugin.Logic
 {
     public class SearchEngine
     {
         private readonly IDocumentParser _parser;
-        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap;
+        private readonly IExtendedDictionary<MappingItem, DstFileContainer> _mappingToDstFileContainerMap; // разные mapping item-ы могут ссылаться на один и тот же контейнер
 
         private string _currentFilePath = null;
 
@@ -41,11 +41,13 @@ namespace NppJsonLinksPlugin.Logic
                 fileDstWords.Add(dst.Word);
             }
 
+            IExtendedDictionary<DstLocation, DstFileContainer> dstContainerCache = new ExtendedDictionary<DstLocation, DstFileContainer>();
+
             foreach (var mappingItem in settings.Mapping)
             {
-                var dstFilePath = mappingItem.Dst.FullPath;
-                var supportedWords = dstFilePathToDstWordsCache[dstFilePath];
-                _mappingToDstFileContainerMap[mappingItem] = new DstFileContainer(_parser, dstFilePath, supportedWords);
+                var supportedWords = dstFilePathToDstWordsCache[mappingItem.Dst.FullPath];
+                var dstFileContainer = dstContainerCache.ComputeIfAbsent(mappingItem.Dst, dst => new DstFileContainer(_parser, dst.FullPath, supportedWords));
+                _mappingToDstFileContainerMap[mappingItem] = dstFileContainer;
             }
 
             SwitchContext(currentFilePath);
@@ -58,17 +60,6 @@ namespace NppJsonLinksPlugin.Logic
 
             Logger.Info($"OnSwitchContext[changed={currentFilePath != _currentFilePath}]: <{_currentFilePath}> to <{currentFilePath}>");
             _currentFilePath = currentFilePath;
-        }
-
-        public void FireInsertText(int currentLine, int linesAdded, string insertedText)
-        {
-            // GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
-        }
-
-        public void FireDeleteText(int currentLine, int linesDeleted)
-        {
-            //from = currentLine + 1, to =  currentLine - linesAdded
-            // GetContainerByDstFilePath(_currentFilePath)?.OnContentChanged();
         }
 
         public void FireSaveFile()
@@ -87,7 +78,15 @@ namespace NppJsonLinksPlugin.Logic
                 return null;
             }
 
-            var mappingItem = GetMappingItem(searchContext);
+            return SelectMappingItems(searchContext)
+                .Select(item => FindForMapping(searchContext, item))
+                .FirstOrDefault(location => location != null);
+        }
+
+        private JumpLocation? FindForMapping(ISearchContext searchContext, MappingItem mappingItem)
+        {
+            var property = searchContext.GetSelectedProperty();
+
             if (mappingItem == null)
             {
                 Logger.Info($"FAIL: mapping not found! selectedProperty={property} by selectedWord=\"{searchContext.GetSelectedWord()}\" does not match with any srcWord");
@@ -110,16 +109,13 @@ namespace NppJsonLinksPlugin.Logic
             return jumpLocation;
         }
 
-        private MappingItem? GetMappingItem(ISearchContext searchContext)
+        private List<MappingItem> SelectMappingItems(ISearchContext searchContext)
         {
-            foreach (var mappingItem in _mappingToDstFileContainerMap.Keys)
-            {
-                if (!mappingItem.Src.MatchesWithPath(_currentFilePath)) continue;
-
-                if (searchContext.MatchesWith(mappingItem.Src.Word, true)) return mappingItem;
-            }
-
-            return null;
+            return _mappingToDstFileContainerMap.Keys
+                .Where(mappingItem => mappingItem.Src.MatchesWithPath(_currentFilePath))
+                .Where(mappingItem => searchContext.MatchesWith(mappingItem.Src.Word, true))
+                .OrderBy(item => item.Dst.Order)
+                .ToList();
         }
 
         private DstFileContainer GetContainerByDstFilePath(string dstFilePath)
@@ -132,7 +128,6 @@ namespace NppJsonLinksPlugin.Logic
             private readonly IDocumentParser _parser;
             internal string DstFilePath { get; }
             private readonly IDictionary<Word, ValuesLocationContainer> _dstWordToValuesLocationContainer; // dstWord -> ValuesLocationContainer
-            private readonly bool _hasComplexWords;
             private bool _inited;
             private bool _changed;
 
@@ -143,16 +138,10 @@ namespace NppJsonLinksPlugin.Logic
                 _dstWordToValuesLocationContainer = new Dictionary<Word, ValuesLocationContainer>();
 
                 _inited = false;
-                _hasComplexWords = false;
                 _changed = false;
 
                 foreach (var dstWord in dstWords)
                 {
-                    if (dstWord.IsComplex())
-                    {
-                        _hasComplexWords = true;
-                    }
-
                     _dstWordToValuesLocationContainer[dstWord] = new ValuesLocationContainer(dstFilePath);
                 }
             }

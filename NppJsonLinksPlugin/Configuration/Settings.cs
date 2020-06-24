@@ -85,12 +85,14 @@ namespace NppJsonLinksPlugin.Configuration
                             srcLocation.FileName,
                             rawSettings.MappingDefaultFilePath,
                             srcLocation.OverrideFilePath,
-                            srcLocation.FileNameRegexpEnabled
+                            srcLocation.FileNameRegexpEnabled,
+                            srcLocation.IgnoredFileNames
                         ),
                         Dst = new Settings.MappingItem.DstLocation
                         (
                             Word.ParseDst(rawMappingItem.Dst.Word),
                             rawMappingItem.Dst.FileName,
+                            rawMappingItem.Dst.Order,
                             rawSettings.MappingDefaultFilePath,
                             rawMappingItem.Dst.OverrideFilePath
                         )
@@ -191,7 +193,18 @@ namespace NppJsonLinksPlugin.Configuration
 
             public class SrcLocation
             {
-                public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled)
+                public readonly Word Word;
+                private readonly string _initialFileName;
+                internal readonly string FilePath;
+                private readonly ISet<string> _ignoredFileNames;
+
+                private readonly string _fileName;
+                private readonly string _fileNamePattern;
+
+                private const string ANY_FILE = "*";
+                private const string ASTERISK_PATTERN = "[^:/\\\\*?\"<>]+";
+
+                public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled, List<string> ignoredFileNames)
                 {
                     _initialFileName = fileName;
                     Word = word;
@@ -204,6 +217,11 @@ namespace NppJsonLinksPlugin.Configuration
                     {
                         FilePath = FilePath.Substring(0, FilePath.Length - 1);
                     }
+
+                    _ignoredFileNames = new HashSet<string>(ignoredFileNames
+                        .Select(ignoredFileName => Path.Combine(FilePath, ignoredFileName))
+                        .Select(StringUtils.NormalizePath)
+                    );
 
                     if (fileNameRegexpEnabled)
                     {
@@ -222,16 +240,6 @@ namespace NppJsonLinksPlugin.Configuration
                     }
                 }
 
-                public readonly Word Word;
-                private readonly string _initialFileName;
-                internal readonly string FilePath;
-
-                private readonly string _fileName;
-                private readonly string _fileNamePattern;
-
-                private const string AnyFile = "*";
-                private const string AsteriskPattern = "[^:/\\\\*?\"<>]+";
-
                 private static string ToRegexp(string fileName)
                 {
                     var rawPattern = new StringBuilder(fileName)
@@ -243,7 +251,7 @@ namespace NppJsonLinksPlugin.Configuration
                         rawPattern += "$";
                     }
 
-                    return rawPattern.Replace("*", AsteriskPattern);
+                    return rawPattern.Replace("*", ASTERISK_PATTERN);
                 }
 
                 public bool MatchesWithPath(string absoluteNormalizedFilePath)
@@ -251,12 +259,16 @@ namespace NppJsonLinksPlugin.Configuration
                     var fileName = Path.GetFileName(absoluteNormalizedFilePath);
                     if (fileName == null)
                     {
-                        // ReSharper disable once ExpressionIsAlwaysNull
                         Logger.Warn($"could not extract file name from path: {absoluteNormalizedFilePath}");
                         return false;
                     }
 
-                    if (FilePath != AnyFile)
+                    if (_ignoredFileNames.Contains(absoluteNormalizedFilePath))
+                    {
+                        return false;
+                    }
+
+                    if (FilePath != ANY_FILE)
                     {
                         var directoryName = Path.GetDirectoryName(absoluteNormalizedFilePath);
 
@@ -308,14 +320,16 @@ namespace NppJsonLinksPlugin.Configuration
             {
                 public readonly Word Word;
                 public readonly string FullPath;
+                public readonly int Order;
 
-                public DstLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath)
+                public DstLocation(Word word, string fileName, int order, string defaultFilePath, string overrideFilePath)
                 {
                     string pathPrefix = !string.IsNullOrWhiteSpace(overrideFilePath)
                         ? overrideFilePath
                         : defaultFilePath;
 
                     Word = word;
+                    Order = order;
                     FullPath = StringUtils.NormalizePath($"{pathPrefix}\\{fileName}");
                 }
 

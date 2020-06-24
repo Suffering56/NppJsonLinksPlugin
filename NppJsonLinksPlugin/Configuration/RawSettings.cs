@@ -8,7 +8,7 @@ namespace NppJsonLinksPlugin.Configuration
     {
         [JsonProperty(PropertyName = "highlightingEnabled")]
         public bool HighlightingEnabled = true;
-        
+
         [JsonProperty(PropertyName = "soundEnabled")]
         public bool SoundEnabled = true;
 
@@ -20,7 +20,7 @@ namespace NppJsonLinksPlugin.Configuration
 
         [JsonProperty(PropertyName = "mapping")]
         public IList<RawMappingItem> Mapping;
-        
+
         [JsonObject]
         public class RawMappingItem
         {
@@ -42,6 +42,9 @@ namespace NppJsonLinksPlugin.Configuration
                 [JsonProperty(PropertyName = "fileName", Required = Required.Always)]
                 public string FileName;
 
+                [JsonProperty(PropertyName = "ignoredFileNames")]
+                public List<string> IgnoredFileNames = new List<string>();
+
                 [JsonProperty(PropertyName = "word", Required = Required.Always)]
                 public string Word;
 
@@ -50,6 +53,9 @@ namespace NppJsonLinksPlugin.Configuration
 
                 [JsonProperty(PropertyName = "wordRegexpEnabled")]
                 public bool WordRegexpEnabled = false;
+                
+                [JsonProperty(PropertyName = "order")]
+                public int Order = AppConstants.DEFAULT_DST_ORDER;
             }
         }
     }

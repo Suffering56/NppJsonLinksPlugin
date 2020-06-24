@@ -181,7 +181,6 @@ namespace NppJsonLinksPlugin
                 case (uint) SciMsg.SCN_SAVEPOINTREACHED:
                     // пользователь сохранил изменения в текущем файле (ctrl + s)
                     SearchEngine.FireSaveFile();
-                    Logger.Info("SCN_SAVEPOINTREACHED");
                     break;
 
                 case (uint) SciMsg.SCN_UPDATEUI:
