@@ -1060,6 +1060,8 @@ namespace NppJsonLinksPlugin.PluginInfrastructure
 
         /// Retrieve the position at the start of a line.
         SCI_POSITIONFROMLINE = 2167,
+        
+        SCI_INDEXPOSITIONFROMLINE = 2714,
 
         /// Scroll horizontally and vertically.
         SCI_LINESCROLL = 2168,

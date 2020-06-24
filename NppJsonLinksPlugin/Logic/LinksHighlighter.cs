@@ -175,6 +175,7 @@ namespace NppJsonLinksPlugin.Logic
                             if (IsNeedToHighlightWord(word, lineIndex, i - wordLength))
                             {
                                 int position = _gateway.LineToPosition(lineIndex) + i - wordLength;
+                                // int position = _gateway.IndexPositionFromLine(lineIndex, i - wordLength);
                                 HighlightWord(position, wordLength);
                             }
 

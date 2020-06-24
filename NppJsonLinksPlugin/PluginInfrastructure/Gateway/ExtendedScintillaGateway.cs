@@ -82,5 +82,10 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
             Win32.SendMessage(scintilla, SciMsg.SCI_SETINDICATORCURRENT, indicatorId, Unused);
             Win32.SendMessage(scintilla, SciMsg.SCI_INDICATORCLEARRANGE, startPosition, length);
         }
+
+        public int IndexPositionFromLine(int lineIndex, int linePosition)
+        {
+            return (int) Win32.SendMessage(scintilla, SciMsg.SCI_INDEXPOSITIONFROMLINE, lineIndex, linePosition);
+        }
     }
 }

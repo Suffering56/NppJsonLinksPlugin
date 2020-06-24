@@ -25,5 +25,7 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
         void ApplyIndicatorStyleForRange(int indicatorId, int startPosition, int length);
 
         void ClearIndicatorStyleForRange(int indicatorId, int startPosition, int length);
+        
+        int IndexPositionFromLine(int lineIndex, int linePosition);
     }
 }

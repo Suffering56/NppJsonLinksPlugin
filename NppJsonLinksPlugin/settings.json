@@ -69,15 +69,6 @@
           "word": "abilityId"
         },
         {
-          "fileName": "*.json",
-          "ignoredFileNames": [
-            "parametrizedMobs.json",
-            "abilities.json",
-            "mobSettings.json"
-          ],
-          "word": "id<<<abilities"
-        },
-        {
           "fileName": "equipmentSets.json",
           "word": "id<<<from<<<abilityMappings"
         },
@@ -90,7 +81,18 @@
           "ignoredFileNames": [
             "parametrizedMobs.json",
             "abilities.json",
-            "mobSettings.json"
+            "mobSettings.json",
+            "rewardPacks.json"
+          ],
+          "word": "id<<<abilities"
+        },
+        {
+          "fileName": "*.json",
+          "ignoredFileNames": [
+            "parametrizedMobs.json",
+            "abilities.json",
+            "mobSettings.json",
+            "rewardPacks.json"
           ],
           "word": "id<<<abilityRef"
         },
@@ -99,7 +101,8 @@
           "ignoredFileNames": [
             "parametrizedMobs.json",
             "abilities.json",
-            "mobSettings.json"
+            "mobSettings.json",
+            "rewardPacks.json"
           ],
           "word": "id<<<ability"
         },
@@ -213,7 +216,7 @@
       ]
     },
     {
-      "description": "parametrizedMobs.json: templateId",
+      "description": "parametrizedMobs.json: templateId/mobId/specificMobId",
       "dst": {
         "order": 2,
         "fileName": "parametrizedMobs.json",
@@ -245,6 +248,59 @@
         {
           "fileName": "*.json",
           "word": "mobId"
+        }
+      ]
+    },
+    {
+      "description": "animals.json: animalId",
+      "dst": {
+        "fileName": "animals.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "animalId"
+        }
+      ]
+    },
+    {
+      "description": "unit.json: unitId",
+      "dst": {
+        "fileName": "unit.json",
+        "word": "id<<<generatedUnits"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "unitId"
+        }
+      ]
+    },
+    {
+      "description": "craftPieces.json: craftPieceId",
+      "dst": {
+        "fileName": "craftPieces.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "craftPieceId"
+        }
+      ]
+    },
+    
+    {
+      "description": "coop.json: etherModifierId",
+      "dst": {
+        "fileName": "coop.json",
+        "word": "id<<<etherModifiers"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "etherModifierId"
         }
       ]
     }
