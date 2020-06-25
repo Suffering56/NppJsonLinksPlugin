@@ -69,46 +69,38 @@
           "word": "abilityId"
         },
         {
+          "fileName": "*.json",
+          "word": "subAbilities"
+        },
+        {
+          "fileName": "*.json",
+          "word": "*abilityIds*"
+        },
+        {
+          "fileName": "*.json",
+          "ignoredFileNames": [
+            "parametrizedMobs.json",
+            "abilities.json",
+            "mobSettings.json",
+            "rewardPacks.json",
+            "equipments.json"
+          ],
+          // ability/abilities/abilityEntry/abilityRef
+          "word": "id<<<abilit*"
+        },
+        {
+          
+          // equipments.json/defaultEquipments.json
+          "fileName": "*equipments.json",
+          "word": "id<<<abilityEntryRandom"
+        },
+        {
           "fileName": "equipmentSets.json",
           "word": "id<<<from<<<abilityMappings"
         },
         {
           "fileName": "equipmentSets.json",
           "word": "id<<<to<<<abilityMappings"
-        },
-        {
-          "fileName": "*.json",
-          "ignoredFileNames": [
-            "parametrizedMobs.json",
-            "abilities.json",
-            "mobSettings.json",
-            "rewardPacks.json"
-          ],
-          "word": "id<<<abilities"
-        },
-        {
-          "fileName": "*.json",
-          "ignoredFileNames": [
-            "parametrizedMobs.json",
-            "abilities.json",
-            "mobSettings.json",
-            "rewardPacks.json"
-          ],
-          "word": "id<<<abilityRef"
-        },
-        {
-          "fileName": "*.json",
-          "ignoredFileNames": [
-            "parametrizedMobs.json",
-            "abilities.json",
-            "mobSettings.json",
-            "rewardPacks.json"
-          ],
-          "word": "id<<<ability"
-        },
-        {
-          "fileName": "*.json",
-          "word": "subAbilities"
         }
       ]
     },
@@ -290,7 +282,6 @@
         }
       ]
     },
-    
     {
       "description": "coop.json: etherModifierId",
       "dst": {

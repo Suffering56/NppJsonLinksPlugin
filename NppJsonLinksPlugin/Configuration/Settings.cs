@@ -202,7 +202,7 @@ namespace NppJsonLinksPlugin.Configuration
                 private readonly string _fileNamePattern;
 
                 private const string ANY_FILE = "*";
-                private const string ASTERISK_PATTERN = "[^:/\\\\*?\"<>]+";
+                private const string ASTERISK_PATTERN = "[^:/\\\\*?\"<>]*";
 
                 public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled, List<string> ignoredFileNames)
                 {
@@ -246,12 +246,7 @@ namespace NppJsonLinksPlugin.Configuration
                         .Replace("*.*", "*")
                         .ToString();
 
-                    if (rawPattern.EndsWith("*"))
-                    {
-                        rawPattern += "$";
-                    }
-
-                    return rawPattern.Replace("*", ASTERISK_PATTERN);
+                    return "^" + rawPattern.Replace("*", ASTERISK_PATTERN) + "$";
                 }
 
                 public bool MatchesWithPath(string absoluteNormalizedFilePath)
@@ -283,7 +278,7 @@ namespace NppJsonLinksPlugin.Configuration
                         return fileName == _fileName;
                     }
 
-                    return Regex.IsMatch(fileName, _fileNamePattern);
+                    return Regex.IsMatch(fileName, _fileNamePattern, RegexOptions.IgnoreCase);
                 }
 
                 public override string ToString()

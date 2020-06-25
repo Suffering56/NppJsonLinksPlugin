@@ -14,6 +14,8 @@ namespace NppJsonLinksPlugin.Logic.Context
         private readonly IScintillaGateway _gateway;
         private readonly int _totalLinesCount;
 
+        private const int DEFAULT_SEARCH_LINES_LIMIT = 2000;
+
         public JsonSearchContext(string selectedWord, IScintillaGateway gateway, int initialLineIndex, int indexOfSelectedWord)
         {
             _gateway = gateway;
@@ -393,9 +395,16 @@ namespace NppJsonLinksPlugin.Logic.Context
             string propertyName = null;
 
             var lineOffset = initialLineOffset;
+            var linesLimit = DEFAULT_SEARCH_LINES_LIMIT;
 
             for (int lineIndex = initialLineIndex; lineIndex >= 0; lineIndex--)
             {
+                if (--linesLimit < 0)
+                {
+                    Logger.Fail($"PROCESSING_LINES_LIMIT exceeded for selected word=\"{_selectedWord}\"");
+                    return PropertyNameLocation.Root;
+                }
+
                 var lineText = GetLineText(lineIndex);
                 if (lineIndex < initialLineIndex)
                 {
