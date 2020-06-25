@@ -2239,16 +2239,16 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
         }
 
         /// <summary>Get position of start of word. (Scintilla feature 2266)</summary>
-        public int WordStartPosition(Position pos, bool onlyWordCharacters)
+        public int WordStartPosition(int pos, bool onlyWordCharacters)
         {
-            IntPtr res = Win32.SendMessage(scintilla, SciMsg.SCI_WORDSTARTPOSITION, pos.Value, onlyWordCharacters ? 1 : 0);
+            IntPtr res = Win32.SendMessage(scintilla, SciMsg.SCI_WORDSTARTPOSITION, pos, onlyWordCharacters ? 1 : 0);
             return (int) res;
         }
 
         /// <summary>Get position of end of word. (Scintilla feature 2267)</summary>
-        public int WordEndPosition(Position pos, bool onlyWordCharacters)
+        public int WordEndPosition(int pos, bool onlyWordCharacters)
         {
-            IntPtr res = Win32.SendMessage(scintilla, SciMsg.SCI_WORDENDPOSITION, pos.Value, onlyWordCharacters ? 1 : 0);
+            IntPtr res = Win32.SendMessage(scintilla, SciMsg.SCI_WORDENDPOSITION, pos, onlyWordCharacters ? 1 : 0);
             return (int) res;
         }
 

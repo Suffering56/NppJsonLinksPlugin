@@ -1095,10 +1095,10 @@ namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
         int GetMouseDwellTime();
 
         /// <summary>Get position of start of word. (Scintilla feature 2266)</summary>
-        int WordStartPosition(Position pos, bool onlyWordCharacters);
+        int WordStartPosition(int pos, bool onlyWordCharacters);
 
         /// <summary>Get position of end of word. (Scintilla feature 2267)</summary>
-        int WordEndPosition(Position pos, bool onlyWordCharacters);
+        int WordEndPosition(int pos, bool onlyWordCharacters);
 
         /// <summary>Sets whether text is word wrapped. (Scintilla feature 2268)</summary>
         void SetWrapMode(int mode);

@@ -172,10 +172,19 @@ namespace NppJsonLinksPlugin.Logic
                         {
                             string word = currentWord.ToString();
                             var wordLength = word.Length;
+
                             if (IsNeedToHighlightWord(word, lineIndex, i - wordLength))
                             {
+                                // TODO может помочь победить баг с кириллицей
+                                // int position = _gateway.LineToPosition(lineIndex) + i;
+                                // int startPosition = _gateway.WordStartPosition(position, true);
+                                // int endPosition = _gateway.WordEndPosition(position, true);
+                                // HighlightWord(startPosition, endPosition - startPosition);
+
+                                // в доке эта штука была описана как то, что мне нужно (
+                                // int position = _gateway.IndexPositionFromLine(lineIndex, i - wordLength);    
+
                                 int position = _gateway.LineToPosition(lineIndex) + i - wordLength;
-                                // int position = _gateway.IndexPositionFromLine(lineIndex, i - wordLength);
                                 HighlightWord(position, wordLength);
                             }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.Logic;
 
 namespace NppJsonLinksPlugin.PluginInfrastructure.Gateway
