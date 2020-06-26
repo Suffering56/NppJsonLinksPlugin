@@ -242,6 +242,34 @@
         }
       ]
     },
+
+    {
+      // ====================================== CHESTS: chests.json ============================================
+      "description": "chests.json: chestId",
+      "dst": {
+        "fileName": "chests.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*chestId"
+        },
+        {
+          "fileName": "coop.json",
+          "word": "chestIdForTorches"
+        },
+        {
+          "fileName": "friendsGifts.json",
+          "word": "sentRewardChest"
+        },
+        {
+          "fileName": "restrictionsByIdSettings.json",  
+          "word": "looksLikeChestWithId"
+        }
+      ]
+    },
+    
     {
       // ====================================== TRAVEL_ZONES: festivalTravelZones.json ============================================
       "description": "festivalTravelZones.json: festivalZoneId",
@@ -332,6 +360,27 @@
         }
       ]
     },
+
+    {
+      // ====================================== FESTIVAL_SHOPS: festivalShops.json ============================================
+      "description": "festivalShops.json: festivalShopId",
+      "dst": {
+        "fileName": "festivalShops.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "festivalShopId"
+        },
+        {
+          "fileName": "festivalSettings.json",
+          "word": "shopId"
+        }
+      ]
+    },
+    
+    
     
     {
       "description": "rooms.json: roomId",
@@ -343,6 +392,10 @@
         {
           "fileName": "*.json",
           "word": "roomId"
+        },
+        {
+          "fileName": "craftRules.json",
+          "word": "workshopId"
         }
       ]
     },
@@ -381,23 +434,7 @@
         }
       ]
     },
-    {
-      "description": "chests.json: chestId",
-      "dst": {
-        "fileName": "chests.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "*chestId"
-        },
-        {
-          "fileName": "*.json",
-          "word": "chestIdForTorches"
-        }
-      ]
-    },
+  
     
    
     {
@@ -449,6 +486,23 @@
         {
           "fileName": "*.json",
           "word": "etherModifierId"
+        }
+      ]
+    },
+    {
+      "description": "diamonds.json: diamondId",
+      "dst": {
+        "fileName": "diamonds.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "diamondId"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "replacedDiamondId"
         }
       ]
     }

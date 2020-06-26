@@ -228,31 +228,38 @@ namespace NppJsonLinksPlugin
 
         private static void HandleMouseEvent(UserInputHandler.MouseMessage msg)
         {
+            bool goToDefinition = false;
+
             switch (msg)
             {
                 case UserInputHandler.MouseMessage.WM_LBUTTONUP:
                     if (Control.ModifierKeys == Keys.Control)
                     {
-                        NavigationHandler.UpdateHistory(
-                            PluginBase.GetGatewayFactory().Invoke().GetCurrentLocation(),
-                            NavigateActionType.MOUSE_CLICK
-                        );
-
-                        GoToDefinition();
-                        return;
+                        goToDefinition = true;
                     }
 
                     break;
 
                 case UserInputHandler.MouseMessage.WM_RBUTTONUP:
                     break;
+                case UserInputHandler.MouseMessage.WM_MOUSEWHEEL:
+                    //TODO: почему-то клик по колесику мыши вообще не инициирует никакой mouse event
+                    // goToDefinition = true;
+                    break;
 
                 default:
                     return;
             }
 
-            var gateway = PluginBase.GetGatewayFactory().Invoke();
-            NavigationHandler.UpdateHistory(gateway.GetCurrentLocation(), NavigateActionType.MOUSE_CLICK);
+            NavigationHandler.UpdateHistory(
+                PluginBase.GetGatewayFactory().Invoke().GetCurrentLocation(),
+                NavigateActionType.MOUSE_CLICK
+            );
+
+            if (goToDefinition)
+            {
+                GoToDefinition();
+            }
         }
 
         private static void GoToDefinitionCmd()

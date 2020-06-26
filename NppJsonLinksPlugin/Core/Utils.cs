@@ -24,7 +24,7 @@ namespace NppJsonLinksPlugin.Core
 
         public static string CurrentDateTimeStr()
         {
-            return DateTime.Now.ToString("yyyy_MM_dd hh:mm:ss");
+            return DateTime.Now.ToString("yyyy_MM_dd HH:mm:ss");
         }
     }
 

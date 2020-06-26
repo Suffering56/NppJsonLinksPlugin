@@ -72,6 +72,7 @@ necessary:
    - equipmentView.json:28/coop.json:39: cyrillic bug
    - подумать над знанчением PROCESSING_LINES_LIMIT (вынести в настройки)   -> searchLinesLimit
    - в теории можно и лиды поддержать
+   - закладки через ctrl + 1/2/3/4/5/6...
 
    - настроить маппинг для самых основных ссылок:
         + abilities                 => abilities.json
@@ -119,8 +120,9 @@ necessary:
         //shopId
         //commanderPathId
         //battlePassId
-        //questsId
+        //questsId  //quests
         //sourceId
+        //advertisingId
           
         
         // "id"
