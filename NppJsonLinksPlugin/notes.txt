@@ -124,7 +124,8 @@ necessary:
         //sourceId
         //advertisingId
           
-        
+          
+        // merchants.json + merchantGoods.json??? unused?
         // "id"
         
        "mobTags": [

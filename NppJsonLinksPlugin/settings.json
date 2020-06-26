@@ -379,8 +379,70 @@
         }
       ]
     },
-    
-    
+
+    {
+      // ====================================== FESTIVAL_GOODS: festivalGoods.json ============================================
+      "description": "festivalGoods.json: goodId",
+      "dst": {
+        "fileName": "festivalGoods.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "festivalShopId"
+        },
+        {
+          "fileName": "festivalShops.json",
+          "word": "goodId?"
+        }
+      ]
+    },
+
+    {
+      // ====================================== COOP_GLOBAL_SHOP_GOODS: coopGlobalShopGoods.json ============================================
+      "description": "coopGlobalShopGoods.json: goodId",
+      "dst": {
+        "fileName": "coopGlobalShopGoods.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "coopGlobalShop.json",
+          "word": "shopGoodId?"
+        }
+      ]
+    },
+
+    {
+      // ====================================== GLOBAL_SHOP_GOODS: shop.json ============================================
+      "description": "shop.json: goodId",
+      "dst": {
+        "fileName": "shop.json",
+        "word": "id<<<goods"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "shopGoodId?",
+          "ignoredFileNames": [
+            "coopGlobalShop.json"
+          ]
+        },
+        {
+          "fileName": "portal.json",
+          "word": "goodId"
+        },
+        {
+          "fileName": "globalSettings.json",
+          "word": "shopGoodWithCraftPiecesId"
+        },
+        {
+          "fileName": "globalSettings.json",
+          "word": "shopGoodIdWithGemstonesAndDust"
+        }
+      ]
+    },
     
     {
       "description": "rooms.json: roomId",
