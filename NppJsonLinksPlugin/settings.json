@@ -5,59 +5,7 @@
   "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
     {
-      "description": "rooms.json: roomId",
-      "dst": {
-        "fileName": "rooms.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "wordRegexpEnabled": true,
-          "fileName": "*.json",
-          "word": "roomId<<<extension<<<^[\\w_]*restriction[\\w_]?$"
-        }
-      ]
-    },
-    {
-      "description": "equipments.json: equipmentId",
-      "dst": {
-        "fileName": "equipments.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "equipmentId"
-        }
-      ]
-    },
-    {
-      "description": "offers.json: offerId",
-      "dst": {
-        "fileName": "offers.json",
-        "word": "id<<<offers"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "offerId"
-        }
-      ]
-    },
-    {
-      "description": "parametrizedMobs.json: defaultParamsKey",
-      "dst": {
-        "fileName": "parametrizedMobs.json",
-        "word": "paramKey<<<params"
-      },
-      "src": [
-        {
-          "fileName": "parametrizedMobs.json",
-          "word": "defaultParamsKey"
-        }
-      ]
-    },
-    {
+      // ====================================== ABILITIES ============================================
       "description": "abilities.json: abilityId",
       "dst": {
         "fileName": "abilities.json",
@@ -100,6 +48,231 @@
         {
           "fileName": "equipmentSets.json",
           "word": "id<<<to<<<abilityMappings"
+        },
+        {
+          "fileName": "runeSettings.json",
+          "word": "from<<<transformations"
+        },
+        {
+          "fileName": "runeSettings.json",
+          "word": "to<<<transformations"
+        }
+      ]
+    },
+    {
+      // ====================================== MOBS: mobSettings.json ============================================
+      "description": "mobSettings.json: mobId",
+      "dst": {
+        "fileName": "mobSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "order": 1,
+          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
+          "fileName": "*.json",
+          "word": "mobId"
+        },
+        {
+          "order": 2,
+          // parametrizedMobs [1] > mobSettings[2]
+          "fileName": "*.json",
+          "word": "specificMobId?"
+        }
+      ]
+    },
+    {
+      // ====================================== MOBS: parametrizedMobs.json ============================================
+      "description": "parametrizedMobs.json: templateId/mobId/specificMobId",
+      "dst": {
+        "fileName": "parametrizedMobs.json",
+        "word": "id<<<templates"
+      },
+      "src": [
+        {
+          "order": 1,
+          // parametrizedMobs [1] > mobSettings[2]
+          "fileName": "*.json",
+          "word": "specificMobId?"
+        },
+        {
+          "order": 2,
+          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
+          "fileName": "*.json",
+          "word": "mobId"
+        }
+      ]
+    },
+    {
+      // ====================================== MOBS: summonSettings.json ============================================
+      "description": "summonSettings.json: mobId",
+      "dst": {
+        "fileName": "summonSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "order": 3,
+          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
+          "fileName": "*.json",
+          "word": "mobId"
+        }
+      ]
+    },
+    {
+      // ====================================== EQUIPMENTS: equipments.json ============================================
+      "description": "equipments.json: equipmentId",
+      "dst": {
+        "fileName": "equipments.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "order": 2, // defaultEquipments[1] > equipments[2]
+          "fileName": "*.json",
+          "word": "*equipmentId?"
+        },
+        {
+          "fileName": "craftRules.json",
+          "word": "value<<<*equipmentId?"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "itemId<<<uniqueEquipmentViews"
+        },
+        {
+          "fileName": "tourneySettings.json",
+          "word": "value<<<weightedEquipmentIds"
+        }
+      ]
+    },
+    {
+      // ====================================== EQUIPMENTS: defaultEquipments.json ============================================
+      "description": "defaultEquipments.json: defaultEquipmentId",
+      "dst": {
+        "fileName": "defaultEquipments.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "order": 1, // defaultEquipments[1] > equipments[2]
+          "fileName": "*.json",
+          "word": "*equipmentId?"
+        }
+      ]
+    },
+    {
+      // ====================================== EQUIPMENTS: equipmentTiers.json ============================================
+      "description": "equipmentTiers.json: tierId",
+      "dst": {
+        "fileName": "equipmentTiers.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "tierId"  //TODO: *tierId
+        }
+      ]
+    },
+    {
+      // ====================================== EQUIPMENTS: equipmentViews.json ============================================
+      "description": "equipmentViews.json: equipmentViewId",
+      "dst": {
+        "fileName": "equipmentViews.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "viewId"  //TODO *viewId
+        },
+        {
+          "fileName": "*.json",
+          "word": "equipmentViewId"
+        }
+      ]
+    },
+    
+    {
+      // ====================================== EQUIPMENTS: equipmentSets.json: setId ============================================
+      "description": "equipmentSets.json: setId",
+      "dst": {
+        "fileName": "equipmentSets.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "setId"
+        }
+      ]
+    },
+
+    {
+      // ====================================== EQUIPMENTS: equipmentSets.json: setElementId ============================================
+      "description": "equipmentSets.json: setElementId",
+      "dst": {
+        "fileName": "equipmentSets.json",
+        "word": "id<<<elements"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "setElementId"
+        }
+      ]
+    },
+    
+    {
+      "description": "rooms.json: roomId",
+      "dst": {
+        "fileName": "rooms.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "setId"
+        }
+      ]
+    },
+    {
+      "description": "rooms.json: roomId",
+      "dst": {
+        "fileName": "rooms.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "roomId"
+        }
+      ]
+    },
+    {
+      "description": "offers.json: offerId",
+      "dst": {
+        "fileName": "offers.json",
+        "word": "id<<<offers"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "offerId"
+        }
+      ]
+    },
+    {
+      "description": "parametrizedMobs.json: defaultParamsKey",
+      "dst": {
+        "fileName": "parametrizedMobs.json",
+        "word": "paramKey<<<params"
+      },
+      "src": [
+        {
+          "fileName": "parametrizedMobs.json",
+          "word": "defaultParamsKey"
         }
       ]
     },
@@ -121,19 +294,6 @@
         {
           "fileName": "*.json",
           "word": "armorType<<<mobMatchRules"
-        }
-      ]
-    },
-    {
-      "description": "defaultEquipments.json: defaultEquipmentId",
-      "dst": {
-        "fileName": "defaultEquipments.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "mobSettings.json",
-          "word": "defaultEquipmentIds"
         }
       ]
     },
@@ -171,79 +331,7 @@
         }
       ]
     },
-    {
-      "description": "equipmentViews.json: equipmentViewId",
-      "dst": {
-        "fileName": "equipmentViews.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "*rewardPackId?"
-        },
-        {
-          "fileName": "*.json",
-          "word": "viewId"
-        },
-        {
-          "fileName": "*.json",
-          "word": "equipmentViewId"
-        }
-      ]
-    },
-    {
-      "description": "mobSettings.json: mobId",
-      "dst": {
-        "fileName": "mobSettings.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "order": 1,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
-          "fileName": "*.json",
-          "word": "mobId"
-        },
-        {
-          "order": 2,   // parametrizedMobs [1] > mobSettings[2]
-          "fileName": "*.json",
-          "word": "specificMobId?"
-        }
-      ]
-    },
-    {
-      "description": "parametrizedMobs.json: templateId/mobId/specificMobId",
-      "dst": {
-        "fileName": "parametrizedMobs.json",
-        "word": "id<<<templates"
-      },
-      "src": [
-        {
-          "order": 1,   // parametrizedMobs [1] > mobSettings[2]
-          "fileName": "*.json",
-          "word": "specificMobId?"
-        },
-        {
-          "order": 2,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
-          "fileName": "*.json",
-          "word": "mobId"
-        }
-      ]
-    },
-    {
-      "description": "summonSettings.json: mobId",
-      "dst": {
-        "fileName": "summonSettings.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "order": 3,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
-          "fileName": "*.json",
-          "word": "mobId"
-        }
-      ]
-    },
+   
     {
       "description": "animals.json: animalId",
       "dst": {

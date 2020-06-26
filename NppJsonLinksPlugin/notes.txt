@@ -68,12 +68,17 @@ necessary:
        + "order": 1,    // чем меньше order, тем приоритетнее будет элемент mapping-а, по умолчанию order = int.MaxValue - 10000
    + мне все еще не нравится как работает навигация.
    + while защита
+   
+   - equipmentView.json:28 cyrillic bug
+   - подумать над знанчением PROCESSING_LINES_LIMIT (вынести в настройки)   -> searchLinesLimit
+   - в теории можно и лиды поддержать
 
    - настроить маппинг для самых основных ссылок:
-        + abilities     => abilities.json
-        + mobs          => mobSettings.json/parametrizedMobs.json/summonSettings.json
-        - equipments    =>   
-   
+        + abilities                 => abilities.json
+        + mobs                      => mobSettings.json/parametrizedMobs.json/summonSettings.json
+        + equipments                => equipments.json/defaultEquipments.json
+        + equipmentViews            => equipmentViews.json
+        + equipmentTiers            => equipmentTiers.json
    
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
@@ -85,6 +90,26 @@ necessary:
         
         
         //invasionMobRuleId
+        //googlePlayId
+        //gameCenterId
+        //parameterId
+        //tierId
+        //gemstoneSlotGenerationRuleId
+        //equipmentType
+        //unitSettingsId
+        //workingRoomId
+        //id<<<defenceObjects
+        //articleId
+        //ownerId
+        //equipedCustomizationItemIds   
+        //unlockedCustomizationItemIds
+        //"type": "HAS_HERO_CUSTOMIZATION", "extension": {"itemId": 3}, "negate": true},
+        //itemId
+        //counterId
+        //essenceCraftPieceId
+        //overrideGemstoneRuleId
+          
+        
         // "id"
         
        "mobTags": [
