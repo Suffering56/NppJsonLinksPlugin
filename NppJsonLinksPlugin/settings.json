@@ -223,20 +223,116 @@
         }
       ]
     },
-    
+
     {
-      "description": "rooms.json: roomId",
+      // ====================================== REWARD_PACKS: rewardPacks.json ============================================
+      "description": "rewardPacks.json: rewardPackId",
       "dst": {
-        "fileName": "rooms.json",
+        "fileName": "rewardPacks.json",
         "word": "id<<<ROOT"
       },
       "src": [
         {
           "fileName": "*.json",
-          "word": "setId"
+          "word": "*packId?"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "rewardPackIdsGeneratedAfterPurchase"
         }
       ]
     },
+    {
+      // ====================================== TRAVEL_ZONES: festivalTravelZones.json ============================================
+      "description": "festivalTravelZones.json: festivalZoneId",
+      "dst": {
+        "fileName": "festivalTravelZones.json",
+        "word": "festivalZoneId"
+      },
+      "src": [
+        {
+          "order": 1,
+          "fileName": "*.json",
+          "word": "*zoneId",
+          "ignoredFileNames": [
+            "festivalTravelZones.json",
+            "coopMapGeneration.json",
+            "travelMap.json"
+          ]
+        }
+      ]
+    },
+    {
+      // ====================================== TRAVEL_ZONES: coopMapGeneration.json ============================================
+      "description": "coopMapGeneration.json: coopZoneId",
+      "dst": {
+        "fileName": "coopMapGeneration.json",
+        "word": "coopZoneId"
+      },
+      "src": [
+        {
+          "order": 2,
+          "fileName": "*.json",
+          "word": "*zoneId",
+          "ignoredFileNames": [
+            "festivalTravelZones.json",
+            "coopMapGeneration.json",
+            "travelMap.json"
+          ]
+        }
+      ]
+    },
+    {
+      // ====================================== TRAVEL_ZONES: travelMap.json ============================================
+      "description": "travelMap.json: zoneId",
+      "dst": {
+        "fileName": "travelMap.json",
+        "word": "zoneId<<<ROOT"
+      },
+      "src": [
+        {
+          "order": 3,
+          "fileName": "*.json",
+          "word": "*zoneId",
+          "ignoredFileNames": [
+            "festivalTravelZones.json",
+            "coopMapGeneration.json",
+            "travelMap.json"
+          ]
+        },
+        {
+          "fileName": "travelMap.json",
+          "word": "zoneId<<<extension"
+        }
+      ]
+    },
+    {
+      // ====================================== OFFERS: offers.json ============================================
+      "description": "offers.json: offerId",
+      "dst": {
+        "fileName": "offers.json",
+        "word": "id<<<offers"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "offerId"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "offers"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "removedOfferIds"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "offersToInactivate"
+        }
+      ]
+    },
+    
     {
       "description": "rooms.json: roomId",
       "dst": {
@@ -250,19 +346,7 @@
         }
       ]
     },
-    {
-      "description": "offers.json: offerId",
-      "dst": {
-        "fileName": "offers.json",
-        "word": "id<<<offers"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "offerId"
-        }
-      ]
-    },
+   
     {
       "description": "parametrizedMobs.json: defaultParamsKey",
       "dst": {
@@ -314,23 +398,7 @@
         }
       ]
     },
-    {
-      "description": "rewardPacks.json: rewardPackId",
-      "dst": {
-        "fileName": "rewardPacks.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "*rewardPackId?"
-        },
-        {
-          "fileName": "rewardPacks.json",
-          "word": "packId"
-        }
-      ]
-    },
+    
    
     {
       "description": "animals.json: animalId",

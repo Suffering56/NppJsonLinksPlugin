@@ -69,7 +69,7 @@ necessary:
    + мне все еще не нравится как работает навигация.
    + while защита
    
-   - equipmentView.json:28 cyrillic bug
+   - equipmentView.json:28/coop.json:39: cyrillic bug
    - подумать над знанчением PROCESSING_LINES_LIMIT (вынести в настройки)   -> searchLinesLimit
    - в теории можно и лиды поддержать
 
@@ -108,6 +108,19 @@ necessary:
         //counterId
         //essenceCraftPieceId
         //overrideGemstoneRuleId
+        //relicGroupId
+        //collectionId
+        //coopPointContentIds
+        //gemstoneId
+        //dropGroupId
+        //lotteryId
+        //entityId
+        //characterId
+        //shopId
+        //commanderPathId
+        //battlePassId
+        //questsId
+        //sourceId
           
         
         // "id"
@@ -135,6 +148,7 @@ necessary:
         - устал вспоминать в каком файле ты только что был?
         - тогда NppJsonLinksPlugin это то, что тебе нужно!
         - установи NppJsonLinksPlugin прямо сейчас и в подарок ты получишь опцию подсветки кликабельных ссылок!
+        - offers/rewardPacks/abilities
         
 unnecessary:
     - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
