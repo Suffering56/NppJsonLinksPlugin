@@ -83,6 +83,7 @@ namespace NppJsonLinksPlugin.Configuration
                         (
                             Word.ParseSrc(srcLocation.Word, srcLocation.WordRegexpEnabled),
                             srcLocation.FileName,
+                            srcLocation.Order,
                             rawSettings.MappingDefaultFilePath,
                             srcLocation.OverrideFilePath,
                             srcLocation.FileNameRegexpEnabled,
@@ -92,7 +93,6 @@ namespace NppJsonLinksPlugin.Configuration
                         (
                             Word.ParseDst(rawMappingItem.Dst.Word),
                             rawMappingItem.Dst.FileName,
-                            rawMappingItem.Dst.Order,
                             rawSettings.MappingDefaultFilePath,
                             rawMappingItem.Dst.OverrideFilePath
                         )
@@ -197,6 +197,7 @@ namespace NppJsonLinksPlugin.Configuration
                 private readonly string _initialFileName;
                 internal readonly string FilePath;
                 private readonly ISet<string> _ignoredFileNames;
+                public readonly int Order;
 
                 private readonly string _fileName;
                 private readonly string _fileNamePattern;
@@ -204,8 +205,9 @@ namespace NppJsonLinksPlugin.Configuration
                 private const string ANY_FILE = "*";
                 private const string ASTERISK_PATTERN = "[^:/\\\\*?\"<>]*";
 
-                public SrcLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled, List<string> ignoredFileNames)
+                public SrcLocation(Word word, string fileName, int order, string defaultFilePath, string overrideFilePath, bool fileNameRegexpEnabled, List<string> ignoredFileNames)
                 {
+                    Order = order;
                     _initialFileName = fileName;
                     Word = word;
                     FilePath = StringUtils.NormalizePath(!string.IsNullOrWhiteSpace(overrideFilePath)
@@ -315,16 +317,14 @@ namespace NppJsonLinksPlugin.Configuration
             {
                 public readonly Word Word;
                 public readonly string FullPath;
-                public readonly int Order;
 
-                public DstLocation(Word word, string fileName, int order, string defaultFilePath, string overrideFilePath)
+                public DstLocation(Word word, string fileName, string defaultFilePath, string overrideFilePath)
                 {
                     string pathPrefix = !string.IsNullOrWhiteSpace(overrideFilePath)
                         ? overrideFilePath
                         : defaultFilePath;
 
                     Word = word;
-                    Order = order;
                     FullPath = StringUtils.NormalizePath($"{pathPrefix}\\{fileName}");
                 }
 

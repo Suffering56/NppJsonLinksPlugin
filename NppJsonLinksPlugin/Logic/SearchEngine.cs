@@ -114,7 +114,7 @@ namespace NppJsonLinksPlugin.Logic
             return _mappingToDstFileContainerMap.Keys
                 .Where(mappingItem => mappingItem.Src.MatchesWithPath(_currentFilePath))
                 .Where(mappingItem => searchContext.MatchesWith(mappingItem.Src.Word, true))
-                .OrderBy(item => item.Dst.Order)
+                .OrderBy(item => item.Src.Order)
                 .ToList();
         }
 

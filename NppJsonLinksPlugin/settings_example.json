@@ -185,12 +185,12 @@
     {
       "description": "mobSettings.json: mobId",
       "dst": {
-        "order": 1,
         "fileName": "mobSettings.json",
         "word": "id<<<ROOT"
       },
       "src": [
         {
+          "order": 1,
           "fileName": "*.json",
           "word": "mobId"
         }
@@ -199,12 +199,12 @@
     {
       "description": "parametrizedMobs.json: templateId",
       "dst": {
-        "order": 2,
         "fileName": "parametrizedMobs.json",
         "word": "id<<<templates"
       },
       "src": [
         {
+          "order": 2,
           "fileName": "*.json",
           "word": "mobId"
         }
@@ -213,12 +213,12 @@
     {
       "description": "summonSettings.json: mobId",
       "dst": {
-        "order": 3,
         "fileName": "summonSettings.json",
         "word": "id<<<ROOT"
       },
       "src": [
         {
+          "order": 3,
           "fileName": "*.json",
           "word": "mobId"
         }

@@ -89,7 +89,6 @@
           "word": "id<<<abilit*"
         },
         {
-          
           // equipments.json/defaultEquipments.json
           "fileName": "*equipments.json",
           "word": "id<<<abilityEntryRandom"
@@ -196,34 +195,36 @@
     {
       "description": "mobSettings.json: mobId",
       "dst": {
-        "order": 1,
         "fileName": "mobSettings.json",
         "word": "id<<<ROOT"
       },
       "src": [
         {
+          "order": 1,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
           "fileName": "*.json",
           "word": "mobId"
+        },
+        {
+          "order": 2,   // parametrizedMobs [1] > mobSettings[2]
+          "fileName": "*.json",
+          "word": "specificMobId?"
         }
       ]
     },
     {
       "description": "parametrizedMobs.json: templateId/mobId/specificMobId",
       "dst": {
-        "order": 2,
         "fileName": "parametrizedMobs.json",
         "word": "id<<<templates"
       },
       "src": [
         {
+          "order": 1,   // parametrizedMobs [1] > mobSettings[2]
           "fileName": "*.json",
-          "word": "specificMobIds<<<mobRule"
+          "word": "specificMobId?"
         },
         {
-          "fileName": "crusadeBattleShop.json",
-          "word": "specificMobId"
-        },
-        {
+          "order": 2,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
           "fileName": "*.json",
           "word": "mobId"
         }
@@ -232,12 +233,12 @@
     {
       "description": "summonSettings.json: mobId",
       "dst": {
-        "order": 3,
         "fileName": "summonSettings.json",
         "word": "id<<<ROOT"
       },
       "src": [
         {
+          "order": 3,   // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
           "fileName": "*.json",
           "word": "mobId"
         }

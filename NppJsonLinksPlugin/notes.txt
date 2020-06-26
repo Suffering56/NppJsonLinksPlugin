@@ -70,6 +70,11 @@ necessary:
    + while защита
 
    - настроить маппинг для самых основных ссылок:
+        + abilities     => abilities.json
+        + mobs          => mobSettings.json/parametrizedMobs.json/summonSettings.json
+        - equipments    =>   
+   
+   
         id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
         roomId<<?extension<<?restrictions   for rewardPacks.json
         tierId<<?elements                   for equipmentSets.json
@@ -77,8 +82,27 @@ necessary:
         // constellationId<<<extension<<<*restriction?
         // constellationItemId<<<extension<<<*restriction?
         // relicId<<<extension<<<*restriction?
-        //craftPieceId
-        //specificMobIds
+        
+        
+        //invasionMobRuleId
+        // "id"
+        
+       "mobTags": [
+               { "tags": ["TANK"], 		"weight":250, 	"requiredCount": 1 },
+               { "tags": ["RANGER"], 		"weight":350,	"requiredCount": 1 },
+               { "tags": ["MAGE"], 		"weight":350, 	"requiredCount": 1 },
+               { "tags": ["ROGUE"], 		"weight":0 },
+               { "tags": ["ELITE"], 		"weight":0}
+             ],
+             "paramsModifier": {
+               "statModifiers":[
+                 { "type": "HEALTH", 			"coefficient": 1.1},
+                 { "type": "PHYSICAL_ARMOR", 	"coefficient": 0.8},
+                 { "type": "MAGICAL_ARMOR", 		"coefficient": 0.8},
+                 { "type": "DODGE", 				"coefficient": 0.8},
+                 { "type": "CRITICAL_CHANCE", 	"coefficient": 0.8},
+                 { "type": "MAGIC", 				"coefficient": 0.8}
+               ]
    
    - ролик-превьюшка:
         - надоело проверять что 11 комната это тронный зал?
