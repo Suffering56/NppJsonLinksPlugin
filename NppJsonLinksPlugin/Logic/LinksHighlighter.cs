@@ -32,6 +32,9 @@ namespace NppJsonLinksPlugin.Logic
         private readonly Func<string, int, int, ISearchContext> _searchContextProvider;
         private bool _uiUpdated = true;
 
+        // для того чтобы досрочно прервать активный процесс подсветки, потому что уже запустился новый
+        private volatile int _lastHighlightTime = 0;
+
         public LinksHighlighter(IScintillaGateway gateway, Settings settings)
         {
             if (!settings.HighlightingEnabled)
@@ -135,15 +138,21 @@ namespace NppJsonLinksPlugin.Logic
 
         private void HighlightVisibleText()
         {
-            CleanCurrentFileHighlighting();
+            TryCleanCurrentFileHighlighting();
             if (_expectedWords.Count == 0) return;
+            _lastHighlightTime = DateUtils.CurrentUts();
+            var lastHighlightTime = _lastHighlightTime;
 
             var linesOnScreen = _gateway.LinesOnScreen();
             var totalLinesCount = _gateway.GetLineCount();
             int lineIndex = _startLineIndex - 1;
 
+
             while (linesOnScreen-- > 0)
             {
+                // прерываем текущий процесс подсветки, потому что запустился новый
+                if (IsNeedToBreak(lastHighlightTime)) return;
+
                 lineIndex++;
                 if (lineIndex >= totalLinesCount) return;
 
@@ -172,8 +181,9 @@ namespace NppJsonLinksPlugin.Logic
                         {
                             string word = currentWord.ToString();
                             var wordLength = word.Length;
+                            if (IsNeedToBreak(lastHighlightTime)) return;
 
-                            if (IsNeedToHighlightWord(word, lineIndex, i - wordLength))
+                            if (IsNeedToHighlightWord(word, lineIndex, i - wordLength, lastHighlightTime))
                             {
                                 // TODO может помочь победить баг с кириллицей
                                 // int position = _gateway.LineToPosition(lineIndex) + i;
@@ -204,7 +214,7 @@ namespace NppJsonLinksPlugin.Logic
             }
         }
 
-        private bool IsNeedToHighlightWord(string word, int lineIndex, int indexOfWord)
+        private bool IsNeedToHighlightWord(string word, int lineIndex, int indexOfWord, int lastHighlightTime)
         {
             var searchContext = _searchContextProvider.Invoke(word, lineIndex, indexOfWord);
             var contextProperty = searchContext.GetSelectedProperty();
@@ -216,6 +226,8 @@ namespace NppJsonLinksPlugin.Logic
 
             foreach (var srcWord in _expectedWords)
             {
+                if (IsNeedToBreak(lastHighlightTime)) return false;
+
                 if (searchContext.MatchesWith(srcWord, false))
                 {
                     return true;
@@ -225,13 +237,21 @@ namespace NppJsonLinksPlugin.Logic
             return false;
         }
 
+        private bool IsNeedToBreak(int lastHighlightTime)
+        {
+            return lastHighlightTime < _lastHighlightTime;
+        }
+
         private void HighlightWord(int indexOfWord, int wordLength)
         {
             _gateway.ApplyIndicatorStyleForRange(HIGHLIGHT_INDICATOR_ID, indexOfWord, wordLength);
         }
 
-        private void CleanCurrentFileHighlighting()
+        // private int _cleanCounter = 0;
+
+        private void TryCleanCurrentFileHighlighting()
         {
+            // if (++_cleanCounter % 5 != 0) return;
             _gateway.ClearIndicatorStyleForRange(HIGHLIGHT_INDICATOR_ID, 0, _gateway.GetTextLength());
         }
     }

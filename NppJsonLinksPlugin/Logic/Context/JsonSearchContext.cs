@@ -245,58 +245,66 @@ namespace NppJsonLinksPlugin.Logic.Context
 
         private Direction? ChooseDirection(string selectedWord, int indexOfWord, string lineText)
         {
-            var wordLength = selectedWord.Length;
-
-            var lineLength = lineText.Length;
-
-            // по сути проверка эквивалентна if (startBorderPos == -1 && endBorderPos == lineLength)
-            if (wordLength == lineLength)
+            try
             {
-                // selectedWord полностью занимает всю строку. значит это точно не stringValue (потому что нет кавычек по бокам)
-                // значит это может быть только integerValue и ни что другое
-                if (selectedWord.IsInteger()) return Direction.LEFT;
+                var wordLength = selectedWord.Length;
+
+                var lineLength = lineText.Length;
+
+                // по сути проверка эквивалентна if (startBorderPos == -1 && endBorderPos == lineLength)
+                if (wordLength == lineLength)
+                {
+                    // selectedWord полностью занимает всю строку. значит это точно не stringValue (потому что нет кавычек по бокам)
+                    // значит это может быть только integerValue и ни что другое
+                    if (selectedWord.IsInteger()) return Direction.LEFT;
+                    return null;
+                }
+
+                int startBorderPos = indexOfWord - 1;
+                int endBorderPos = indexOfWord + wordLength;
+
+                if (startBorderPos == -1)
+                {
+                    if (!lineText[endBorderPos].IsWhiteSpaceOr(',', '}', ']')) return null;
+                    if (selectedWord.IsInteger()) return Direction.LEFT;
+                    return null;
+                }
+
+                if (endBorderPos == lineLength)
+                {
+                    if (!lineText[startBorderPos].IsWhiteSpaceOr(',', '[', ':')) return null;
+                    if (selectedWord.IsInteger()) return Direction.LEFT;
+                    return null;
+                }
+
+                var startBorderChar = lineText[startBorderPos];
+                var endBorderChar = lineText[endBorderPos];
+
+                if (startBorderChar == '"' && endBorderChar == '"')
+                {
+                    // это либо propertyName, либо stringValue, но пойдем направо, думая что это первый вариант более вероятен
+                    return Direction.RIGHT;
+                }
+
+                if (startBorderChar == '"' || endBorderChar == '"')
+                {
+                    // кавычка стоит только с одной стороны - это либо невалидный JSON, либо это строка с текстом из нескольких слов
+                    return null;
+                }
+
+                if (!selectedWord.IsInteger()) return null;
+
+                if (startBorderChar.IsWhiteSpaceOr(',', '[', ':')
+                    && endBorderChar.IsWhiteSpaceOr(',', ']', '}'))
+                {
+                    return Direction.LEFT;
+                }
+            }
+            catch (Exception e)
+            {
+                // такое может произойти, если в процессе поиска сменился контекст
+                Logger.Fail($"choose direction for selectedWord: {_selectedWord} error: {e.Message}");
                 return null;
-            }
-
-            int startBorderPos = indexOfWord - 1;
-
-            int endBorderPos = indexOfWord + wordLength;
-
-            if (startBorderPos == -1)
-            {
-                if (!lineText[endBorderPos].IsWhiteSpaceOr(',', '}', ']')) return null;
-                if (selectedWord.IsInteger()) return Direction.LEFT;
-                return null;
-            }
-
-            if (endBorderPos == lineLength)
-            {
-                if (!lineText[startBorderPos].IsWhiteSpaceOr(',', '[', ':')) return null;
-                if (selectedWord.IsInteger()) return Direction.LEFT;
-                return null;
-            }
-
-            var startBorderChar = lineText[startBorderPos];
-            var endBorderChar = lineText[endBorderPos];
-
-            if (startBorderChar == '"' && endBorderChar == '"')
-            {
-                // это либо propertyName, либо stringValue, но пойдем направо, думая что это первый вариант более вероятен
-                return Direction.RIGHT;
-            }
-
-            if (startBorderChar == '"' || endBorderChar == '"')
-            {
-                // кавычка стоит только с одной стороны - это либо невалидный JSON, либо это строка с текстом из нескольких слов
-                return null;
-            }
-
-            if (!selectedWord.IsInteger()) return null;
-
-            if (startBorderChar.IsWhiteSpaceOr(',', '[', ':')
-                && endBorderChar.IsWhiteSpaceOr(',', ']', '}'))
-            {
-                return Direction.LEFT;
             }
 
             return null;

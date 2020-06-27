@@ -145,6 +145,10 @@
         {
           "fileName": "tourneySettings.json",
           "word": "value<<<weightedEquipmentIds"
+        },
+        {
+          "fileName": "defaultLocation.json",
+          "word": "itemId"
         }
       ]
     },
@@ -161,6 +165,10 @@
           "order": 1,
           "fileName": "*.json",
           "word": "*equipmentId?"
+        },
+        {
+          "fileName": "unit.json",
+          "word": "ids<<<items<<<defaultItemGroups"
         }
       ]
     },
@@ -494,7 +502,79 @@
       ]
     },
     {
-      // ========================================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=====================================
+      // ====================================== GEMSTONES: gemstoneSettings.json ============================================
+      "description": "gemstoneSettings.json: gemstoneId",
+      "dst": {
+        "fileName": "gemstoneSettings.json",
+        "word": "id<<<gemstones"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "gemstoneId"
+        }
+      ]
+    },
+    {
+      // ====================================== GEMSTONES: gemstoneSlotGenerationRules.json ============================================
+      "description": "gemstoneSlotGenerationRules.json: gemstoneSlotGenerationRuleId",
+      "dst": {
+        "fileName": "gemstoneSlotGenerationRules.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "gemstoneSlotGenerationRuleId"
+        },
+        {
+          "fileName": "rewardPacks.json",
+          "word": "overrideGemstoneRuleId"
+        }
+      ]
+    },
+    {
+      // ====================================== CRAFT_PIECES: craftPieces.json ============================================
+      "description": "craftPieces.json: craftPieceId",
+      "dst": {
+        "fileName": "craftPieces.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*pieceId"
+        }
+      ]
+    },
+    {
+      // ====================================== UNITS: unit.json ============================================
+      "description": "unit.json: unitId",
+      "dst": {
+        "fileName": "unit.json",
+        "word": "id<<<generatedUnits"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "unitId"
+        },
+        {
+          "fileName": "globalSettings.json",
+          "word": "childUnitId"
+        },
+        {
+          "fileName": "fakeLocations.json",
+          "word": "unitSettingsId"
+        },
+        {
+          "fileName": "defaultLocation.json",
+          "word": "unitSettingsId"
+        }
+      ]
+    },
+    {
+      // ====================================== ROOMS: rooms.json ============================================
       "description": "rooms.json: roomId",
       "dst": {
         "fileName": "rooms.json",
@@ -503,7 +583,11 @@
       "src": [
         {
           "fileName": "*.json",
-          "word": "roomId"
+          "word": "*roomId?"
+        },
+        {
+          "fileName": "*.json",
+          "word": "*articleId"
         },
         {
           "fileName": "craftRules.json",
@@ -512,6 +596,201 @@
       ]
     },
     {
+      // ====================================== BATTLE_PASS: battlePassSettings.json ============================================
+      "description": "battlePassSettings.json: battlePassId",
+      "dst": {
+        "fileName": "battlePassSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "battlePassId"
+        }
+      ]
+    },
+    {
+      // ====================================== COMMANDER_PATH: commanderPathSettings.json ============================================
+      "description": "commanderPathSettings.json: commanderPathId",
+      "dst": {
+        "fileName": "commanderPathSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "commanderPathId"
+        }
+      ]
+    },
+    {
+      // ====================================== LOTTERY: lotterySettings.json ============================================
+      "description": "lotterySettings.json: lotteryId",
+      "dst": {
+        "fileName": "lotterySettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "lotteryId"
+        }
+      ]
+    },
+    {
+      // ====================================== COLLECTION_SETS: collectionSets.json ============================================
+      "description": "collectionSets.json: collectionId",
+      "dst": {
+        "fileName": "collectionSets.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "collection?SetId"
+        }
+      ]
+    },
+    {
+      // ====================================== COLLECTION_CARDS: collectionCards.json ============================================
+      "description": "collectionCards.json: cardId",
+      "dst": {
+        "fileName": "collectionCards.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "collection*.json",
+          "word": "cardId?"
+        }
+      ]
+    },
+    {
+      // ====================================== COLLECTIONS_SMART_DROP_GROUPS: collectionsSmartDrop.json ============================================
+      "description": "collectionsSmartDrop.json: smartDropGroupId",
+      "dst": {
+        "fileName": "collectionsSmartDrop.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "*dropGroupId?"
+        }
+      ]
+    },
+    {
+      // ====================================== HERO_CUSTOMIZE: heroCustomizeSettings.json ============================================
+      "description": "heroCustomizeSettings.json: itemId",
+      "dst": {
+        "fileName": "heroCustomizeSettings.json",
+        "word": "id<<<items"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "heroCustomizationId"
+        },
+        {
+          "fileName": "*.json",
+          "word": "itemId<<<extension"
+        },
+        {
+          "fileName": "hero.json",
+          "word": "*customizationItemIds"
+        }
+      ]
+    },
+    {
+      // ====================================== RUNES: runeSettings.json ============================================
+      "description": "runeSettings.json: runeId",
+      "dst": {
+        "fileName": "runeSettings.json",
+        "word": "id<<<runes"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "runeId"
+        }
+      ]
+    },
+    {
+      // ====================================== RUNE_GROUPS: runeSettings.json ============================================
+      "description": "runeSettings.json: groupId",
+      "dst": {
+        "fileName": "runeSettings.json",
+        "word": "id<<<groups"
+      },
+      "src": [
+        {
+          "fileName": "runeSettings.json",
+          "word": "groupId"
+        }
+      ]
+    },
+    {
+      // ====================================== HERO_CONSTELLATION_ITEMS: hero.json ============================================
+      "description": "hero.json: relicId",
+      "dst": {
+        "fileName": "hero.json",
+        "word": "id<<<items<<<constellations"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "relicId"
+        },
+        {
+          "fileName": "*.json",
+          "word": "constellationItemId"
+        }
+      ]
+    },
+    {
+      // ====================================== HERO_CONSTELLATIONS: hero.json ============================================
+      "description": "hero.json: constellationId",
+      "dst": {
+        "fileName": "hero.json",
+        "word": "id<<<constellations"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "constellationId"
+        }
+      ]
+    },
+    {
+      // ====================================== RELIC_GROUPS: hero.json ============================================
+      "description": "relicGroups.json: groupId",
+      "dst": {
+        "fileName": "relicGroups.json",
+        "word": "groupId"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "relicGroupId"
+        }
+      ]
+    },
+    {
+      // ======================================== ANIMALS: animals.json ============================================
+      "description": "animals.json: animalId",
+      "dst": {
+        "fileName": "animals.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "animalId"
+        }
+      ]
+    },
+    {
+      // ======================================== PARAMETRIZED_MOBS_PARAM_KEY: parametrizedMobs.json ============================================
       "description": "parametrizedMobs.json: defaultParamsKey",
       "dst": {
         "fileName": "parametrizedMobs.json",
@@ -525,6 +804,208 @@
       ]
     },
     {
+      // ======================================== ETHER_MODIFIER: coop.json ============================================
+      "description": "coop.json: etherModifierId",
+      "dst": {
+        "fileName": "coop.json",
+        "word": "id<<<etherModifiers"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "etherModifierId"
+        }
+      ]
+    },
+    {
+      // ====================================== DIAMONDS: diamonds.json ============================================
+      "description": "diamonds.json: diamondId",
+      "dst": {
+        "fileName": "diamonds.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "diamondId"
+        },
+        {
+          "fileName": "offers.json",
+          "word": "replacedDiamondId"
+        }
+      ]
+    },
+    {
+      // ====================================== ADVERTISING: advertisingSettings.json ============================================
+      "description": "advertisingSettings.json: advertisingId",
+      "dst": {
+        "fileName": "advertisingSettings.json",
+        "word": "adsId"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "advertisingId"
+        }
+      ]
+    },
+    {
+      // ====================================== QUESTS: quests.json ============================================
+      "description": "quests.json: questId",
+      "dst": {
+        "fileName": "quests.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "questId?"
+        },
+        {
+          "fileName": "*.json",
+          "word": "quests"
+        },
+        {
+          "fileName": "questsDaily.json",
+          "word": "id<<<quests"
+        }
+      ]
+    },
+    {
+      // ====================================== FESTIVAL_QUESTS: festivalQuestsSettings.json ============================================
+      "description": "festivalQuestsSettings.json: questId",
+      "dst": {
+        "fileName": "festivalQuestsSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "festivalSettings.json",
+          "word": "questsId"
+        }
+      ]
+    },
+    {
+      // ====================================== INVASION_MOB_RULES: invasionMobRules.json ============================================
+      "description": "invasionMobRules.json: invasionMobRuleId",
+      "dst": {
+        "fileName": "invasionMobRules.json",
+        "word": "ruleId"
+      },
+      "src": [
+        {
+          "fileName": "invasions.json",
+          "word": "invasionMobRuleId"
+        }
+      ]
+    },
+    {
+      // ====================================== DEFENCES: defences.json ============================================
+      "description": "defences.json: defenceId",
+      "dst": {
+        "fileName": "defences.json",
+        "word": "id<<<types"
+      },
+      "src": [
+        {
+          "fileName": "fakeLocations.json",
+          "word": "id<<<defenceObjects"
+        },
+        {
+          "fileName": "rooms.json",
+          "word": "defenceTypes"
+        }
+      ]
+    },
+    {
+      // ====================================== SPELLS: spells.json ============================================
+      "description": "spells.json: spellId",
+      "dst": {
+        "fileName": "spells.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "spellId",
+          "ignoredFileNames": [
+            "crusadeBattleShop.json",
+            "crusadeSettings.json",
+            "portalSpellDrops.json"
+          ]
+        },
+        {
+          "fileName": "tutorialBattles.json",
+          "word": "id<<<spells"
+        }
+      ]
+    },
+    {
+      // ====================================== CRUSADE_SPELLS: crusadeSpells.json ============================================
+      "description": "crusadeSpells.json: spellId",
+      "dst": {
+        "fileName": "crusadeSpells.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "crusadeBattleShop.json",
+          "word": "spellId"
+        },
+        {
+          "fileName": "crusadeSettings.json",
+          "word": "spellId"
+        }
+      ]
+    },
+    {
+      // ====================================== PORTAL_SPELLS: portalSpells.json ============================================
+      "description": "portalSpells.json: spellId",
+      "dst": {
+        "fileName": "portalSpells.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "portal.json",
+          "word": "portalSpellId"
+        },
+        {
+          "fileName": "portalSpellDrops.json",
+          "word": "spellId"
+        }
+      ]
+    },
+    {
+      // ====================================== THRONE_ROOM_UOGRADE_INFOS: throneRoomUpgradeInfo.json ============================================
+      "description": "throneRoomUpgradeInfo.json: infoId",
+      "dst": {
+        "fileName": "throneRoomUpgradeInfo.json",
+        "word": "id<<<info"
+      },
+      "src": [
+        {
+          "fileName": "throneRoomUpgradeInfo.json",
+          "word": "infoIds"
+        }
+      ]
+    },
+    {
+      // ====================================== FESTIVALS: festivalSettings.json ============================================
+      "description": "festivalSettings.json: festivalId",
+      "dst": {
+        "fileName": "festivalSettings.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "festivalId"
+        }
+      ]
+    },
+    {
+      // ======================================== BATTLE_CLASSES: battleClasses.json ============================================
       "description": "battleClasses.json: battleClass",
       "dst": {
         "fileName": "battleClasses.json",
@@ -546,71 +1027,28 @@
       ]
     },
     {
-      "description": "animals.json: animalId",
+      // ====================================== UNIT_STATS: unitStats.json ============================================
+      "description": "unitStats.json: type",
       "dst": {
-        "fileName": "animals.json",
-        "word": "id<<<ROOT"
+        "fileName": "unitStats.json",
+        "word": "type"
       },
       "src": [
         {
           "fileName": "*.json",
-          "word": "animalId"
-        }
-      ]
-    },
-    {
-      "description": "unit.json: unitId",
-      "dst": {
-        "fileName": "unit.json",
-        "word": "id<<<generatedUnits"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "unitId"
-        }
-      ]
-    },
-    {
-      "description": "craftPieces.json: craftPieceId",
-      "dst": {
-        "fileName": "craftPieces.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "craftPieceId"
-        }
-      ]
-    },
-    {
-      "description": "coop.json: etherModifierId",
-      "dst": {
-        "fileName": "coop.json",
-        "word": "id<<<etherModifiers"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "etherModifierId"
-        }
-      ]
-    },
-    {
-      "description": "diamonds.json: diamondId",
-      "dst": {
-        "fileName": "diamonds.json",
-        "word": "id<<<ROOT"
-      },
-      "src": [
-        {
-          "fileName": "*.json",
-          "word": "diamondId"
+          "word": "stat"
         },
         {
-          "fileName": "offers.json",
-          "word": "replacedDiamondId"
+          "fileName": "hiddenStatsSettings.json",
+          "word": "requiredStat"
+        },
+        {
+          "fileName": "trainingAdsSettings.json",
+          "word": "trainedStat"
+        },
+        {
+          "fileName": "abilities.json",
+          "word": "unitStat"
         }
       ]
     }

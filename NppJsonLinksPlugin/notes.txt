@@ -81,49 +81,39 @@ necessary:
         + equipmentViews            => equipmentViews.json
         + equipmentTiers            => equipmentTiers.json
    
-        id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
-        roomId<<?extension<<?restrictions   for rewardPacks.json
-        tierId<<?elements                   for equipmentSets.json
+        + id<<abilityEntryRandom              for defaultEquipments.json         +  tierTag?        type?      rarity?
+        + roomId<<?extension<<?restrictions   for rewardPacks.json
+        + tierId<<?elements                   for equipmentSets.json
+        +tierId
+        +gemstoneSlotGenerationRuleId
+        +unitSettingsId
+        +workingRoomId
+        +articleId
+        +equipedCustomizationItemIds   
+        +unlockedCustomizationItemIds
+        +"type": "HAS_HERO_CUSTOMIZATION", "extension": {"itemId": 3}, "negate": true},
+        +itemId
+        +essenceCraftPieceId
+        +overrideGemstoneRuleId
+        +collectionId
+        +coopPointContentIds
+        +gemstoneId
+        +dropGroupId
+        +advertisingId
+        +shopId
+        +commanderPathId
+        +battlePassId
+        +relicGroupId
+        +questsId  //quests
+        +lotteryId
+        +invasionMobRuleId
+        +constellationId<<<extension<<<*restriction?
+        +constellationItemId<<<extension<<<*restriction?
+        +relicId<<<extension<<<*restriction?
+        +id<<<defenceObjects
+        +id<<<spells
         
-        // constellationId<<<extension<<<*restriction?
-        // constellationItemId<<<extension<<<*restriction?
-        // relicId<<<extension<<<*restriction?
-        
-        
-        //invasionMobRuleId
-        //googlePlayId
-        //gameCenterId
-        //parameterId
-        //tierId
-        //gemstoneSlotGenerationRuleId
         //equipmentType
-        //unitSettingsId
-        //workingRoomId
-        //id<<<defenceObjects
-        //articleId
-        //ownerId
-        //equipedCustomizationItemIds   
-        //unlockedCustomizationItemIds
-        //"type": "HAS_HERO_CUSTOMIZATION", "extension": {"itemId": 3}, "negate": true},
-        //itemId
-        //counterId
-        //essenceCraftPieceId
-        //overrideGemstoneRuleId
-        //relicGroupId
-        //collectionId
-        //coopPointContentIds
-        //gemstoneId
-        //dropGroupId
-        //lotteryId
-        //entityId
-        //characterId
-        //shopId
-        //commanderPathId
-        //battlePassId
-        //questsId  //quests
-        //sourceId
-        //advertisingId
-          
           
         // merchants.json + merchantGoods.json??? unused?
         // "id"
@@ -156,6 +146,10 @@ necessary:
 unnecessary:
     - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
         - невозможно обработать, потому что айдишники пересекаются для разных групп кастомизации
+        - festivalSettings.json: entityId
+        
+    - equipments.json: parameterId to parameter.id of parent object (id intersects with neighbors)
+    
     - settings.validation
     - подключить нормальный логгер
     
