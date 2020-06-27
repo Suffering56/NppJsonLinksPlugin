@@ -26,19 +26,20 @@
         },
         {
           "fileName": "*.json",
+          // ability/abilities/abilityEntry/abilityRef
+          "word": "id<<<abilit*",
+          // связка id<<< для *.json довольно опасна, лучше кинуть в игнор большие файлы, в которых может встретиться "id" для корневого элемента
           "ignoredFileNames": [
             "parametrizedMobs.json",
             "abilities.json",
             "mobSettings.json",
             "rewardPacks.json",
             "equipments.json"
-          ],
-          // ability/abilities/abilityEntry/abilityRef
-          "word": "id<<<abilit*"
+          ]
         },
         {
-          // equipments.json/defaultEquipments.json
           "fileName": "*equipments.json",
+          // equipments.json/defaultEquipments.json
           "word": "id<<<abilityEntryRandom"
         },
         {
@@ -68,14 +69,14 @@
       },
       "src": [
         {
-          "order": 1,
           // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
+          "order": 1,
           "fileName": "*.json",
           "word": "mobId"
         },
         {
-          "order": 2,
           // parametrizedMobs [1] > mobSettings[2]
+          "order": 2,
           "fileName": "*.json",
           "word": "specificMobId?"
         }
@@ -90,14 +91,14 @@
       },
       "src": [
         {
+          // parametrizedMobs [1] > mobSettings[2],
           "order": 1,
-          // parametrizedMobs [1] > mobSettings[2]
           "fileName": "*.json",
           "word": "specificMobId?"
         },
         {
+          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3],
           "order": 2,
-          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
           "fileName": "*.json",
           "word": "mobId"
         }
@@ -112,8 +113,8 @@
       },
       "src": [
         {
+          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3],
           "order": 3,
-          // mobId: mobSettings[1] > parametrizedMobs[2] > summonSettings[3]
           "fileName": "*.json",
           "word": "mobId"
         }
@@ -128,7 +129,8 @@
       },
       "src": [
         {
-          "order": 2, // defaultEquipments[1] > equipments[2]
+          // defaultEquipments[1] > equipments[2],
+          "order": 2,
           "fileName": "*.json",
           "word": "*equipmentId?"
         },
@@ -155,7 +157,8 @@
       },
       "src": [
         {
-          "order": 1, // defaultEquipments[1] > equipments[2]
+          // defaultEquipments[1] > equipments[2],
+          "order": 1,
           "fileName": "*.json",
           "word": "*equipmentId?"
         }
@@ -171,7 +174,7 @@
       "src": [
         {
           "fileName": "*.json",
-          "word": "tierId"  //TODO: *tierId
+          "word": "tierId"
         }
       ]
     },
@@ -185,7 +188,7 @@
       "src": [
         {
           "fileName": "*.json",
-          "word": "viewId"  //TODO *viewId
+          "word": "viewId"
         },
         {
           "fileName": "*.json",
@@ -193,7 +196,6 @@
         }
       ]
     },
-    
     {
       // ====================================== EQUIPMENTS: equipmentSets.json: setId ============================================
       "description": "equipmentSets.json: setId",
@@ -208,7 +210,6 @@
         }
       ]
     },
-
     {
       // ====================================== EQUIPMENTS: equipmentSets.json: setElementId ============================================
       "description": "equipmentSets.json: setElementId",
@@ -223,7 +224,6 @@
         }
       ]
     },
-
     {
       // ====================================== REWARD_PACKS: rewardPacks.json ============================================
       "description": "rewardPacks.json: rewardPackId",
@@ -242,7 +242,6 @@
         }
       ]
     },
-
     {
       // ====================================== CHESTS: chests.json ============================================
       "description": "chests.json: chestId",
@@ -264,12 +263,11 @@
           "word": "sentRewardChest"
         },
         {
-          "fileName": "restrictionsByIdSettings.json",  
+          "fileName": "restrictionsByIdSettings.json",
           "word": "looksLikeChestWithId"
         }
       ]
     },
-    
     {
       // ====================================== TRAVEL_ZONES: festivalTravelZones.json ============================================
       "description": "festivalTravelZones.json: festivalZoneId",
@@ -335,6 +333,62 @@
       ]
     },
     {
+      // ====================================== COOP_TRAVEL_POINTS: coopTravelZones.json ============================================
+      "description": "coopTravelZones.json: travelPointId",
+      "dst": {
+        "fileName": "coopTravelZones.json",
+        "word": "id<<<travelPoints"
+      },
+      "src": [
+        {
+          // coopTravelZones[1] > travelMap[2]
+          "order": 1,
+          "fileName": "coopMapGeneration.json",
+          "word": "pointId"
+        },
+        {
+          // coopTravelZones[1] > travelMap[2]
+          "order": 1,
+          "fileName": "coopTravelZones.json",
+          "word": "travelPointId"
+        }
+      ]
+    },
+    {
+      // ====================================== GLOBAL_TRAVEL_POINTS: travelMap.json ============================================
+      "description": "travelMap.json: travelPointId",
+      "dst": {
+        "fileName": "travelMap.json",
+        "word": "id<<<travelPoints"
+      },
+      "src": [
+        {
+          // coopTravelZones[1] > travelMap[2]
+          "order": 2,
+          "fileName": "*.json",
+          "word": "*pointId?"
+        }
+      ]
+    },
+    {
+      // ====================================== COOP_POINT_CONTENTS: coopPointContents.json ============================================
+      "description": "coopPointContents.json: pointContentId",
+      "dst": {
+        "fileName": "coopPointContents.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "coopMapGeneration.json",
+          "word": "pointContentId"
+        },
+        {
+          "fileName": "coop.json",
+          "word": "coopPointContentIds"
+        }
+      ]
+    },
+    {
       // ====================================== OFFERS: offers.json ============================================
       "description": "offers.json: offerId",
       "dst": {
@@ -360,7 +414,6 @@
         }
       ]
     },
-
     {
       // ====================================== FESTIVAL_SHOPS: festivalShops.json ============================================
       "description": "festivalShops.json: festivalShopId",
@@ -379,7 +432,6 @@
         }
       ]
     },
-
     {
       // ====================================== FESTIVAL_GOODS: festivalGoods.json ============================================
       "description": "festivalGoods.json: goodId",
@@ -398,7 +450,6 @@
         }
       ]
     },
-
     {
       // ====================================== COOP_GLOBAL_SHOP_GOODS: coopGlobalShopGoods.json ============================================
       "description": "coopGlobalShopGoods.json: goodId",
@@ -413,7 +464,6 @@
         }
       ]
     },
-
     {
       // ====================================== GLOBAL_SHOP_GOODS: shop.json ============================================
       "description": "shop.json: goodId",
@@ -443,8 +493,8 @@
         }
       ]
     },
-    
     {
+      // ========================================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=====================================
       "description": "rooms.json: roomId",
       "dst": {
         "fileName": "rooms.json",
@@ -461,7 +511,6 @@
         }
       ]
     },
-   
     {
       "description": "parametrizedMobs.json: defaultParamsKey",
       "dst": {
@@ -496,9 +545,6 @@
         }
       ]
     },
-  
-    
-   
     {
       "description": "animals.json: animalId",
       "dst": {
