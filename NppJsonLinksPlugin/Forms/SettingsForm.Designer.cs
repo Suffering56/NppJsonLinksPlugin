@@ -73,7 +73,7 @@ namespace NppJsonLinksPlugin.Forms
             this.soundEnabledComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.soundEnabledComboBox.FormattingEnabled = true;
             this.soundEnabledComboBox.Items.AddRange(new object[] {"false", "true"});
-            this.soundEnabledComboBox.Location = new System.Drawing.Point(230, 199);
+            this.soundEnabledComboBox.Location = new System.Drawing.Point(230, 200);
             this.soundEnabledComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.soundEnabledComboBox.Name = "soundEnabledComboBox";
             this.soundEnabledComboBox.Size = new System.Drawing.Size(630, 24);
@@ -85,7 +85,7 @@ namespace NppJsonLinksPlugin.Forms
             this.highlightingEnabledComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.highlightingEnabledComboBox.FormattingEnabled = true;
             this.highlightingEnabledComboBox.Items.AddRange(new object[] {"false", "true"});
-            this.highlightingEnabledComboBox.Location = new System.Drawing.Point(230, 168);
+            this.highlightingEnabledComboBox.Location = new System.Drawing.Point(230, 167);
             this.highlightingEnabledComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.highlightingEnabledComboBox.Name = "highlightingEnabledComboBox";
             this.highlightingEnabledComboBox.Size = new System.Drawing.Size(630, 24);
@@ -97,7 +97,7 @@ namespace NppJsonLinksPlugin.Forms
             this.loggerModeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.loggerModeComboBox.FormattingEnabled = true;
             this.loggerModeComboBox.Items.AddRange(new object[] {"ENABLED", "ONLY_ERRORS", "DISABLED"});
-            this.loggerModeComboBox.Location = new System.Drawing.Point(230, 88);
+            this.loggerModeComboBox.Location = new System.Drawing.Point(230, 87);
             this.loggerModeComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.loggerModeComboBox.Name = "loggerModeComboBox";
             this.loggerModeComboBox.Size = new System.Drawing.Size(630, 24);

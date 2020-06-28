@@ -22,7 +22,9 @@ NppJsonLinksPlugin позволяет настраивать ссылки в jso
 ####Требования:
 NppJsonLinksPlugin работает только на 32-битной версии Notepad++
 
-На всякий случай напишу версию на которой рабтал автор (на ней то все точно работает). `Notepad++ v7.8.6 (32-bit)`.
+Плагин полностью совместим с последней (на текущей момент) версией Notepad++ v.7.8.8(32-bit).
+
+Ссылка на скачивание NPP: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.exe
 
 Автор подозревает, что на слишком давних версиях NPP (6.xx и ниже) ничего работать не будет.
 
@@ -30,11 +32,12 @@ NppJsonLinksPlugin работает только на 32-битной верси
 - скачать плагин можно по ссылке: https://github.com/Suffering56/NppJsonLinksPlugin/raw/master/NppJsonLinksPlugin/NppJsonLinksPlugin.zip
 - полученный архив нужно распаковать в `C:/Program Files (x86)/Notepad++/plugins/` так, чтобы файл NppJsonLinksPlugin.dll лежал по адресу: 
 `C:/Program Files (x86)/Notepad++/plugins/NppJsonLinksPlugin/NppJsonLinksPlugin.dll`, а рядом с ним лежал файл config.ini
+- в корне архива есть папка с файлом `Newtonsoft.Json.dll`. Положи его в `C:/Program Files (x86)/Notepad++/` рядом с файлом `notepad++.exe`
 - затем нужно запустить/перезапустить Notepad++
 - далее зайти в `Меню=>Плагины(Plugins)=>NppJsonLinksPlugin=>Settings` и указать путь к папке с json-данными в поле `Jsons working directory`. 
 Остальные настройки можно не трогать.
-- затем нужно будет сохранить изменения (кнопка save) 
-- и перезапустить плагин через `Меню=>Плагины(Plugins)=>NppJsonLinksPlugin=>Reload/Enable plugin`
+- осталось сохранить изменения (кнопка Save)
+- должно появиться сообщение: Plugin reloaded: success! 
 - бинго! ты потрясающий!
 
 ####Настройки:

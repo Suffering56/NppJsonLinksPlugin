@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using Newtonsoft.Json;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.Logic;
@@ -74,6 +73,8 @@ namespace NppJsonLinksPlugin.Configuration
 
         private static Settings ConvertRawSettings(RawSettings rawSettings, IniConfig iniConfig)
         {
+            var mappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath; // override by ini
+            
             var mappingItems = rawSettings.Mapping
                 .SelectMany(rawMappingItem =>
                 {
@@ -84,7 +85,7 @@ namespace NppJsonLinksPlugin.Configuration
                             Word.ParseSrc(srcLocation.Word, srcLocation.WordRegexpEnabled),
                             srcLocation.FileName,
                             srcLocation.Order,
-                            rawSettings.MappingDefaultFilePath,
+                            mappingDefaultFilePath,
                             srcLocation.OverrideFilePath,
                             srcLocation.FileNameRegexpEnabled,
                             srcLocation.IgnoredFileNames
@@ -93,24 +94,24 @@ namespace NppJsonLinksPlugin.Configuration
                         (
                             Word.ParseDst(rawMappingItem.Dst.Word),
                             rawMappingItem.Dst.FileName,
-                            rawSettings.MappingDefaultFilePath,
+                            mappingDefaultFilePath,
                             rawMappingItem.Dst.OverrideFilePath
                         )
                     });
                 })
                 .ToList();
 
-            return MergeWithConfig(rawSettings, iniConfig, mappingItems);
+            return MergeWithConfig(rawSettings, iniConfig, mappingDefaultFilePath, mappingItems);
         }
 
-        private static Settings MergeWithConfig(RawSettings rawSettings, IniConfig iniConfig, List<Settings.MappingItem> mappingItems)
+        private static Settings MergeWithConfig(RawSettings rawSettings, IniConfig iniConfig, string mappingDefaultFilePath, List<Settings.MappingItem> mappingItems)
         {
             return new Settings
             {
                 HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled, // override by ini
                 SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled, // override by ini
                 JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay, // override by ini
-                MappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath, // override by ini
+                MappingDefaultFilePath = mappingDefaultFilePath, // override by ini
                 Mapping = mappingItems
             };
         }
