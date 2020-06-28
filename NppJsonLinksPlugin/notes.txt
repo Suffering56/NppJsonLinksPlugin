@@ -68,13 +68,8 @@ necessary:
        + "order": 1,    // чем меньше order, тем приоритетнее будет элемент mapping-а, по умолчанию order = int.MaxValue - 10000
    + мне все еще не нравится как работает навигация.
    + while защита
-   
-   - equipmentView.json:28/coop.json:39: cyrillic bug
-   - подумать над знанчением PROCESSING_LINES_LIMIT (вынести в настройки)   -> searchLinesLimit
-   - в теории можно и лиды поддержать
-   - закладки через ctrl + 1/2/3/4/5/6...
-
-   - настроить маппинг для самых основных ссылок:
+  
+   + настроить маппинг для самых основных ссылок:
         + abilities                 => abilities.json
         + mobs                      => mobSettings.json/parametrizedMobs.json/summonSettings.json
         + equipments                => equipments.json/defaultEquipments.json
@@ -154,14 +149,12 @@ necessary:
         + unitNames                    id<<<specialNames
         - voitingsSettings             id<<<ROOT + id<<<variants
         - wishes                       id<<<ROOT
-   
-   - ролик-превьюшка:
-        - надоело проверять что 11 комната это тронный зал?
-        - надоело вводить делать поиск по "id": xxx?
-        - устал вспоминать в каком файле ты только что был?
-        - тогда NppJsonLinksPlugin это то, что тебе нужно!
-        - установи NppJsonLinksPlugin прямо сейчас и в подарок ты получишь опцию подсветки кликабельных ссылок!
-        - offers/rewardPacks/abilities
+        
+        
+    - equipmentView.json:28/coop.json:39: cyrillic bug
+    - подумать над знанчением PROCESSING_LINES_LIMIT (вынести в настройки)   -> searchLinesLimit
+    - в теории можно и лиды поддержать
+    - закладки через ctrl + 1/2/3/4/5/6...
         
 unnecessary:
     - *.json: itemId<<<item<<<extension -> customizeCastleSettings.json
