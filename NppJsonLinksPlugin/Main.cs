@@ -17,7 +17,7 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
-        private const string PLUGIN_VERSION = "0.3.2";
+        private const string PLUGIN_VERSION = "0.4.1";
 
         private static readonly string IniFilePath = Path.GetFullPath($"plugins/{PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
         private static IniConfig _iniConfig = null;
