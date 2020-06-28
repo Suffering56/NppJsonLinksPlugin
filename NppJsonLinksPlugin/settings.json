@@ -441,7 +441,7 @@
       ]
     },
     {
-      // ====================================== FESTIVAL_GOODS: festivalGoods.json ============================================
+      // ====================================== FESTIVAL_SHOP_GOODS: festivalGoods.json ============================================
       "description": "festivalGoods.json: goodId",
       "dst": {
         "fileName": "festivalGoods.json",
@@ -473,6 +473,20 @@
       ]
     },
     {
+      // ====================================== PORTAL_SHOP_GOODS: portal.json ============================================
+      "description": "portal.json: goodId",
+      "dst": {
+        "fileName": "portal.json",
+        "word": "id<<<goods"
+      },
+      "src": [
+        {
+          "fileName": "portal.json",
+          "word": "goodId"
+        }
+      ]
+    },
+    {
       // ====================================== GLOBAL_SHOP_GOODS: shop.json ============================================
       "description": "shop.json: goodId",
       "dst": {
@@ -486,10 +500,6 @@
           "ignoredFileNames": [
             "coopGlobalShop.json"
           ]
-        },
-        {
-          "fileName": "portal.json",
-          "word": "goodId"
         },
         {
           "fileName": "globalSettings.json",
@@ -731,7 +741,7 @@
     },
     {
       // ====================================== HERO_CONSTELLATION_ITEMS: hero.json ============================================
-      "description": "hero.json: relicId",
+      "description": "hero.json: constellationItemId/relicId",
       "dst": {
         "fileName": "hero.json",
         "word": "id<<<items<<<constellations"
@@ -744,6 +754,10 @@
         {
           "fileName": "*.json",
           "word": "constellationItemId"
+        },
+        {
+          "fileName": "hero.json",
+          "word": "id<<<items<<<initialState"
         }
       ]
     },
@@ -772,6 +786,32 @@
         {
           "fileName": "*.json",
           "word": "relicGroupId"
+        }
+      ]
+    },
+    {
+      // ====================================== BATTLE_MODIFIERS: battleModifiers.json ============================================
+      "description": "battleModifiers.json: battleModifierId",
+      "dst": {
+        "fileName": "battleModifiers.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "clanWarMaps.json",
+          "word": "id<<<entry<<<battleModifiers"
+        },
+        {
+          "fileName": "coopPointContents.json",
+          "word": "value<<<modifiers"
+        },
+        {
+          "fileName": "hero.json",
+          "word": "modifier"
+        },
+        {
+          "fileName": "portal.json",
+          "word": "value<<<modifiersPool"
         }
       ]
     },
@@ -868,6 +908,14 @@
         {
           "fileName": "questsDaily.json",
           "word": "id<<<quests"
+        },
+        {
+          "fileName": "festivalQuestsSettings.json",
+          "word": "*quest*<<<levels"
+        },
+        {
+          "fileName": "festivalQuestsSettings.json",
+          "word": "id<<<questIconsMeta"
         }
       ]
     },
@@ -914,6 +962,24 @@
         {
           "fileName": "rooms.json",
           "word": "defenceTypes"
+        }
+      ]
+    },
+    {
+      // ====================================== DEFENCES_SUBTYPES: defences.json ============================================
+      "description": "defences.json: defenceId",
+      "dst": {
+        "fileName": "defences.json",
+        "word": "id<<<subtypes"
+      },
+      "src": [
+        {
+          "fileName": "defences.json",
+          "word": "defaultSubtypeId"
+        },
+        {
+          "fileName": "defences.json",
+          "word": "subtypes"
         }
       ]
     },
@@ -1049,6 +1115,146 @@
         {
           "fileName": "abilities.json",
           "word": "unitStat"
+        }
+      ]
+    },
+    {
+      // ====================================== AUTO_CLICKERS: autoClickerId.json ============================================
+      "description": "autoClickers.json: autoClickerId",
+      "dst": {
+        "fileName": "autoClickers.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "autoClickerId"
+        }
+      ]
+    },
+    {
+      // ====================================== CLAN_GIFTS: clanGifts.json ============================================
+      "description": "clanGifts.json: clanGiftId",
+      "dst": {
+        "fileName": "clanGifts.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "clanGiftId"
+        }
+      ]
+    },
+    {
+      // ====================================== CLAN_WAR_MAPS: clanWarMaps.json ============================================
+      "description": "clanWarMaps.json: mapId",
+      "dst": {
+        "fileName": "clanWarMaps.json",
+        "word": "id<<<maps"
+      },
+      "src": [
+        {
+          "fileName": "clanWarMaps.json",
+          "word": "mapsIds"
+        }
+      ]
+    },
+    {
+      // ====================================== CHARACTERS: fakeSocialCharacters.json ============================================
+      "description": "fakeSocialCharacters.json: characterId",
+      "dst": {
+        "fileName": "fakeSocialCharacters.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "characterId"
+        }
+      ]
+    },
+    {
+      // ====================================== FESTIVAL_GLOBAL_PROGRESS: festivalGlobalProgresses.json ============================================
+      "description": "festivalGlobalProgresses.json: progressId",
+      "dst": {
+        "fileName": "festivalGlobalProgresses.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "festivalSettings.json",
+          "word": "festivalGlobalProgressId"
+        }
+      ]
+    },
+    {
+      // ====================================== OBSTACLES: obstacles.json ============================================
+      "description": "obstacles.json: obstacleId",
+      "dst": {
+        "fileName": "obstacles.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "defaultLocation.json",
+          "word": "obstacleId"
+        }
+      ]
+    },
+    {
+      // ====================================== PREMIUM: premiumAccount.json ============================================
+      "description": "premiumAccount.json: premiumId",
+      "dst": {
+        "fileName": "premiumAccount.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "premiumId"
+        }
+      ]
+    },
+    {
+      // ====================================== REWARD_VISUALIZERS: premiumAccount.json ============================================
+      "description": "rewardVisualizers.json: visualizerId",
+      "dst": {
+        "fileName": "rewardVisualizers.json",
+        "word": "id<<<ROOT"
+      },
+      "src": [
+        {
+          "fileName": "travelMap.json",
+          "word": "visualizerId"
+        }
+      ]
+    },
+    {
+      // ====================================== PEDESTALS: trophySettings.json ============================================
+      "description": "trophySettings.json: pedestalId",
+      "dst": {
+        "fileName": "trophySettings.json",
+        "word": "id<<<pedestals"
+      },
+      "src": [
+        {
+          "fileName": "*.json",
+          "word": "pedestalId"
+        }
+      ]
+    },
+    {
+      // ====================================== UNIT_SPECIAL_NAMES: unitNames.json ============================================
+      "description": "unitNames.json: specialNameId",
+      "dst": {
+        "fileName": "unitNames.json",
+        "word": "id<<<specialNames"
+      },
+      "src": [
+        {
+          "fileName": "unit.json",
+          "word": "specialNameId"
         }
       ]
     }

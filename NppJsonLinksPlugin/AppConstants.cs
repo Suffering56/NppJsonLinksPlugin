@@ -19,6 +19,7 @@ namespace NppJsonLinksPlugin
         public const string MAPPING_PATH_PLACEHOLDER = "D:/projects/shelter/gd_data";
         public const int DEFAULT_JUMP_TO_LINE_DELAY = 0;    //100
         public const int DEFAULT_DST_ORDER = int.MaxValue - 10000;
+        public const int HIGHLIGHTING_TIMER_INTERVAL = 500;
 
         private static string GetPluginPath()
         {

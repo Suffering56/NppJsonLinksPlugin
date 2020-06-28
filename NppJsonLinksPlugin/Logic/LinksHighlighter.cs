@@ -50,7 +50,7 @@ namespace NppJsonLinksPlugin.Logic
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
-            _updateUiTimer = CreateTimer(1000);
+            _updateUiTimer = CreateTimer(AppConstants.HIGHLIGHTING_TIMER_INTERVAL);
         }
 
         public void Dispose()
