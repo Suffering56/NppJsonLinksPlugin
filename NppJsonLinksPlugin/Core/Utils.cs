@@ -30,9 +30,32 @@ namespace NppJsonLinksPlugin.Core
 
     public static class ConvertUtils
     {
+        public static Uri ToUri(string uri)
+        {
+            try
+            {
+                return new Uri(uri);
+            }
+            catch (Exception)
+            {
+                Logger.Error($"URI is not valid: \"{uri}\"", null, true);
+                throw;
+            }
+        }
+        
         public static int? ToInt(string str)
         {
             return ToInt(str, () => "cannot parse value=\"{str}\" to int");
+        }
+        
+        public static int ToInt(string str, int defaultValue)
+        {
+            return ToInt(str) ?? defaultValue;
+        }
+
+        public static int ToInt(string str, int defaultValue, Func<string> errorMsgSupplier)
+        {
+            return ToInt(str, errorMsgSupplier) ?? defaultValue;
         }
 
         public static int? ToInt(string str, Func<string> errorMsgSupplier)
@@ -53,6 +76,16 @@ namespace NppJsonLinksPlugin.Core
             return ToBool(str, () => $"cannot parse value=\"{str}\" to bool");
         }
 
+        public static bool ToBool(string str, bool defaultValue)
+        {
+            return ToBool(str) ?? defaultValue;
+        }
+
+        public static bool ToBool(string str, bool defaultValue, Func<string> errorMsgSupplier)
+        {
+            return ToBool(str, errorMsgSupplier) ?? defaultValue;
+        }
+
         public static bool? ToBool(string str, Func<string> errorMsgSupplier)
         {
             if (str == null) return null;
@@ -69,6 +102,16 @@ namespace NppJsonLinksPlugin.Core
         public static Logger.Mode? ToLoggerMode(string str)
         {
             return ToLoggerMode(str, () => $"cannot parse value=\"{str}\" to Logger.Mode");
+        }
+        
+        public static Logger.Mode ToLoggerMode(string str, Logger.Mode defaultValue)
+        {
+            return ToLoggerMode(str) ?? defaultValue;
+        }
+        
+        public static Logger.Mode ToLoggerMode(string str, Logger.Mode defaultValue, Func<string> errorMsgSupplier)
+        {
+            return ToLoggerMode(str, errorMsgSupplier) ?? defaultValue;
         }
 
         public static Logger.Mode? ToLoggerMode(string str, Func<string> errorMsgSupplier)

@@ -2,52 +2,60 @@
 using System.Windows.Forms;
 using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
+using static NppJsonLinksPlugin.AppConstants;
 
 namespace NppJsonLinksPlugin.Forms
 {
     public partial class SettingsForm : Form
     {
-        private Settings _settings;
-        private IniConfig _config;
+        private IniConfig _mutableConfig;
 
-        private readonly TextboxWrapper _settingsJsonUriTextboxWrapper;
-        private readonly TextboxWrapper _defaultMappingPathTextboxWrapper;
-        private readonly TextboxWrapper _loggerPathTextboxWrapper;
-        private readonly TextboxWrapper _jumpToLineDelayTextboxWrapper;
+        private readonly TextboxWrapper _mappingRemoteUrlTextBoxWrapper;
+        private readonly TextboxWrapper _workingDirectoryTextBoxWrapper;
+        private readonly TextboxWrapper _jumpToLineDelayTextBoxWrapper;
+        private readonly TextboxWrapper _mappingDefaultSrcOrderTextBoxWrapper;
+        private readonly TextboxWrapper _highlightingTimerIntervalTextBoxWrapper;
 
         public SettingsForm()
         {
             InitializeComponent();
 
-            _settingsJsonUriTextboxWrapper = WrapWithPlaceholder(settingsJsonUriTextbox, AppConstants.DEFAULT_SETTINGS_URI);
-            _defaultMappingPathTextboxWrapper = WrapWithPlaceholder(defaultMappingPathTextbox, AppConstants.MAPPING_PATH_PLACEHOLDER);
-            _loggerPathTextboxWrapper = WrapWithPlaceholder(loggerPathTextbox, AppConstants.DEFAULT_LOGGER_PATH);
-            _jumpToLineDelayTextboxWrapper = WrapWithPlaceholder(jumpToLineDelayTextbox, AppConstants.DEFAULT_JUMP_TO_LINE_DELAY.ToString());
+            _mappingRemoteUrlTextBoxWrapper = WrapWithPlaceholder(mappingRemoteUrlTextbox, Placeholders.MAPPING_REMOTE_URL);
+            _workingDirectoryTextBoxWrapper = WrapWithPlaceholder(workingDirectoryTextbox, Placeholders.WORKING_DIRECTORY);
+            _mappingDefaultSrcOrderTextBoxWrapper = WrapWithPlaceholder(mappingDefailtSrcOrderTextbox, Placeholders.MAPPING_DEFAULT_SRC_ORDER);
+            _highlightingTimerIntervalTextBoxWrapper = WrapWithPlaceholder(highlightingTimerIntervalTextbox, Placeholders.HIGHLIGHTING_TIMER_INTERVAL);
+            _jumpToLineDelayTextBoxWrapper = WrapWithPlaceholder(jumpToLineDelayTextbox, Placeholders.JUMP_TO_LINE_DELAY);
         }
 
-        public DialogResult ShowDialog(IniConfig config, Settings settings)
+        public DialogResult ShowDialog(IniConfig mutableConfig)
         {
-            _settings = settings;
-            _config = config;
+            _mutableConfig = mutableConfig;
             return base.ShowDialog();
         }
 
-        private TextboxWrapper WrapWithPlaceholder(TextBox textBox, string placehoder)
+        private static TextboxWrapper WrapWithPlaceholder(TextBox textBox, string placeHolder)
         {
-            return new TextboxWrapper(textBox, placehoder);
+            return new TextboxWrapper(textBox, placeHolder);
         }
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
-            _settingsJsonUriTextboxWrapper.SetInitialText(_config.SettingsJsonUri);
-
-            _loggerPathTextboxWrapper.SetInitialText(_config.LogsDir);
-            loggerModeComboBox.SelectedIndex = (int) _config.LoggerMode;
-
-            highlightingEnabledComboBox.SelectedIndex = Convert.ToInt32(_settings.HighlightingEnabled);
-            soundEnabledComboBox.SelectedIndex = Convert.ToInt32(_settings.SoundEnabled);
-            _defaultMappingPathTextboxWrapper.SetInitialText(_settings.MappingDefaultFilePath);
-            _jumpToLineDelayTextboxWrapper.SetInitialText(_settings.JumpToLineDelay.ToString());
+            //1
+            _mappingRemoteUrlTextBoxWrapper.SetInitialText(_mutableConfig.MappingRemoteUrl);
+            //2
+            loggerModeComboBox.SelectedIndex = (int) _mutableConfig.LoggerMode;
+            //3
+            _workingDirectoryTextBoxWrapper.SetInitialText(_mutableConfig.WorkingDirectory);
+            //4
+            _mappingDefaultSrcOrderTextBoxWrapper.SetInitialText(_mutableConfig.MappingDefaultSrcOrder.ToString());
+            //5
+            highlightingEnabledComboBox.SelectedIndex = Convert.ToInt32(_mutableConfig.HighlightingEnabled);
+            //6
+            _highlightingTimerIntervalTextBoxWrapper.SetInitialText(_mutableConfig.HighlightingTimerInterval.ToString());
+            //7
+            _jumpToLineDelayTextBoxWrapper.SetInitialText(_mutableConfig.JumpToLineDelay.ToString());
+            //8
+            soundEnabledComboBox.SelectedIndex = Convert.ToInt32(_mutableConfig.SoundEnabled);
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -59,50 +67,68 @@ namespace NppJsonLinksPlugin.Forms
         {
             Logger.Info("settings form closed: Save");
 
-            _config.SettingsJsonUri = _settingsJsonUriTextboxWrapper.GetText();
-            _config.MappingDefaultFilePath = _defaultMappingPathTextboxWrapper.GetText();
-            _config.LogsDir = _loggerPathTextboxWrapper.GetText();
+            int? intValue;
+            bool? booleanValue;
 
+            //1
+            _mutableConfig.MappingRemoteUrl = _mappingRemoteUrlTextBoxWrapper.GetText();
+
+            //2
             var loggerMode = ConvertUtils.ToLoggerMode(loggerModeComboBox.Text, () => $"cannot parse loggerMode: {loggerModeComboBox.Text}");
             if (!loggerMode.HasValue) return;
-            _config.LoggerMode = loggerMode.Value;
+            _mutableConfig.LoggerMode = loggerMode.Value;
 
-            var booleanValue = ConvertUtils.ToBool(highlightingEnabledComboBox.Text);
+            //3
+            _mutableConfig.WorkingDirectory = _workingDirectoryTextBoxWrapper.GetText();
+
+            //4
+            intValue = _mappingDefaultSrcOrderTextBoxWrapper.GetInt();
+            if (!intValue.HasValue) return;
+            _mutableConfig.MappingDefaultSrcOrder = intValue.Value;
+
+            //5
+            booleanValue = ConvertUtils.ToBool(highlightingEnabledComboBox.Text);
             if (!booleanValue.HasValue) return;
-            _config.HighlightingEnabled = booleanValue.Value;
+            _mutableConfig.HighlightingEnabled = booleanValue.Value;
 
+            //6
+            intValue = _highlightingTimerIntervalTextBoxWrapper.GetInt();
+            if (!intValue.HasValue) return;
+            _mutableConfig.HighlightingTimerInterval = intValue.Value;
+
+            //7
+            intValue = _jumpToLineDelayTextBoxWrapper.GetInt();
+            if (!intValue.HasValue) return;
+            _mutableConfig.JumpToLineDelay = intValue.Value;
+
+            //8
             booleanValue = ConvertUtils.ToBool(soundEnabledComboBox.Text);
             if (!booleanValue.HasValue) return;
-            _config.SoundEnabled = booleanValue.Value;
-
-            var intValue = _jumpToLineDelayTextboxWrapper.GetInt();
-            if (!intValue.HasValue) return;
-            _config.JumpToLineDelay = intValue.Value;
+            _mutableConfig.SoundEnabled = booleanValue.Value;
         }
 
-        private void resetButton_Click(object sender, EventArgs e)
+        private void reloadMappingButton_Click(object sender, EventArgs e)
         {
-            var settingsUri = _settingsJsonUriTextboxWrapper.GetText();
-            RawSettings rawSettings;
+            var mappingRemoteUrl = _mappingRemoteUrlTextBoxWrapper.GetText();
+            Uri uri;
+
             try
             {
-                rawSettings = SettingsParser.Parse(settingsUri);
+                uri = ConvertUtils.ToUri(mappingRemoteUrl);
             }
             catch (Exception)
             {
-                Logger.Error($"cannot load default settings by invalid settings uri: \"{settingsUri}\". try reload by default settings uri path.", null, true);
-                settingsUri = AppConstants.DEFAULT_SETTINGS_URI;
-                _settingsJsonUriTextboxWrapper.SetInitialText(settingsUri);
-                rawSettings = SettingsParser.Parse(settingsUri);
+                return;
             }
 
-            _loggerPathTextboxWrapper.SetInitialText(AppConstants.DEFAULT_LOGGER_PATH);
-            loggerModeComboBox.SelectedIndex = (int) AppConstants.DEFAULT_LOGGER_MODE;
-
-            _defaultMappingPathTextboxWrapper.SetInitialText("");
-            highlightingEnabledComboBox.SelectedIndex = Convert.ToInt32(rawSettings.HighlightingEnabled);
-            soundEnabledComboBox.SelectedIndex = Convert.ToInt32(rawSettings.SoundEnabled);
-            _jumpToLineDelayTextboxWrapper.SetInitialText(rawSettings.JumpToLineDelay.ToString());
+            try
+            {
+                SettingsParser.DownloadRemoteMapping(uri);
+            }
+            catch (Exception)
+            {
+                Logger.Error($"cannot reload mapping by remote URL: \"{uri}\".", null, true);
+            }
         }
     }
 }

@@ -12,60 +12,39 @@ namespace NppJsonLinksPlugin.Core
         public enum Mode
         {
             ENABLED = 0,
-            ONLY_ERRORS = 1,
-            DISABLED = 2,
+            ENABLED_WITHOUT_ALERTS = 1,
+            DISABLED_WITH_ALERTS = 2,
+            DISABLED = 3,
         }
 
-        private static Mode _mode = Mode.ONLY_ERRORS;
-        private static string _infoPathPrefix = null;
-        private static string _errorPathPrefix = null;
-
+        private static Mode _mode = AppConstants.Defaults.LOGGER_MODE;
         private const int FREQUENT_ERRORS_COUNT_LIMIT = 15;
         private const int FREQUENT_ERRORS_TIME_LIMIT_SECONDS = 5;
         private static readonly List<int> LastErrorTimesList = new List<int>();
         private static readonly object Lock = new object();
 
-        public static void SetMode(Mode mode, string prefix)
+        public static void SetMode(Mode mode)
         {
-            _infoPathPrefix = null;
-            _errorPathPrefix = null;
-
-            if (mode == Mode.ENABLED && string.IsNullOrEmpty(prefix))
-            {
-                _mode = Mode.ONLY_ERRORS;
-                ShowErrorDialog($"Settings.LogPathPrefix could not be empty when loggerMode is {Mode.ENABLED.ToString()}. Logger mode will set to: {Mode.ONLY_ERRORS}");
-                return;
-            }
-
-            if (mode == Mode.ENABLED)
-            {
-                if (!Directory.Exists(prefix))
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(prefix);
-                    }
-                    catch (Exception)
-                    {
-                        ShowErrorDialog($"Cannot enable logger. Can't create not existing logs directory={prefix}. Logger mode will set to {Mode.ONLY_ERRORS})");
-                        _mode = Mode.ONLY_ERRORS;
-                        return;
-                    }
-                }
-
-                _infoPathPrefix = Path.Combine(prefix, $"{DateUtils.CurrentDateStr()}_out.log");
-                _errorPathPrefix = Path.Combine(prefix, $"{DateUtils.CurrentDateStr()}_err.log");
-            }
-
             _mode = mode;
+
+            if (IsFileRecordingEnabled() && !Directory.Exists(AppConstants.LOGS_PATH))
+            {
+                try
+                {
+                    Directory.CreateDirectory(AppConstants.LOGS_PATH);
+                }
+                catch (Exception)
+                {
+                    ErrorBox($"Cannot enable logger. Can't create not existing logs directory={AppConstants.LOGS_PATH}. Logger mode will set to {Mode.DISABLED_WITH_ALERTS})");
+                    _mode = Mode.DISABLED_WITH_ALERTS;
+                }
+            }
         }
 
         internal static void Info(string msg)
         {
-            if (_mode != Mode.ENABLED) return;
-
-            Debug.WriteLine(msg);
-            WriteToFile(_infoPathPrefix, msg);
+            WriteToConsole(msg);
+            WriteToFile(InfoLogFilePath(), msg);
         }
 
         public static void Warn(string msg)
@@ -78,40 +57,30 @@ namespace NppJsonLinksPlugin.Core
             Info($"FAIL: {msg}");
         }
 
-        internal static void Error(string msg, Exception e = null, bool showMsgBox = false)
+        internal static void Error(string msg, Exception e = null, bool showAlert = false)
         {
             OnError();
+            if (_mode == Mode.DISABLED) return;
 
             msg = $"Plugin \"{Main.PLUGIN_NAME}\" ERROR: {msg}";
 
-            if (showMsgBox)
+            if (showAlert)
             {
-                ShowErrorDialog(msg);
+                ErrorBox(msg);
             }
 
-            if (_mode != Mode.ENABLED) return;
-
-            Debug.WriteLine(msg);
-            WriteToFile(_errorPathPrefix, msg);
+            WriteToConsole(msg);
+            WriteToFile(ErrorLogFilePath(), msg);
             PrintStackTrace(e);
-        }
-
-        private static void ShowErrorDialog(string errorMsg)
-        {
-            if (_mode == Mode.DISABLED) return;
-            MsgBox(errorMsg, MessageBoxIcon.Error);
-        }
-
-        private static void MsgBox(string msg, MessageBoxIcon icon)
-        {
-            MessageBox.Show(msg, Main.PLUGIN_NAME, MessageBoxButtons.OK, icon);
         }
 
         private static void PrintStackTrace(Exception e)
         {
-            if (e == null || _mode != Mode.ENABLED) return;
+            if (e == null) return;
 
-            Debug.WriteLine($"{e.StackTrace}");
+            WriteToConsole($"{e.StackTrace}");
+
+            if (!IsFileRecordingEnabled()) return;
 
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append("\n");
@@ -119,13 +88,15 @@ namespace NppJsonLinksPlugin.Core
             stringBuilder.Append(e.StackTrace);
             var errorMsg = stringBuilder.ToString();
 
-            WriteToFile(_errorPathPrefix, errorMsg);
+            WriteToFile(ErrorLogFilePath(), errorMsg);
         }
 
         private static readonly string TracePId = Process.GetCurrentProcess().Id.ToString("X04");
 
         private static void WriteToFile(string logFilePath, string msg)
         {
+            if (!IsFileRecordingEnabled()) return;
+
             try
             {
                 using TextWriter w = new StreamWriter(logFilePath, true);
@@ -133,10 +104,10 @@ namespace NppJsonLinksPlugin.Core
             }
             catch (Exception ex)
             {
-                ShowErrorDialog($"Error while attempting to write into log file (loggerMode will set to {Mode.ONLY_ERRORS}), message:\n" + ex.Message);
-                if (_mode != Mode.DISABLED)
+                ErrorBox($"Error while attempting to write into log file (loggerMode will set to {Mode.DISABLED_WITH_ALERTS}), message:\n" + ex.Message);
+                if (IsAlertsEnabled())
                 {
-                    SetMode(Mode.ONLY_ERRORS, null);
+                    SetMode(Mode.DISABLED_WITH_ALERTS);
                 }
             }
         }
@@ -173,9 +144,46 @@ namespace NppJsonLinksPlugin.Core
             }
         }
 
+        [Conditional("DEBUG")]
+        private static void WriteToConsole(string msg)
+        {
+            Debug.WriteLine(msg);
+        }
+
+        private static void MsgBox(string msg, MessageBoxIcon icon)
+        {
+            MessageBox.Show(msg, Main.PLUGIN_NAME, MessageBoxButtons.OK, icon);
+        }
+
         public static void InfoBox(string msg)
         {
             MsgBox(msg, MessageBoxIcon.Information);
+        }
+
+        private static void ErrorBox(string errorMsg)
+        {
+            if (!IsAlertsEnabled()) return;
+            MsgBox(errorMsg, MessageBoxIcon.Error);
+        }
+
+        private static string InfoLogFilePath()
+        {
+            return Path.Combine(AppConstants.LOGS_PATH, $"{DateUtils.CurrentDateStr()}_out.log");
+        }
+
+        private static string ErrorLogFilePath()
+        {
+            return Path.Combine(AppConstants.LOGS_PATH, $"{DateUtils.CurrentDateStr()}_err.log");
+        }
+
+        private static bool IsFileRecordingEnabled()
+        {
+            return _mode == Mode.ENABLED || _mode == Mode.ENABLED_WITHOUT_ALERTS;
+        }
+
+        private static bool IsAlertsEnabled()
+        {
+            return _mode == Mode.ENABLED || _mode == Mode.DISABLED_WITH_ALERTS;
         }
     }
 }

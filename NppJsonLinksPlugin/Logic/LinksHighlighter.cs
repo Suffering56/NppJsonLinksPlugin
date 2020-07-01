@@ -7,6 +7,7 @@ using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.Logic.Context;
 using NppJsonLinksPlugin.PluginInfrastructure.Gateway;
+using static NppJsonLinksPlugin.AppConstants;
 
 namespace NppJsonLinksPlugin.Logic
 {
@@ -37,7 +38,7 @@ namespace NppJsonLinksPlugin.Logic
 
         public LinksHighlighter(IScintillaGateway gateway, Settings settings)
         {
-            if (!settings.HighlightingEnabled)
+            if (!settings.Config.HighlightingEnabled)
             {
                 _settingsMapping = null;
                 gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
@@ -50,7 +51,7 @@ namespace NppJsonLinksPlugin.Logic
             _searchContextProvider = (word, initialLineIndex, indexOfSelectedWord) => new JsonSearchContext(word, gateway, initialLineIndex, indexOfSelectedWord);
 
             gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_UNDERLINE);
-            _updateUiTimer = CreateTimer(AppConstants.HIGHLIGHTING_TIMER_INTERVAL);
+            _updateUiTimer = CreateTimer(Defaults.HIGHLIGHTING_TIMER_INTERVAL);
         }
 
         public void Dispose()

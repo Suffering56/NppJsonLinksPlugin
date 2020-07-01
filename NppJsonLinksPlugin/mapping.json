@@ -1,8 +1,4 @@
 {
-  "highlightingEnabled": true,
-  "soundEnabled": true,
-  "jumpToLineDelay": 0,
-  "mappingDefaultFilePath": "F:/gd_data",
   "mapping": [
     {
       // ====================================== ABILITIES ============================================
@@ -57,6 +53,10 @@
         {
           "fileName": "runeSettings.json",
           "word": "to<<<transformations"
+        },
+        {
+          "fileName": "abilities.json",
+          "word": "excludedIds"
         }
       ]
     },

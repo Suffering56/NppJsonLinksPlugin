@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 using NppJsonLinksPlugin.Configuration;
 using NppJsonLinksPlugin.Core;
@@ -17,9 +15,8 @@ namespace NppJsonLinksPlugin
     internal static class Main
     {
         internal const string PLUGIN_NAME = "NppJsonLinksPlugin";
-        private const string PLUGIN_VERSION = "0.4.1";
+        private const string PLUGIN_VERSION = "0.4.2";
 
-        private static readonly string IniFilePath = Path.GetFullPath($"plugins/{PLUGIN_NAME}/{AppConstants.INI_CONFIG_NAME}");
         private static IniConfig _iniConfig = null;
         private static Settings _settings = null;
 
@@ -38,8 +35,6 @@ namespace NppJsonLinksPlugin
         );
 
         private static SettingsForm _settingsForm = null;
-        private static readonly Bitmap TbBmp = Properties.Resources.star;
-        private static readonly Bitmap TbBmpTbTab = Properties.Resources.star_bmp;
 
         internal static void DisablePlugin(bool showErrorBox = true)
         {
@@ -49,7 +44,7 @@ namespace NppJsonLinksPlugin
             }
 
             IsPluginDisabled = true;
-            Logger.SetMode(Logger.Mode.DISABLED, null);
+            Logger.SetMode(Logger.Mode.DISABLED);
             _linksHighlighter?.Dispose();
             UserInputHandler.Disable();
             NavigationHandler.Disable();
@@ -76,14 +71,14 @@ namespace NppJsonLinksPlugin
         {
             try
             {
-                _iniConfig = IniConfigParser.Parse(IniFilePath);
-                Logger.SetMode(_iniConfig.LoggerMode, _iniConfig.LogsDir);
+                _iniConfig = IniConfigParser.Parse();
+                Logger.SetMode(_iniConfig.LoggerMode);
 
                 return true;
             }
             catch (Exception e)
             {
-                Logger.SetMode(Logger.Mode.ONLY_ERRORS, null);
+                Logger.SetMode(Logger.Mode.DISABLED_WITH_ALERTS);
                 Logger.Error(e.Message, e, true);
 
                 return false;
@@ -97,8 +92,8 @@ namespace NppJsonLinksPlugin
                 var gateway = PluginBase.GetGatewayFactory().Invoke();
 
                 // загружаем настройки плагина
-                _settings = SettingsParser.Load(_iniConfig);
-                Logger.Info($"settings reloaded: mappingFilePathPrefix={_settings.MappingDefaultFilePath}");
+                _settings = SettingsParser.LoadMapping(_iniConfig);
+                Logger.Info($"settings reloaded: WorkingDirectory={_settings.Config.WorkingDirectory}");
 
                 // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
                 gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
@@ -287,7 +282,7 @@ namespace NppJsonLinksPlugin
 
             gateway.GrabFocus();
 
-            if (_settings.SoundEnabled)
+            if (_settings.Config.SoundEnabled)
             {
                 System.Media.SystemSounds.Asterisk.Play();
             }
@@ -305,10 +300,10 @@ namespace NppJsonLinksPlugin
             var gateway = PluginBase.GetGatewayFactory().Invoke();
             gateway.OpenFile(file);
 
-            if (_settings.JumpToLineDelay > 0)
+            if (_settings.Config.JumpToLineDelay > 0)
             {
                 // задержка фиксит багу с выделением текста при переходе
-                ThreadUtils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.JumpToLineDelay);
+                ThreadUtils.ExecuteDelayed(() => gateway.JumpToLine(line), _settings.Config.JumpToLineDelay);
             }
             else
             {
@@ -345,7 +340,7 @@ namespace NppJsonLinksPlugin
             _settingsForm ??= new SettingsForm();
             var modifiedConfig = _iniConfig.Clone();
 
-            if (_settingsForm.ShowDialog(modifiedConfig, _settings) == DialogResult.OK)
+            if (_settingsForm.ShowDialog(modifiedConfig) == DialogResult.OK)
             {
                 if (modifiedConfig.Save())
                 {

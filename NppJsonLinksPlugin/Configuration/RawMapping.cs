@@ -1,23 +1,12 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using static NppJsonLinksPlugin.AppConstants;
 
 namespace NppJsonLinksPlugin.Configuration
 {
     [JsonObject]
-    public class RawSettings
+    public class RawMapping
     {
-        [JsonProperty(PropertyName = "highlightingEnabled")]
-        public bool HighlightingEnabled = true;
-
-        [JsonProperty(PropertyName = "soundEnabled")]
-        public bool SoundEnabled = true;
-
-        [JsonProperty(PropertyName = "jumpToLineDelay")]
-        public int JumpToLineDelay = AppConstants.DEFAULT_JUMP_TO_LINE_DELAY;
-
-        [JsonProperty(PropertyName = "mappingDefaultFilePath")]
-        public string MappingDefaultFilePath = null;
-
         [JsonProperty(PropertyName = "mapping")]
         public IList<RawMappingItem> Mapping;
 
@@ -55,7 +44,7 @@ namespace NppJsonLinksPlugin.Configuration
                 public bool WordRegexpEnabled = false;
                 
                 [JsonProperty(PropertyName = "order")]
-                public int Order = AppConstants.DEFAULT_DST_ORDER;
+                public int Order = Defaults.MAPPING_DEFAULT_SRC_ORDER;
             }
         }
     }

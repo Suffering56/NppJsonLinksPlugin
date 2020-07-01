@@ -9,73 +9,66 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NppJsonLinksPlugin.Core;
 using NppJsonLinksPlugin.Logic;
+using static NppJsonLinksPlugin.AppConstants;
 
 namespace NppJsonLinksPlugin.Configuration
 {
     public static class SettingsParser
     {
-        public static Settings Load(IniConfig iniConfig)
+        public static Settings LoadMapping(IniConfig iniConfig)
         {
-            var rawSettings = Parse(iniConfig.SettingsJsonUri);
-            Settings settings = ConvertRawSettings(rawSettings, iniConfig);
+            if (!File.Exists(MAPPING_LOCAL_PATH))
+            {
+                DownloadRemoteMapping(ConvertUtils.ToUri(iniConfig.MappingRemoteUrl));
+            }
 
+            RawMapping rawMapping = LoadRawMapping();
+            Settings settings = MergeToSettings(rawMapping, iniConfig);
             Validate(settings);
-
             return settings;
         }
 
-        public static RawSettings Parse(string settingsUri)
+        private static RawMapping LoadRawMapping()
         {
-            var uri = ToUri(settingsUri);
             try
             {
-                string settingsString = uri.IsFile
-                    ? File.ReadAllText(uri.LocalPath)
-                    : ReadRemoteSettings(uri);
-
-                var rawSettings = JsonConvert.DeserializeObject<RawSettings>(settingsString);
-                return rawSettings;
+                string mappingString = File.ReadAllText(MAPPING_LOCAL_PATH);
+                var rawMapping = JsonConvert.DeserializeObject<RawMapping>(mappingString);
+                return rawMapping;
             }
             catch (Exception e)
             {
-                Logger.Error($"cannot parse settings by uri: {settingsUri}", e, true);
+                Logger.Error($"cannot parse mapping by uri: {MAPPING_LOCAL_PATH}", e, true);
                 throw;
             }
         }
 
-        private static Uri ToUri(string uri)
+        public static void DownloadRemoteMapping(Uri remoteMappingUrl)
         {
-            try
-            {
-                return new Uri(uri);
-            }
-            catch (Exception)
-            {
-                Logger.Error($"URI is not valid: \"{uri}\"", null, true);
-                throw;
-            }
-        }
-
-        private static string ReadRemoteSettings(Uri uri)
-        {
-            WebRequest request = WebRequest.Create(uri);
+            WebRequest request = WebRequest.Create(remoteMappingUrl);
             request.Timeout = 30 * 60 * 1000;
             request.UseDefaultCredentials = true;
             request.Proxy.Credentials = request.Credentials;
             WebResponse response = request.GetResponse();
 
-            using StreamReader reader = new StreamReader(
-                response.GetResponseStream()
-                ?? throw new Exception($"couldn't read settings by uri: {uri}. response stream is null")
-            );
-            return reader.ReadToEnd();
+            Stream inputStream = response.GetResponseStream() ?? throw new Exception($"couldn't read settings by uri: {remoteMappingUrl}. response stream is null");
+
+            if (!Directory.Exists(MAPPING_LOCAL_DIR))
+            {
+                Directory.CreateDirectory(MAPPING_LOCAL_DIR);
+            }
+
+            using Stream outputStream = File.Create(MAPPING_LOCAL_PATH);
+            inputStream.CopyTo(outputStream);
         }
 
-        private static Settings ConvertRawSettings(RawSettings rawSettings, IniConfig iniConfig)
+       
+
+        private static Settings MergeToSettings(RawMapping rawMapping, IniConfig iniConfig)
         {
-            var mappingDefaultFilePath = iniConfig.MappingDefaultFilePath ?? rawSettings.MappingDefaultFilePath; // override by ini
-            
-            var mappingItems = rawSettings.Mapping
+            var mappingDefaultFilePath = iniConfig.WorkingDirectory;
+
+            var mappingItems = rawMapping.Mapping
                 .SelectMany(rawMappingItem =>
                 {
                     return rawMappingItem.Src.Select(srcLocation => new Settings.MappingItem
@@ -101,25 +94,11 @@ namespace NppJsonLinksPlugin.Configuration
                 })
                 .ToList();
 
-            return MergeWithConfig(rawSettings, iniConfig, mappingDefaultFilePath, mappingItems);
-        }
-
-        private static Settings MergeWithConfig(RawSettings rawSettings, IniConfig iniConfig, string mappingDefaultFilePath, List<Settings.MappingItem> mappingItems)
-        {
-            return new Settings
-            {
-                HighlightingEnabled = iniConfig.HighlightingEnabled ?? rawSettings.HighlightingEnabled, // override by ini
-                SoundEnabled = iniConfig.SoundEnabled ?? rawSettings.SoundEnabled, // override by ini
-                JumpToLineDelay = iniConfig.JumpToLineDelay ?? rawSettings.JumpToLineDelay, // override by ini
-                MappingDefaultFilePath = mappingDefaultFilePath, // override by ini
-                Mapping = mappingItems
-            };
+            return new Settings(iniConfig, mappingItems);
         }
 
         private static void Validate(Settings settings)
         {
-            Check(!string.IsNullOrWhiteSpace(settings.MappingDefaultFilePath), "settings.MappingDefaultFilePath cannot be null or empty");
-
             int index = 0;
             foreach (var mappingItem in settings.Mapping)
             {
@@ -128,8 +107,7 @@ namespace NppJsonLinksPlugin.Configuration
                 index++;
             }
 
-            //TODO: fileName not contains regexp spec-symbols, but src.FilePath can contains '*'
-            //TODO: Mapping.Src must be unique
+            //TODO: dst fileName not contains regexp spec-symbols, but src.FilePath can contains '*'
         }
 
         private static void Check(bool expression, string errorMsg, params object[] errorArgs)
@@ -150,15 +128,14 @@ namespace NppJsonLinksPlugin.Configuration
     [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
     public class Settings
     {
-        public bool HighlightingEnabled { get; internal set; }
+        public readonly IniConfig Config;
+        public readonly IEnumerable<MappingItem> Mapping;
 
-        public bool SoundEnabled { get; internal set; }
-
-        public int JumpToLineDelay { get; internal set; }
-
-        public string MappingDefaultFilePath { get; internal set; }
-
-        public IEnumerable<MappingItem> Mapping { get; internal set; }
+        public Settings(IniConfig config, IEnumerable<MappingItem> mapping)
+        {
+            Config = config;
+            Mapping = mapping;
+        }
 
         public class MappingItem
         {
@@ -190,7 +167,6 @@ namespace NppJsonLinksPlugin.Configuration
                     return ((Src != null ? Src.GetHashCode() : 0) * 397) ^ (Dst != null ? Dst.GetHashCode() : 0);
                 }
             }
-
 
             public class SrcLocation
             {
