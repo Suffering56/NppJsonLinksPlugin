@@ -56,9 +56,9 @@ namespace NppJsonLinksPlugin.Logic
 
         public void Dispose()
         {
-            _updateUiTimer.Stop();
-            _updateUiTimer.Dispose();
-            _gateway.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
+            _updateUiTimer?.Stop();
+            _updateUiTimer?.Dispose();
+            _gateway?.SetIndicatorStyle(HIGHLIGHT_INDICATOR_ID, STYLE_NONE);
         }
 
         private Timer CreateTimer(int interval)

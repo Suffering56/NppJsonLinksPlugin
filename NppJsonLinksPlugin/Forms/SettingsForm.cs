@@ -110,8 +110,14 @@ namespace NppJsonLinksPlugin.Forms
         private void reloadMappingButton_Click(object sender, EventArgs e)
         {
             var mappingRemoteUrl = _mappingRemoteUrlTextBoxWrapper.GetText();
-            Uri uri;
 
+            var result = MessageBox.Show($@"Do you really want to reload mapping from: <{mappingRemoteUrl}>?", @"Reload mapping?", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (result != DialogResult.OK)
+            {
+                return;
+            }
+
+            Uri uri;
             try
             {
                 uri = ConvertUtils.ToUri(mappingRemoteUrl);
@@ -124,6 +130,7 @@ namespace NppJsonLinksPlugin.Forms
             try
             {
                 SettingsParser.DownloadRemoteMapping(uri);
+                Logger.InfoBox($"Mapping successfully reloaded from: {uri}");
             }
             catch (Exception)
             {

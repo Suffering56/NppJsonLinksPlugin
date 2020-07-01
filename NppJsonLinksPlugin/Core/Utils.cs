@@ -45,7 +45,7 @@ namespace NppJsonLinksPlugin.Core
         
         public static int? ToInt(string str)
         {
-            return ToInt(str, () => "cannot parse value=\"{str}\" to int");
+            return ToInt(str, () => $"cannot parse value=\"{str}\" to int");
         }
         
         public static int ToInt(string str, int defaultValue)

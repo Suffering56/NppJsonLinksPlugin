@@ -98,7 +98,7 @@ namespace NppJsonLinksPlugin.Forms
             this.loggerModeComboBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.loggerModeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.loggerModeComboBox.FormattingEnabled = true;
-            this.loggerModeComboBox.Items.AddRange(new object[] {"ENABLED", "ONLY_ERRORS", "DISABLED"});
+            this.loggerModeComboBox.Items.AddRange(new object[] {"ENABLED", "ENABLED_WITHOUT_ALERTS", "DISABLED_WITH_ALERTS", "DISABLED"});
             this.loggerModeComboBox.Location = new System.Drawing.Point(230, 40);
             this.loggerModeComboBox.Margin = new System.Windows.Forms.Padding(0);
             this.loggerModeComboBox.Name = "loggerModeComboBox";

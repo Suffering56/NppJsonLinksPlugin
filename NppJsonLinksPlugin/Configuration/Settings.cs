@@ -21,10 +21,16 @@ namespace NppJsonLinksPlugin.Configuration
             {
                 DownloadRemoteMapping(ConvertUtils.ToUri(iniConfig.MappingRemoteUrl));
             }
+            else
+            {
+                Logger.Info($"{MAPPING_LOCAL_PATH} exists! Mapping will be loaded locally");
+            }
 
             RawMapping rawMapping = LoadRawMapping();
             Settings settings = MergeToSettings(rawMapping, iniConfig);
             Validate(settings);
+            
+            Logger.Info($"Mapping successfully reloaded from: {MAPPING_LOCAL_PATH}");
             return settings;
         }
 
@@ -45,6 +51,8 @@ namespace NppJsonLinksPlugin.Configuration
 
         public static void DownloadRemoteMapping(Uri remoteMappingUrl)
         {
+            Logger.Info($"loading mapping from: {remoteMappingUrl}");
+            
             WebRequest request = WebRequest.Create(remoteMappingUrl);
             request.Timeout = 30 * 60 * 1000;
             request.UseDefaultCredentials = true;
@@ -60,9 +68,9 @@ namespace NppJsonLinksPlugin.Configuration
 
             using Stream outputStream = File.Create(MAPPING_LOCAL_PATH);
             inputStream.CopyTo(outputStream);
+            
+            Logger.Info($"loading mapping result: SUCCESS");
         }
-
-       
 
         private static Settings MergeToSettings(RawMapping rawMapping, IniConfig iniConfig)
         {

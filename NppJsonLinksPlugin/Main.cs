@@ -93,7 +93,6 @@ namespace NppJsonLinksPlugin
 
                 // загружаем настройки плагина
                 _settings = SettingsParser.LoadMapping(_iniConfig);
-                Logger.Info($"settings reloaded: WorkingDirectory={_settings.Config.WorkingDirectory}");
 
                 // чтобы SCN_MODIFIED вызывался только, если был добавлен или удален текст
                 gateway.SetModEventMask((int) SciMsg.SC_MOD_INSERTTEXT | (int) SciMsg.SC_MOD_DELETETEXT);
